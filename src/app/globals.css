@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   CSS Custom Properties (từ theme.ts)
+   ============================================ */
+:root {
+  /* Primary colors */
+  --color-primary: #3C81C6;
+  --color-primary-hover: #2a6da8;
+
+  /* Secondary & accents */
+  --color-secondary: #C6E7FF;
+  --color-notification: #D4F6FF;
+
+  /* Semantic colors */
+  --color-success: #D2F7E1;
+  --color-success-text: #16a34a;
+  --color-warning: #FFF3CC;
+  --color-warning-text: #ca8a04;
+  --color-error: #FA707A;
+  --color-error-text: #dc2626;
+
+  /* Neutral colors */
+  --color-neutral: #F6F6F6;
+  --color-white: #FFFFFF;
+  --color-gray: #706E6E;
+  --color-gray-light: #687582;
+  --color-black: #000000;
+  --color-text-primary: #121417;
+
+  /* Background colors */
+  --color-background-light: #f6f7f8;
+  --color-background-dark: #13191f;
+  --color-surface-dark: #1e242b;
+  --color-border-dark: #2d353e;
+  --color-border-light: #dde0e4;
+}
+
+/* ============================================
+   Base styles
+   ============================================ */
+body {
+  font-family: "Inter", sans-serif;
+  background-color: var(--color-background-light);
+  color: var(--color-text-primary);
+}
+
+.dark body {
+  background-color: var(--color-background-dark);
+  color: #f3f4f6;
+}
+
+/* ============================================
+   Material Symbols (Google Icons)
+   ============================================ */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ============================================
+   Custom Scrollbar
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}

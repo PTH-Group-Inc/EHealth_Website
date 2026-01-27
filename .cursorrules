@@ -1,0 +1,369 @@
+# E-Health Frontend Rules (BẮT BUỘC)
+
+Bạn là senior frontend developer trong dự án e-health. Hãy **TUÂN THỦ NGHIÊM NGẶT** các quy tắc sau:
+
+---
+
+## 1. Tech Stack
+
+- **Framework**: Next.js 14+ App Router + TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State Management**:
+  - Redux Toolkit (global state)
+  - RTK Query (server state / API calls)
+  - nuqs (URL state / query params)
+  - TanStack Table (data tables)
+
+---
+
+## 2. Cấu trúc dự án (Feature-Based)
+
+```
+src/
+├── app/
+│   ├── (public)/           # Auth: login, forgot-password, otp
+│   ├── (portal)/           # Doctor, Pharmacist, Receptionist
+│   └── (admin)/            # Admin dashboard
+├── components/
+│   ├── ui/                 # shadcn/ui + base components
+│   └── shared/             # Header, Sidebar, Guard, PageShell
+├── config/                 # env.ts, app.ts, theme.ts
+├── constants/              # roles.ts, routes.ts, status.ts, api.ts, storage-keys.ts, ui-text.ts, table.ts
+├── hooks/                  # Custom hooks
+├── lib/
+│   ├── http/               # baseQuery, interceptors, error mapper
+│   └── auth/               # Permission helpers
+├── store/
+│   ├── slices/             # Redux slices
+│   └── features/           # RTK Query APIs
+├── types/                  # Shared TypeScript types
+└── features/               # Feature modules
+    └── [feature]/
+        ├── components/     # Feature-specific components
+        └── types/          # Feature-specific types
+```
+
+---
+
+## 3. TUYỆT ĐỐI KHÔNG HARD-CODE
+
+### ❌ KHÔNG ĐƯỢC:
+```tsx
+// Sai - hard-code route
+<Link href="/admin/users">
+
+// Sai - hard-code role
+if (user.role === "ADMIN")
+
+// Sai - hard-code status
+status === "ACTIVE"
+
+// Sai - hard-code API endpoint
+fetch("/api/users")
+
+// Sai - hard-code màu
+className="bg-[#3c81c6]"
+
+// Sai - hard-code label
+<Button>Đăng nhập</Button>
+
+// Sai - hard-code pageSize
+pageSize: 10
+```
+
+### ✅ PHẢI LÀM:
+```tsx
+// Đúng - dùng constants
+import { ROUTES } from "@/constants/routes";
+<Link href={ROUTES.ADMIN.USERS}>
+
+import { ROLES } from "@/constants/roles";
+if (user.role === ROLES.ADMIN)
+
+import { STATUS } from "@/constants/status";
+status === STATUS.ACTIVE
+
+import { API } from "@/constants/api";
+fetch(API.USERS.LIST)
+
+// Đúng - dùng Tailwind theme tokens
+className="bg-primary"
+
+import { UI_TEXT } from "@/constants/ui-text";
+<Button>{UI_TEXT.AUTH.LOGIN_BUTTON}</Button>
+
+import { TABLE_CONFIG } from "@/constants/table";
+pageSize: TABLE_CONFIG.DEFAULT_PAGE_SIZE
+```
+
+---
+
+## 4. Config Files
+
+### `src/config/env.ts`
+- Đọc biến môi trường từ `.env`
+- Validate bằng Zod
+- Export: `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_NAME`
+
+### `src/config/app.ts`
+- `appName`, `defaultPageSize`, `defaultLocale`, `dateFormat`
+
+### `src/config/theme.ts`
+- Color palette tokens (KHÔNG dùng hex trực tiếp trong component)
+
+---
+
+## 5. Constants Files
+
+### `src/constants/roles.ts`
+```ts
+export const ROLES = {
+  PATIENT: "PATIENT",
+  DOCTOR: "DOCTOR",
+  PHARMACIST: "PHARMACIST",
+  RECEPTIONIST: "RECEPTIONIST",
+  ADMIN: "ADMIN",
+} as const;
+```
+
+### `src/constants/routes.ts`
+```ts
+export const ROUTES = {
+  PUBLIC: {
+    LOGIN: "/login",
+    FORGOT_PASSWORD: "/forgot-password",
+    OTP: "/otp",
+  },
+  PORTAL: {
+    DASHBOARD: "/portal/dashboard",
+    // ... more routes
+  },
+  ADMIN: {
+    DASHBOARD: "/admin/dashboard",
+    USERS: "/admin/users",
+    // ... more routes
+  },
+} as const;
+```
+
+### `src/constants/status.ts`
+```ts
+export const STATUS = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+  LOCKED: "LOCKED",
+} as const;
+
+export const APPOINTMENT_STATUS = {
+  PENDING: "PENDING",
+  CONFIRMED: "CONFIRMED",
+  WAITING: "WAITING",
+  COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED",
+} as const;
+```
+
+### `src/constants/api.ts`
+```ts
+export const API = {
+  AUTH: {
+    LOGIN: "/auth/login",
+    LOGOUT: "/auth/logout",
+    ME: "/auth/me",
+    // ...
+  },
+  USERS: {
+    LIST: "/users",
+    CREATE: "/users",
+    // ...
+  },
+} as const;
+```
+
+### `src/constants/storage-keys.ts`
+```ts
+export const STORAGE_KEYS = {
+  ACCESS_TOKEN: "access_token",
+  REFRESH_TOKEN: "refresh_token",
+  USER: "user",
+} as const;
+```
+
+### `src/constants/ui-text.ts`
+```ts
+export const UI_TEXT = {
+  AUTH: {
+    LOGIN_BUTTON: "Đăng nhập",
+    LOGOUT_BUTTON: "Đăng xuất",
+    // ...
+  },
+  COMMON: {
+    SAVE: "Lưu",
+    CANCEL: "Hủy",
+    DELETE: "Xóa",
+    EDIT: "Sửa",
+    CREATE: "Tạo mới",
+    SEARCH: "Tìm kiếm",
+    NO_DATA: "Không có dữ liệu",
+    LOADING: "Đang tải...",
+    // ...
+  },
+} as const;
+```
+
+### `src/constants/table.ts`
+```ts
+export const TABLE_CONFIG = {
+  DEFAULT_PAGE_SIZE: 10,
+  PAGE_SIZE_OPTIONS: [10, 20, 50, 100],
+  DEFAULT_SORT_ORDER: "desc",
+} as const;
+```
+
+---
+
+## 6. Color Palette (Tailwind Theme)
+
+| Token        | Hex       | CSS Variable          |
+|--------------|-----------|----------------------|
+| primary      | #3c81c6   | --color-primary      |
+| secondary    | #C6E7FF   | --color-secondary    |
+| notification | #D4F6FF   | --color-notification |
+| success      | #D2F7E1   | --color-success      |
+| warning      | #FFF3CC   | --color-warning      |
+| error        | #FA707A   | --color-error        |
+| neutral      | #F6F6F6   | --color-neutral      |
+| white        | #FFFFFF   | --color-white        |
+| gray         | #706E6E   | --color-gray         |
+| black        | #000000   | --color-black        |
+
+**Sử dụng**: `bg-primary`, `text-error`, `border-secondary` (KHÔNG dùng `bg-[#3c81c6]`)
+
+---
+
+## 7. Component Naming Convention (Feature Modules)
+
+Mỗi feature trong `src/features/[feature]/` có cấu trúc:
+
+```
+features/users/
+├── components/
+│   ├── users-listing.tsx       # Trang danh sách
+│   ├── user-form-modal.tsx     # Form tạo/sửa
+│   └── user-tables/
+│       ├── index.tsx           # Table component
+│       ├── columns.tsx         # Column definitions
+│       └── cell-action.tsx     # Actions column
+└── types/
+    └── user.ts                 # User types
+```
+
+---
+
+## 8. RTK Query APIs
+
+**Vị trí**: `src/store/features/[feature]/[feature]Api.ts`
+
+**Naming**:
+- `getUsers` - GET list
+- `getUserById` - GET by ID
+- `createUser` - POST
+- `updateUser` - PUT/PATCH
+- `deleteUser` - DELETE
+- `lockUser`, `unlockUser` - PATCH actions
+
+**baseUrl**: Lấy từ `src/config/env.ts` (KHÔNG hard-code)
+
+---
+
+## 9. Guards
+
+- **AuthGuard**: `src/components/shared/auth-guard.tsx` - Kiểm tra đăng nhập
+- **RoleGuard**: `src/components/shared/role-guard.tsx` - Kiểm tra quyền theo role
+
+**Roles lấy từ**: `src/constants/roles.ts` (KHÔNG hard-code)
+
+---
+
+## 10. Layout Routes
+
+| Route Group | Layout | Roles |
+|-------------|--------|-------|
+| `(public)` | Không sidebar | Guest |
+| `(portal)` | Sidebar + Topbar | DOCTOR, PHARMACIST, RECEPTIONIST |
+| `(admin)` | Admin sidebar | ADMIN |
+
+---
+
+## 11. Bắt buộc có Loading/Empty State
+
+Mọi component hiển thị data PHẢI có:
+- **Loading**: Skeleton hoặc spinner
+- **Empty**: Thông báo khi không có data
+- **Error**: Hiển thị lỗi user-friendly
+
+---
+
+## 12. Type Definitions
+
+- **Shared types**: `src/types/`
+- **Feature types**: `src/features/[feature]/types/`
+- **KHÔNG dùng `any`** - Luôn khai báo type rõ ràng
+
+---
+
+## 13. Output Guidelines
+
+Khi được yêu cầu tạo code:
+1. **Tạo file đầy đủ** - Không chỉ mô tả
+2. **Import đúng** - Từ config/constants
+3. **Có type** - Khai báo rõ ràng
+4. **Có loading/empty/error** - States đầy đủ
+5. **Reusable** - Component có thể tái sử dụng
+
+---
+
+## 14. Roadmap FE (Giai đoạn triển khai)
+
+### GĐ 2.1 - Foundation (Bắt buộc xong trước)
+1. Setup Next.js + Tailwind + shadcn/ui + ESLint/Prettier
+2. Config/constants layer
+3. Layout & navigation (Sidebar, Topbar)
+4. Auth UI + state
+5. Error handling & UX
+
+### GĐ 2.2 - Booking & Tiếp nhận
+1. Appointment listing + actions
+2. Queue view
+
+### GĐ 2.3 - Khám bệnh & EMR
+1. Doctor dashboard
+2. EMR form (vitals, symptoms, diagnosis)
+3. Patient profile + timeline
+
+### GĐ 2.3.2 - Kê đơn & Kho thuốc
+1. Prescription create
+2. Pharmacist dispense UI
+
+### GĐ 2.4 - AI Features
+1. Chat AI screen
+2. AI summary panel
+
+### GĐ 2.5 - Reports/Stats
+1. Admin charts (revenue, frequency)
+
+---
+
+## Checklist tự kiểm tra
+
+Trước khi hoàn thành, kiểm tra:
+
+- [ ] Không còn string literal cho routes (`"/admin/users"`)
+- [ ] Không còn string literal cho roles (`"ADMIN"`)
+- [ ] Không còn string literal cho status (`"ACTIVE"`)
+- [ ] Không còn hex color trong component (`#3c81c6`)
+- [ ] Không còn hard-code API endpoint (`/api/...`)
+- [ ] Không còn hard-code số (pageSize: `10`)
+- [ ] Mọi label quan trọng đã trong `ui-text.ts`
+- [ ] Component có loading/empty/error states
+- [ ] Types được khai báo rõ ràng
