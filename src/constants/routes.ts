@@ -28,8 +28,13 @@ export const ROUTES = {
   PORTAL: {
     DOCTOR: {
       DASHBOARD: "/portal/doctor",
-      EMR: "/portal/doctor/emr",
+      APPOINTMENTS: "/portal/doctor/appointments",
+      QUEUE: "/portal/doctor/queue",
+      EXAMINATION: "/portal/doctor/examination",
+      MEDICAL_RECORDS: "/portal/doctor/medical-records",
       PRESCRIPTIONS: "/portal/doctor/prescriptions",
+      REPORTS: "/portal/doctor/reports",
+      SETTINGS: "/portal/doctor/settings",
     },
     PHARMACIST: {
       DASHBOARD: "/portal/pharmacist",
@@ -42,6 +47,58 @@ export const ROUTES = {
     },
   },
 } as const;
+
+// Doctor sidebar menu items
+export const DOCTOR_MENU_ITEMS = [
+  {
+    key: "dashboard",
+    href: ROUTES.PORTAL.DOCTOR.DASHBOARD,
+    icon: "home",
+    label: "Trang chủ",
+  },
+  {
+    key: "appointments",
+    href: ROUTES.PORTAL.DOCTOR.APPOINTMENTS,
+    icon: "calendar_month",
+    label: "Lịch hẹn",
+  },
+  {
+    key: "queue",
+    href: ROUTES.PORTAL.DOCTOR.QUEUE,
+    icon: "groups",
+    label: "Hàng đợi",
+  },
+  {
+    key: "examination",
+    href: ROUTES.PORTAL.DOCTOR.EXAMINATION,
+    icon: "stethoscope",
+    label: "Khám bệnh",
+  },
+  {
+    key: "medical-records",
+    href: ROUTES.PORTAL.DOCTOR.MEDICAL_RECORDS,
+    icon: "folder_shared",
+    label: "Hồ sơ bệnh án",
+  },
+  {
+    key: "prescriptions",
+    href: ROUTES.PORTAL.DOCTOR.PRESCRIPTIONS,
+    icon: "pill",
+    label: "Kê đơn",
+  },
+  {
+    key: "reports",
+    href: ROUTES.PORTAL.DOCTOR.REPORTS,
+    icon: "assessment",
+    label: "Báo cáo",
+  },
+  {
+    key: "settings",
+    href: ROUTES.PORTAL.DOCTOR.SETTINGS,
+    icon: "settings",
+    label: "Cài đặt",
+  },
+] as const;
 
 // Admin sidebar menu items
 export const ADMIN_MENU_ITEMS = [

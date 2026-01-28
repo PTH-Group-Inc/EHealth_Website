@@ -2,12 +2,19 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
 
 export function SettingsDropdown() {
     const [isOpen, setIsOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const pathname = usePathname();
+
+    // Determine the current context (admin or doctor)
+    const isDoctor = pathname.startsWith("/portal/doctor");
+    const settingsRoute = isDoctor ? ROUTES.PORTAL.DOCTOR.SETTINGS : ROUTES.ADMIN.SETTINGS;
+    const portalLabel = isDoctor ? "E-Health Doctor" : "E-Health Admin";
 
     // Check initial dark mode state
     useEffect(() => {
@@ -76,7 +83,7 @@ export function SettingsDropdown() {
                     {/* Links */}
                     <div className="p-2">
                         <Link
-                            href={ROUTES.ADMIN.SETTINGS}
+                            href={settingsRoute}
                             onClick={() => setIsOpen(false)}
                             className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left"
                         >
@@ -88,7 +95,7 @@ export function SettingsDropdown() {
                             <span className="material-symbols-outlined text-[16px] text-[#687582]">chevron_right</span>
                         </Link>
                         <Link
-                            href={ROUTES.ADMIN.SETTINGS}
+                            href={settingsRoute}
                             onClick={() => setIsOpen(false)}
                             className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left"
                         >
@@ -113,7 +120,7 @@ export function SettingsDropdown() {
 
                     {/* Version info */}
                     <div className="px-4 py-3">
-                        <p className="text-xs text-[#687582] text-center">E-Health Admin v1.0.0</p>
+                        <p className="text-xs text-[#687582] text-center">{portalLabel} v1.0.0</p>
                     </div>
                 </div>
             )}
