@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { UI_TEXT } from "@/constants/ui-text";
 import { MOCK_MEDICINES, MOCK_MEDICINE_STATS } from "@/lib/mock-data/admin";
 import { MEDICINE_STATUS } from "@/constants/status";
@@ -32,6 +33,7 @@ function formatCurrency(num: number): string {
 
 export default function MedicinesPage() {
     // State
+    const router = useRouter();
     const [medicines, setMedicines] = useState<Medicine[]>(MOCK_MEDICINES);
     const [searchQuery, setSearchQuery] = useState("");
     const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -218,7 +220,7 @@ export default function MedicinesPage() {
                         {UI_TEXT.ADMIN.MEDICINES.IMPORT_EXCEL}
                     </button>
                     <button
-                        onClick={handleAddMedicine}
+                        onClick={() => router.push("/admin/medicines/new")}
                         className="flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform hover:-translate-y-0.5"
                     >
                         <span className="material-symbols-outlined text-[20px]">add_circle</span>
