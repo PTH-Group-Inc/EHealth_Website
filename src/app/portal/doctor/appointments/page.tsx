@@ -62,7 +62,7 @@ export default function AppointmentsPage() {
                             {UI_TEXT.DOCTOR.APPOINTMENTS.MANAGE_SLOTS}
                         </button>
                         <button
-                            onClick={() => setNewAppointmentModal(true)}
+                            onClick={() => window.location.href = '/portal/doctor/appointments/new'}
                             className="flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform hover:-translate-y-0.5"
                         >
                             <span className="material-symbols-outlined text-[20px]">

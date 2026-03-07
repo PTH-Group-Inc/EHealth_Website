@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { UI_TEXT } from "@/constants/ui-text";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { AddScheduleModal } from "@/features/schedules/components/add-schedule-modal";
@@ -66,6 +67,7 @@ const generateMockSchedules = (): Schedule[] => {
 
 export default function SchedulesPage() {
     const [schedules, setSchedules] = useState<Schedule[]>(generateMockSchedules());
+    const router = useRouter();
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
     const [viewMode, setViewMode] = useState<"day" | "week">("day");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -153,7 +155,7 @@ export default function SchedulesPage() {
                         Xuất lịch
                     </button>
                     <button
-                        onClick={() => setIsAddModalOpen(true)}
+                        onClick={() => router.push('/admin/schedules/new')}
                         className="flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform hover:-translate-y-0.5"
                     >
                         <span className="material-symbols-outlined text-[20px]">add_circle</span>

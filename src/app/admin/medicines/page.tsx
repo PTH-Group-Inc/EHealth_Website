@@ -215,7 +215,21 @@ export default function MedicinesPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] text-[#121417] dark:text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <button
+                        onClick={() => {
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = ".xlsx,.xls,.csv";
+                            input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0];
+                                if (file) {
+                                    alert(`Đã chọn file: ${file.name}. Tính năng nhập dữ liệu sẽ được xử lý.`);
+                                }
+                            };
+                            input.click();
+                        }}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] text-[#121417] dark:text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
                         <span className="material-symbols-outlined text-[20px]">upload_file</span>
                         {UI_TEXT.ADMIN.MEDICINES.IMPORT_EXCEL}
                     </button>

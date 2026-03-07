@@ -49,7 +49,7 @@ export default function ReceptionistAppointments() {
                         <p className="text-sm text-[#687582] mt-1">Xem và quản lý lịch hẹn khám bệnh của bệnh nhân</p>
                     </div>
                     <button
-                        onClick={() => setShowNewModal(true)}
+                        onClick={() => window.location.href = '/portal/receptionist/appointments/new'}
                         className="flex items-center gap-2 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-medium transition-colors shadow-lg shadow-[#3C81C6]/20"
                     >
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>

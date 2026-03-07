@@ -62,7 +62,33 @@ export default function StatisticsPage() {
                             </button>
                         ))}
                     </div>
-                    <button className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] text-[#121417] dark:text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <button
+                        onClick={() => {
+                            const headers = ["Tháng", "Doanh thu (Triệu VND)"];
+                            const rows = MONTHLY_REVENUE.map((m) => [m.month, m.value.toString()]);
+                            const deptHeaders = ["Khoa", "Bệnh nhân", "Doanh thu (Triệu VND)"];
+                            const deptRows = DEPARTMENT_STATS.map((d) => [d.name, d.patients.toString(), d.revenue.toString()]);
+                            const csv = [
+                                "BÁO CÁO THỐNG KÊ",
+                                "",
+                                "DOANH THU THEO THÁNG",
+                                headers.join(","),
+                                ...rows.map((r) => r.join(",")),
+                                "",
+                                "THỐNG KÊ THEO KHOA",
+                                deptHeaders.join(","),
+                                ...deptRows.map((r) => r.join(",")),
+                            ].join("\n");
+                            const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement("a");
+                            link.href = url;
+                            link.download = `report_${new Date().toISOString().split("T")[0]}.csv`;
+                            link.click();
+                            URL.revokeObjectURL(url);
+                        }}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] text-[#121417] dark:text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
                         <span className="material-symbols-outlined text-[20px]">download</span>
                         Xuất báo cáo
                     </button>

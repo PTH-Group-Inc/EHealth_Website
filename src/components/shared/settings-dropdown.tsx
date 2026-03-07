@@ -74,7 +74,10 @@ export function SettingsDropdown() {
 
     const handleLogout = () => {
         setIsOpen(false);
-        // TODO: Gọi API logout, xóa token/session
+        // Xóa token/session khỏi localStorage
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
         router.push(ROUTES.PUBLIC.LOGIN);
     };
 

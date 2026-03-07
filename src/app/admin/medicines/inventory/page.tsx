@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 // Mock data — Kho thuốc
 const INVENTORY_STATS = [
@@ -31,6 +32,7 @@ const LOW_STOCK_ITEMS = [
 ];
 
 export default function InventoryPage() {
+    const router = useRouter();
     const [tab, setTab] = useState<"history" | "low">("history");
     const [typeFilter, setTypeFilter] = useState<"all" | "import" | "export">("all");
 
@@ -54,10 +56,27 @@ export default function InventoryPage() {
                         <p className="text-[#687582] dark:text-gray-400 mt-0.5 text-sm">Quản lý lịch sử nhập xuất và theo dõi tồn kho</p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-[#687582] rounded-xl text-sm font-medium transition-colors hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <button
+                            onClick={() => {
+                                const headers = ["Mã", "Ngày", "Loại", "Tên thuốc", "Số lượng", "Đơn vị", "Nhà cung cấp", "Ghi chú", "Người thực hiện"];
+                                const rows = INVENTORY_HISTORY.map((h) => [h.id, h.date, h.type === "import" ? "Nhập" : "Xuất", h.name, h.qty.toString(), h.unit, h.supplier || "-", h.note, h.user]);
+                                const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+                                const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement("a");
+                                link.href = url;
+                                link.download = `inventory_${new Date().toISOString().split("T")[0]}.csv`;
+                                link.click();
+                                URL.revokeObjectURL(url);
+                            }}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-[#687582] rounded-xl text-sm font-medium transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+                        >
                             <span className="material-symbols-outlined text-[18px]">download</span>Xuất Excel
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-medium transition-colors shadow-lg shadow-[#3C81C6]/20">
+                        <button
+                            onClick={() => router.push("/admin/medicines/inventory/import")}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-medium transition-colors shadow-lg shadow-[#3C81C6]/20"
+                        >
                             <span className="material-symbols-outlined text-[18px]">add</span>Nhập kho mới
                         </button>
                     </div>
@@ -166,7 +185,10 @@ export default function InventoryPage() {
                                         </span>
                                     </div>
                                 </div>
-                                <button className="px-3 py-1.5 bg-[#3C81C6] text-white text-xs font-medium rounded-lg hover:bg-[#2a6da8] transition-colors">
+                                <button
+                                    onClick={() => router.push("/admin/medicines/inventory/import")}
+                                    className="px-3 py-1.5 bg-[#3C81C6] text-white text-xs font-medium rounded-lg hover:bg-[#2a6da8] transition-colors"
+                                >
                                     Nhập thêm
                                 </button>
                             </div>

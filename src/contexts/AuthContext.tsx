@@ -99,6 +99,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
                     fullName: email.split('@')[0],
                     role: response.data.role.toLowerCase() as User['role'],
                 };
+
+                // Lưu token + user vào localStorage (AuthGuard cần đọc)
+                localStorage.setItem(AUTH_CONFIG.ACCESS_TOKEN_KEY, response.data.access_token || '');
+                localStorage.setItem(AUTH_CONFIG.REFRESH_TOKEN_KEY, response.data.refresh_token || '');
+                localStorage.setItem(AUTH_CONFIG.USER_KEY, JSON.stringify(userData));
+
                 setUser(userData);
 
                 // Chuyển hướng dựa theo role

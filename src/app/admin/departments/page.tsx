@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { UI_TEXT } from "@/constants/ui-text";
 import { MOCK_DEPARTMENTS } from "@/lib/mock-data/admin";
 import { DEPARTMENT_STATUS } from "@/constants/status";
@@ -15,6 +16,7 @@ type SortOrder = "asc" | "desc";
 export default function DepartmentsPage() {
     // State
     const [departments, setDepartments] = useState<Department[]>(MOCK_DEPARTMENTS);
+    const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -186,7 +188,7 @@ export default function DepartmentsPage() {
                         Tải xuống
                     </button>
                     <button
-                        onClick={handleAddDepartment}
+                        onClick={() => router.push("/admin/departments/new")}
                         className="flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform hover:-translate-y-0.5"
                     >
                         <span className="material-symbols-outlined text-[20px]">add_circle</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { UI_TEXT } from "@/constants/ui-text";
 import { MOCK_DOCTORS, MOCK_DOCTOR_STATS, MOCK_DEPARTMENTS } from "@/lib/mock-data/admin";
 import { DOCTOR_STATUS } from "@/constants/status";
@@ -14,6 +15,7 @@ type SortOrder = "asc" | "desc";
 
 export default function DoctorsPage() {
     // State
+    const router = useRouter();
     const [doctors, setDoctors] = useState<Doctor[]>(MOCK_DOCTORS);
     const [searchQuery, setSearchQuery] = useState("");
     const [departmentFilter, setDepartmentFilter] = useState<string>("all");
@@ -161,7 +163,7 @@ export default function DoctorsPage() {
                         {UI_TEXT.ADMIN.DOCTORS.CONFIGURE_SLOTS}
                     </button>
                     <button
-                        onClick={handleAddDoctor}
+                        onClick={() => router.push("/admin/doctors/new")}
                         className="flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform hover:-translate-y-0.5"
                     >
                         <span className="material-symbols-outlined text-[20px]">person_add</span>
@@ -365,7 +367,7 @@ export default function DoctorsPage() {
                                                         {
                                                             label: "Xem lịch trực",
                                                             icon: "calendar_month",
-                                                            onClick: () => alert("Tính năng đang phát triển"),
+                                                            onClick: () => router.push("/admin/schedules"),
                                                         },
                                                         {
                                                             label: "Xóa",

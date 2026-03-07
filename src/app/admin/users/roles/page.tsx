@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 // Mock data — Vai trò & Quyền hạn
-const ROLES = [
+const INITIAL_ROLES = [
     {
         id: "ROLE_ADMIN", name: "Quản trị viên", code: "ADMIN",
         description: "Toàn quyền quản lý hệ thống",
@@ -59,12 +59,82 @@ const PERMISSION_GROUPS = [
     { group: "Cài đặt", permissions: [{ key: "settings.write", label: "Thay đổi" }] },
 ];
 
-export default function RolesPage() {
-    const [selectedRole, setSelectedRole] = useState<string | null>(null);
-    const [search, setSearch] = useState("");
+type Role = typeof INITIAL_ROLES[number];
 
-    const selected = ROLES.find((r) => r.id === selectedRole);
-    const filteredRoles = ROLES.filter((r) => r.name.toLowerCase().includes(search.toLowerCase()) || r.code.toLowerCase().includes(search.toLowerCase()));
+export default function RolesPage() {
+    const [roles, setRoles] = useState(INITIAL_ROLES);
+    const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+    const [search, setSearch] = useState("");
+    const [editedPermissions, setEditedPermissions] = useState<string[]>([]);
+    const [hasChanges, setHasChanges] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newRole, setNewRole] = useState({ name: "", code: "", description: "" });
+    const [saveSuccess, setSaveSuccess] = useState(false);
+
+    const selected = roles.find((r) => r.id === selectedRoleId);
+    const filteredRoles = roles.filter((r) => r.name.toLowerCase().includes(search.toLowerCase()) || r.code.toLowerCase().includes(search.toLowerCase()));
+
+    const handleSelectRole = (roleId: string) => {
+        const role = roles.find((r) => r.id === roleId);
+        if (role) {
+            setSelectedRoleId(roleId);
+            setEditedPermissions([...role.permissions]);
+            setHasChanges(false);
+            setSaveSuccess(false);
+        }
+    };
+
+    const handleTogglePermission = (permKey: string) => {
+        setEditedPermissions((prev) => {
+            const updated = prev.includes(permKey) ? prev.filter((p) => p !== permKey) : [...prev, permKey];
+            return updated;
+        });
+        setHasChanges(true);
+        setSaveSuccess(false);
+    };
+
+    const handleSave = () => {
+        if (!selectedRoleId) return;
+        setRoles((prev) => prev.map((r) => r.id === selectedRoleId ? { ...r, permissions: editedPermissions } : r));
+        setHasChanges(false);
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2000);
+    };
+
+    const handleCopy = () => {
+        if (!selected) return;
+        const newRoleCopy: Role = {
+            ...selected,
+            id: "ROLE_" + Date.now(),
+            name: selected.name + " (Bản sao)",
+            code: selected.code + "_COPY",
+            users: 0,
+            permissions: [...editedPermissions],
+        };
+        setRoles((prev) => [...prev, newRoleCopy]);
+        setSelectedRoleId(newRoleCopy.id);
+        setEditedPermissions([...newRoleCopy.permissions]);
+        setHasChanges(false);
+    };
+
+    const handleAddRole = () => {
+        if (!newRole.name.trim() || !newRole.code.trim()) return;
+        const role: Role = {
+            id: "ROLE_" + Date.now(),
+            name: newRole.name,
+            code: newRole.code.toUpperCase(),
+            description: newRole.description,
+            users: 0,
+            status: "active",
+            permissions: [],
+        };
+        setRoles((prev) => [...prev, role]);
+        setSelectedRoleId(role.id);
+        setEditedPermissions([]);
+        setShowAddModal(false);
+        setNewRole({ name: "", code: "", description: "" });
+        setHasChanges(false);
+    };
 
     return (
         <div className="space-y-6">
@@ -83,7 +153,10 @@ export default function RolesPage() {
                         <h1 className="text-2xl font-black tracking-tight text-[#121417] dark:text-white">Phân quyền & Vai trò</h1>
                         <p className="text-[#687582] dark:text-gray-400 mt-0.5 text-sm">Quản lý vai trò và quyền hạn của từng nhóm người dùng</p>
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-medium transition-colors shadow-lg shadow-[#3C81C6]/20">
+                    <button
+                        onClick={() => window.location.href = '/admin/users/roles/new'}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-medium transition-colors shadow-lg shadow-[#3C81C6]/20"
+                    >
                         <span className="material-symbols-outlined text-[18px]">add</span>
                         Thêm vai trò
                     </button>
@@ -103,12 +176,12 @@ export default function RolesPage() {
                     </div>
                     <div className="divide-y divide-[#f0f1f3] dark:divide-[#2d353e]">
                         {filteredRoles.map((role) => (
-                            <button key={role.id} onClick={() => setSelectedRole(role.id)}
-                                className={`w-full px-5 py-4 text-left hover:bg-[#f6f7f8] dark:hover:bg-[#13191f] transition-colors ${selectedRole === role.id ? "bg-[#3C81C6]/5 dark:bg-[#3C81C6]/10 border-l-3 border-[#3C81C6]" : ""}`}>
+                            <button key={role.id} onClick={() => handleSelectRole(role.id)}
+                                className={`w-full px-5 py-4 text-left hover:bg-[#f6f7f8] dark:hover:bg-[#13191f] transition-colors ${selectedRoleId === role.id ? "bg-[#3C81C6]/5 dark:bg-[#3C81C6]/10 border-l-3 border-[#3C81C6]" : ""}`}>
                                 <div className="flex items-center justify-between mb-1">
                                     <h4 className="text-sm font-bold text-[#121417] dark:text-white">{role.name}</h4>
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${role.status === "active" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" : "bg-gray-100 dark:bg-gray-800 text-gray-500"}`}>
-                                        {role.status === "active" ? "Đang Hoạt Động" : "Ngưng Hoạt Động"}
+                                        {role.status === "active" ? "Hoạt Động" : "Ngưng"}
                                     </span>
                                 </div>
                                 <p className="text-xs text-[#687582] dark:text-gray-500 mb-1.5">{role.description}</p>
@@ -129,14 +202,19 @@ export default function RolesPage() {
                             <div className="px-5 py-4 border-b border-[#f0f1f3] dark:border-[#2d353e] flex items-center justify-between">
                                 <div>
                                     <h3 className="text-sm font-bold text-[#121417] dark:text-white">Quyền hạn: {selected.name}</h3>
-                                    <p className="text-xs text-[#687582] dark:text-gray-500">{selected.permissions.length} quyền đang bật</p>
+                                    <p className="text-xs text-[#687582] dark:text-gray-500">{editedPermissions.length} quyền đang bật</p>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <button className="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-[#687582] rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium">
+                                    <button onClick={handleCopy} className="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-[#687582] rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium">
                                         <span className="material-symbols-outlined text-[14px] align-middle mr-1">content_copy</span>Sao chép
                                     </button>
-                                    <button className="text-xs px-3 py-1.5 bg-[#3C81C6] text-white rounded-lg hover:bg-[#2a6da8] transition-colors font-medium">
-                                        <span className="material-symbols-outlined text-[14px] align-middle mr-1">save</span>Lưu thay đổi
+                                    <button onClick={handleSave} disabled={!hasChanges}
+                                        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1 ${saveSuccess ? "bg-green-500 text-white" :
+                                            hasChanges ? "bg-[#3C81C6] text-white hover:bg-[#2a6da8]" :
+                                                "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
+                                            }`}>
+                                        <span className="material-symbols-outlined text-[14px]">{saveSuccess ? "check" : "save"}</span>
+                                        {saveSuccess ? "Đã lưu!" : "Lưu thay đổi"}
                                     </button>
                                 </div>
                             </div>
@@ -161,7 +239,9 @@ export default function RolesPage() {
                                                     <td className="px-3 py-3 text-sm text-[#687582] dark:text-gray-400">{p.label}</td>
                                                     <td className="px-3 py-3 text-center">
                                                         <label className="relative inline-flex items-center cursor-pointer">
-                                                            <input type="checkbox" className="sr-only peer" defaultChecked={selected.permissions.includes(p.key)} />
+                                                            <input type="checkbox" className="sr-only peer"
+                                                                checked={editedPermissions.includes(p.key)}
+                                                                onChange={() => handleTogglePermission(p.key)} />
                                                             <div className="w-9 h-5 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-[#3C81C6] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
                                                         </label>
                                                     </td>
@@ -175,11 +255,49 @@ export default function RolesPage() {
                     ) : (
                         <div className="flex flex-col items-center justify-center h-96 text-[#687582] dark:text-gray-500">
                             <span className="material-symbols-outlined text-[48px] mb-3 opacity-30">admin_panel_settings</span>
-                            <p className="text-sm">Chọn một vai trò ở cây bên trái để xem quyền hạn</p>
+                            <p className="text-sm">Chọn một vai trò ở bên trái để xem và chỉnh sửa quyền hạn</p>
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Add Role Modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
+                    <div className="bg-white dark:bg-[#1e242b] rounded-2xl w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+                            <h2 className="text-lg font-bold text-[#121417] dark:text-white flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#3C81C6]">add_circle</span>
+                                Thêm vai trò mới
+                            </h2>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên vai trò *</label>
+                                <input type="text" value={newRole.name} onChange={(e) => setNewRole((p) => ({ ...p, name: e.target.value }))} placeholder="VD: Kỹ thuật viên"
+                                    className="w-full py-2.5 px-4 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Mã vai trò *</label>
+                                <input type="text" value={newRole.code} onChange={(e) => setNewRole((p) => ({ ...p, code: e.target.value }))} placeholder="VD: TECHNICIAN"
+                                    className="w-full py-2.5 px-4 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white uppercase" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Mô tả</label>
+                                <textarea value={newRole.description} onChange={(e) => setNewRole((p) => ({ ...p, description: e.target.value }))} rows={2} placeholder="Mô tả vai trò..."
+                                    className="w-full py-2.5 px-4 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white resize-none" />
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3">
+                            <button onClick={() => setShowAddModal(false)} className="px-5 py-2.5 bg-gray-100 dark:bg-gray-800 text-[#687582] rounded-xl text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Hủy</button>
+                            <button onClick={handleAddRole} disabled={!newRole.name.trim() || !newRole.code.trim()}
+                                className="px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[18px]">add</span> Tạo vai trò
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

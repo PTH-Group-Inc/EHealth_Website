@@ -1,25 +1,37 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ADMIN_MENU_ITEMS, type AdminMenuItem } from "@/constants/routes";
 import { UI_TEXT } from "@/constants/ui-text";
 
-// Sidebar menu item — hỗ trợ nhóm mở rộng
-function SidebarItem({ item, pathname }: { item: AdminMenuItem; pathname: string }) {
-    // Kiểm tra active
+// Helper: kiểm tra item có child đang active không
+function isChildActiveForItem(item: AdminMenuItem, pathname: string) {
+    if (!item.children || item.children.length === 0) return false;
+    return item.children.some((c) => pathname === c.href || pathname.startsWith(c.href + '/'));
+}
+
+// Sidebar menu item — nhận trạng thái open từ cha
+function SidebarItem({
+    item,
+    pathname,
+    isOpen,
+    onToggle,
+}: {
+    item: AdminMenuItem;
+    pathname: string;
+    isOpen: boolean;
+    onToggle: () => void;
+}) {
     const hasChildren = item.children && item.children.length > 0;
-    const isChildActive = hasChildren && item.children!.some((c) => pathname.startsWith(c.href));
-    const isDirectActive = item.href ? (item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href)) : false;
+    const isChildActive = hasChildren && isChildActiveForItem(item, pathname);
+    const isDirectActive = item.href
+        ? item.href === "/admin"
+            ? pathname === "/admin"
+            : pathname === item.href || pathname.startsWith(item.href + '/')
+        : false;
     const isActive = isDirectActive || isChildActive;
-
-    const [isOpen, setIsOpen] = useState(isChildActive);
-
-    // Tự động mở khi child active
-    useEffect(() => {
-        if (isChildActive) setIsOpen(true);
-    }, [isChildActive]);
 
     // Item đơn (không có children)
     if (!hasChildren && item.href) {
@@ -41,11 +53,11 @@ function SidebarItem({ item, pathname }: { item: AdminMenuItem; pathname: string
         );
     }
 
-    // Item nhóm (có children)
+    // Item nhóm (có children) — accordion
     return (
         <div>
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={onToggle}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${isActive
                     ? "bg-[#3C81C6]/5 text-[#3C81C6] dark:bg-[#3C81C6]/10"
                     : "text-[#687582] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -62,11 +74,11 @@ function SidebarItem({ item, pathname }: { item: AdminMenuItem; pathname: string
                 </span>
             </button>
 
-            {/* Submenu */}
+            {/* Submenu — accordion animation */}
             <div className={`overflow-hidden transition-all duration-200 ${isOpen ? "max-h-48 mt-0.5" : "max-h-0"}`}>
                 <div className="ml-[22px] pl-4 border-l-2 border-[#e5e7eb] dark:border-[#2d353e] space-y-0.5 py-0.5">
                     {item.children!.map((child) => {
-                        const childActive = pathname.startsWith(child.href);
+                        const childActive = pathname === child.href || pathname.startsWith(child.href + '/');
                         return (
                             <Link
                                 key={child.key}
@@ -88,6 +100,27 @@ function SidebarItem({ item, pathname }: { item: AdminMenuItem; pathname: string
 
 export function AdminSidebar() {
     const pathname = usePathname();
+
+    // Accordion: chỉ 1 nhóm mở tại 1 thời điểm
+    const [openGroupKey, setOpenGroupKey] = useState<string | null>(null);
+
+    // Tự động mở nhóm active khi pathname thay đổi
+    const getActiveGroupKey = useCallback((path: string) => {
+        for (const item of ADMIN_MENU_ITEMS) {
+            if (item.children && item.children.length > 0 && isChildActiveForItem(item, path)) {
+                return item.key;
+            }
+        }
+        return null;
+    }, []);
+
+    useEffect(() => {
+        setOpenGroupKey(getActiveGroupKey(pathname));
+    }, [pathname, getActiveGroupKey]);
+
+    const handleToggleGroup = (key: string) => {
+        setOpenGroupKey((prev) => (prev === key ? null : key));
+    };
 
     return (
         <aside className="w-72 bg-white dark:bg-[#1e242b] border-r border-[#dde0e4] dark:border-[#2d353e] flex flex-col flex-shrink-0 h-full transition-all duration-300">
@@ -111,7 +144,13 @@ export function AdminSidebar() {
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto px-4 py-2 space-y-0.5">
                 {ADMIN_MENU_ITEMS.map((item) => (
-                    <SidebarItem key={item.key} item={item} pathname={pathname} />
+                    <SidebarItem
+                        key={item.key}
+                        item={item}
+                        pathname={pathname}
+                        isOpen={openGroupKey === item.key}
+                        onToggle={() => handleToggleGroup(item.key)}
+                    />
                 ))}
             </nav>
 

@@ -52,7 +52,7 @@ export default function BillingPage() {
                     <h1 className="text-2xl font-bold text-[#121417] dark:text-white">Thanh toán & Hóa đơn</h1>
                     <p className="text-sm text-[#687582] mt-1">Quản lý thanh toán viện phí và bảo hiểm</p>
                 </div>
-                <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-medium transition-colors">
+                <button onClick={() => window.location.href = '/portal/receptionist/billing/new'} className="flex items-center gap-2 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-medium transition-colors">
                     <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>receipt_long</span>Tạo hóa đơn mới
                 </button>
             </div>

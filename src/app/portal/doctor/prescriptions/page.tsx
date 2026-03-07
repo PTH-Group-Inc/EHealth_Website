@@ -120,7 +120,7 @@ export default function PrescriptionsPage() {
                     </div>
                     <div className="flex items-center gap-3">
                         <button
-                            onClick={() => setNewModalOpen(true)}
+                            onClick={() => window.location.href = '/portal/doctor/prescriptions/new'}
                             className="flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform hover:-translate-y-0.5"
                         >
                             <span className="material-symbols-outlined text-[20px]">add</span>

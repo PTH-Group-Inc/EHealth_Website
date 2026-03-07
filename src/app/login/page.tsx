@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
+import { AUTH_CONFIG } from "@/config";
 
 // Các vai trò đăng nhập
 const ROLE_OPTIONS = [
@@ -30,6 +31,17 @@ export default function LoginPage() {
 
         const role = ROLE_OPTIONS.find((r) => r.value === selectedRole);
         if (role) {
+            // Lưu token + user vào localStorage để AuthGuard cho phép truy cập
+            const userData = {
+                id: "demo-" + role.value,
+                email: email || role.value + "@ehealth.vn",
+                fullName: email ? email.split("@")[0] : role.label,
+                role: role.value,
+            };
+            localStorage.setItem(AUTH_CONFIG.ACCESS_TOKEN_KEY, "demo-token-" + role.value);
+            localStorage.setItem(AUTH_CONFIG.REFRESH_TOKEN_KEY, "demo-refresh-" + role.value);
+            localStorage.setItem(AUTH_CONFIG.USER_KEY, JSON.stringify(userData));
+
             router.push(role.route);
         }
     };

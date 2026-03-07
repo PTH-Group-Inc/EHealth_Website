@@ -44,7 +44,7 @@ export default function PharmacistInventory() {
                     <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm font-medium hover:border-[#3C81C6] transition-colors">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>download</span>Xuất Excel
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-medium transition-colors shadow-lg shadow-[#3C81C6]/20">
+                    <button onClick={() => window.location.href = '/portal/pharmacist/inventory/import'} className="flex items-center gap-2 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-medium transition-colors shadow-lg shadow-[#3C81C6]/20">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>Nhập thuốc
                     </button>
                 </div>
