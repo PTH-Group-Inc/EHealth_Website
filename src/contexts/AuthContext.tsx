@@ -230,16 +230,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Đăng xuất
     // ============================================
     const logout = async () => {
+        // Xóa state trước (đồng bộ) để tránh component tree re-render với loading state
+        setUser(null);
+        setMenus([]);
+        setPermissions([]);
+
+        // Gọi API logout (async) — không block UI
         try {
-            setIsLoading(true);
             await authService.logout();
-            setUser(null);
-            setMenus([]);
-            setPermissions([]);
-            router.push('/login');
-        } finally {
-            setIsLoading(false);
+        } catch {
+            // Ignore — localStorage đã được xóa bởi authService.logout() trong finally block
         }
+
+        router.push('/login');
     };
 
     // ============================================
