@@ -50,6 +50,7 @@ export interface ApiError {
 export interface User extends BaseEntity {
     email: string;
     fullName: string;
+    phone?: string;
     avatar?: string;
     role: Role;
     status: UserStatus;

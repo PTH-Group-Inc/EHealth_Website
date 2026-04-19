@@ -39,6 +39,50 @@ export const ROUTES = {
     STATISTICS_REVENUE: "/admin/statistics/revenue",
     ACTIVITY_LOGS: "/admin/activity-logs",
     SETTINGS: "/admin/settings",
+    
+    // --- New routes based on new menu structure ---
+    // Nhóm 1. Quản trị hệ thống
+    NOTIFICATIONS: "/admin/notifications",
+    CATALOGS: "/admin/catalogs",
+    SYSTEM_CONFIG: "/admin/system-config",
+
+    // Nhóm 2. Quản lý cơ sở y tế
+    BRANCHES: "/admin/branches",
+    SPECIALTIES: "/admin/specialties",
+    SERVICES: "/admin/services",
+    ROOMS: "/admin/rooms",
+    EQUIPMENT: "/admin/equipment",
+    BEDS: "/admin/beds",
+
+    // Nhóm 3. Quản lý khám chữa bệnh
+    WORK_SCHEDULES: "/admin/work-schedules",
+    SCHEDULE_CONFIGS: "/admin/schedule-configs",
+    PATIENTS: "/admin/patients",
+    APPOINTMENTS: "/admin/appointments",
+    APPOINTMENT_OPS: "/admin/appointment-ops",
+    APPOINTMENT_RESCHEDULING: "/admin/appointment-rescheduling",
+
+    // Nhóm 4. Quản lý Hồ sơ bệnh án
+    ENCOUNTERS: "/admin/encounters",
+    CLINICAL_EXAMINATIONS: "/admin/clinical-examinations",
+    DIAGNOSES: "/admin/diagnoses",
+    MEDICAL_RECORDS: "/admin/medical-records",
+    PRESCRIPTIONS: "/admin/prescriptions",
+    TREATMENT_PLANS: "/admin/treatment-plans",
+    EHR: "/admin/ehr",
+
+    // Nhóm 5. Quản lý Dược – kho – tài chính
+    PHARMACY_INVENTORY: "/admin/pharmacy-inventory",
+    BILLING: "/admin/billing",
+    CASHIER: "/admin/cashier",
+
+    // Nhóm 6. Quản lý Khám từ xa
+    TELEMEDICINE_CONFIGS: "/admin/telemedicine-configs",
+    TELEMEDICINE_BOOKINGS: "/admin/telemedicine-bookings",
+    TELEMEDICINE_RESULTS: "/admin/telemedicine-results",
+
+    // Nhóm 7. Báo cáo
+    REPORTS_DASHBOARD: "/admin/reports-dashboard",
   },
 
   // Portal routes (Doctor, Pharmacist, Staff)
@@ -162,61 +206,92 @@ export const ADMIN_MENU_ITEMS: AdminMenuItem[] = [
   {
     key: "dashboard",
     href: ROUTES.ADMIN.DASHBOARD,
-    icon: "dashboard",
+    icon: "home",
     label: "Trang chủ",
   },
   {
-    key: "users",
-    icon: "badge",
-    label: "Quản lý nhân sự",
+    key: "system_admin",
+    icon: "admin_panel_settings",
+    label: "Quản trị hệ thống",
     children: [
-      { key: "users-list", href: ROUTES.ADMIN.USERS, label: "Danh sách nhân sự" },
-      { key: "doctors-list", href: ROUTES.ADMIN.DOCTORS, label: "Danh sách Bác sĩ" },
-      { key: "users-roles", href: ROUTES.ADMIN.USERS_ROLES, label: "Phân quyền & Vai trò" },
+      { key: "users", href: ROUTES.ADMIN.USERS, label: "Tài khoản" },
+      { key: "doctors", href: ROUTES.ADMIN.DOCTORS, label: "Nhân sự y tế" },
+      { key: "roles", href: ROUTES.ADMIN.USERS_ROLES, label: "Phân quyền" },
+      { key: "notifications", href: ROUTES.ADMIN.NOTIFICATIONS, label: "Thông báo" },
+      { key: "catalogs", href: ROUTES.ADMIN.CATALOGS, label: "Danh mục hệ thống" },
+      { key: "system_config", href: ROUTES.ADMIN.SYSTEM_CONFIG, label: "Cấu hình hệ thống" },
     ],
   },
   {
-    key: "hospital",
-    icon: "local_hospital",
-    label: "Quản lý bệnh viện",
+    key: "facility_management",
+    icon: "domain",
+    label: "Quản lý cơ sở y tế",
     children: [
-      { key: "departments", href: ROUTES.ADMIN.DEPARTMENTS, label: "Chuyên khoa" },
       { key: "hospitals", href: ROUTES.ADMIN.HOSPITALS, label: "Cơ sở y tế" },
-      { key: "time-slots", href: ROUTES.ADMIN.TIME_SLOTS, label: "Cấu hình khung giờ" },
-      { key: "schedules", href: ROUTES.ADMIN.SCHEDULES, label: "Lịch trực" },
+      { key: "branches", href: ROUTES.ADMIN.BRANCHES, label: "Chi nhánh" },
+      { key: "departments", href: ROUTES.ADMIN.DEPARTMENTS, label: "Phòng ban / khoa" },
+      { key: "specialties", href: ROUTES.ADMIN.SPECIALTIES, label: "Chuyên khoa" },
+      { key: "services", href: ROUTES.ADMIN.SERVICES, label: "Dịch vụ" },
+      { key: "rooms", href: ROUTES.ADMIN.ROOMS, label: "Phòng khám" },
+      { key: "equipment", href: ROUTES.ADMIN.EQUIPMENT, label: "Thiết bị" },
+      { key: "beds", href: ROUTES.ADMIN.BEDS, label: "Giường bệnh" },
     ],
   },
   {
-    key: "medicines",
-    icon: "medication",
-    label: "Kho thuốc",
+    key: "clinical_management",
+    icon: "stethoscope",
+    label: "Quản lý khám chữa bệnh",
     children: [
-      { key: "medicines-list", href: ROUTES.ADMIN.MEDICINES, label: "Danh mục thuốc" },
-      { key: "medicines-import", href: ROUTES.ADMIN.MEDICINES_IMPORT, label: "Nhập kho" },
-      { key: "medicines-export", href: ROUTES.ADMIN.MEDICINES_EXPORT, label: "Xuất kho" },
-      { key: "medicines-stock", href: ROUTES.ADMIN.MEDICINES_STOCK, label: "Tồn kho" },
+      { key: "work_schedules", href: ROUTES.ADMIN.WORK_SCHEDULES, label: "Lịch làm việc" },
+      { key: "schedule_configs", href: ROUTES.ADMIN.SCHEDULE_CONFIGS, label: "Cấu hình lịch khám" },
+      { key: "patients", href: ROUTES.ADMIN.PATIENTS, label: "Bệnh nhân" },
+      { key: "appointments", href: ROUTES.ADMIN.APPOINTMENTS, label: "Lịch khám" },
+      { key: "appointment_ops", href: ROUTES.ADMIN.APPOINTMENT_OPS, label: "Xác nhận / nhắc lịch / queue" },
+      { key: "appointment_rescheduling", href: ROUTES.ADMIN.APPOINTMENT_RESCHEDULING, label: "Dời lịch / điều phối" },
     ],
   },
   {
-    key: "statistics",
+    key: "medical_records",
+    icon: "folder_shared",
+    label: "Quản lý Hồ sơ bệnh án",
+    children: [
+      { key: "encounters", href: ROUTES.ADMIN.ENCOUNTERS, label: "Encounter" },
+      { key: "clinical_examinations", href: ROUTES.ADMIN.CLINICAL_EXAMINATIONS, label: "Clinical examination" },
+      { key: "diagnoses", href: ROUTES.ADMIN.DIAGNOSES, label: "Diagnosis" },
+      { key: "patient_medical_records", href: ROUTES.ADMIN.MEDICAL_RECORDS, label: "Medical records" },
+      { key: "prescriptions", href: ROUTES.ADMIN.PRESCRIPTIONS, label: "Prescription" },
+      { key: "treatment_plans", href: ROUTES.ADMIN.TREATMENT_PLANS, label: "Treatment plan" },
+      { key: "ehr", href: ROUTES.ADMIN.EHR, label: "EHR tổng hợp" },
+    ],
+  },
+  {
+    key: "pharmacy_finance",
+    icon: "account_balance_wallet",
+    label: "Dược – kho – tài chính",
+    children: [
+      { key: "pharmacy_inventory", href: ROUTES.ADMIN.PHARMACY_INVENTORY, label: "Dược & kho" },
+      { key: "billing", href: ROUTES.ADMIN.BILLING, label: "Billing" },
+      { key: "cashier", href: ROUTES.ADMIN.CASHIER, label: "Thu ngân / QR / đối soát" },
+    ],
+  },
+  {
+    key: "telemedicine",
+    icon: "videocam",
+    label: "Khám từ xa",
+    children: [
+      { key: "telemedicine_configs", href: ROUTES.ADMIN.TELEMEDICINE_CONFIGS, label: "Loại khám & cấu hình" },
+      { key: "telemedicine_bookings", href: ROUTES.ADMIN.TELEMEDICINE_BOOKINGS, label: "Booking & room" },
+      { key: "telemedicine_results", href: ROUTES.ADMIN.TELEMEDICINE_RESULTS, label: "Theo dõi khám online" }, // Shortened for display
+    ],
+  },
+  {
+    key: "reports",
     icon: "bar_chart",
-    label: "Thống kê",
+    label: "Báo cáo",
     children: [
-      { key: "statistics-overview", href: ROUTES.ADMIN.STATISTICS, label: "Tổng quan" },
-      { key: "statistics-revenue", href: ROUTES.ADMIN.STATISTICS_REVENUE, label: "Báo cáo doanh thu" },
+      { key: "reports_dashboard", href: ROUTES.ADMIN.REPORTS_DASHBOARD, label: "Dashboard" },
+      { key: "statistics_revenue", href: ROUTES.ADMIN.STATISTICS_REVENUE, label: "Revenue" },
     ],
-  },
-  {
-    key: "activity-logs",
-    href: ROUTES.ADMIN.ACTIVITY_LOGS,
-    icon: "history",
-    label: "Nhật ký hoạt động",
-  },
-  {
-    key: "settings",
-    href: ROUTES.ADMIN.SETTINGS,
-    icon: "settings",
-    label: "Cài đặt",
   },
 ];
 
