@@ -7,7 +7,6 @@ import { ROLES, ROLE_LABELS, ROLE_COLORS, type Role } from "@/constants/roles";
 import { USER_STATUS } from "@/constants/status";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { UserFormModal } from "@/features/users/components/user-form-modal";
-import { PermissionsModal } from "@/features/users/components/permissions-modal";
 import * as userService from "@/services/userService";
 import type { User } from "@/types";
 import { validateFile } from "@/utils/fileValidation";
@@ -35,7 +34,6 @@ export default function UsersPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [roleFilter, setRoleFilter] = useState<string>("all");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [sortField, setSortField] = useState<SortField>("createdAt");
     const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
@@ -49,16 +47,51 @@ export default function UsersPage() {
                 const res: any = await userService.getUsers({ limit: 100 });
                 const items = res?.data?.items ?? res?.items ?? res?.data?.data ?? res?.data ?? res ?? [];
                 if (Array.isArray(items) && items.length > 0) {
-                    setUsers(items.map((u: Record<string, unknown>) => ({
-                        id: String(u.users_id ?? u.id ?? ""),
-                        fullName: (u as Record<string, unknown> & { profile?: { full_name?: string } }).profile?.full_name ?? u.full_name ?? u.fullName ?? u.email ?? "",
-                        email: u.email ?? "",
-                        phone: u.phone ?? u.phone_number ?? "",
-                        role: Array.isArray(u.roles) && (u.roles as string[]).length > 0 ? (u.roles as string[])[0].toLowerCase() : "staff",
-                        status: u.status ?? "ACTIVE",
-                        avatar: (u as Record<string, unknown> & { profile?: { avatar_url?: string } }).profile?.avatar_url ?? u.avatar ?? "",
-                        createdAt: u.created_at ?? u.createdAt ?? "",
-                    })) as unknown as User[]);
+                    setUsers(items.map((u: any) => {
+                        let idStr = "";
+                        if (u.users_id) idStr = typeof u.users_id === 'object' ? String(u.users_id.id || u.users_id._id || "") : String(u.users_id);
+                        else if (u.id) idStr = typeof u.id === 'object' ? String(u.id.id || u.id._id || "") : String(u.id);
+
+                        let avatarStr = "";
+                        const uAvatar = u.profile?.avatar_url ?? u.avatar;
+                        if (typeof uAvatar === 'string') {
+                            avatarStr = uAvatar;
+                        } else if (Array.isArray(uAvatar) && uAvatar.length > 0) {
+                            avatarStr = typeof uAvatar[0] === 'string' ? uAvatar[0] : (uAvatar[0]?.url || uAvatar[0]?.path || "");
+                        } else if (uAvatar && typeof uAvatar === 'object') {
+                            avatarStr = uAvatar.url || uAvatar.path || "";
+                        }
+
+                        let roleVal = "staff";
+                        if (Array.isArray(u.roles) && u.roles.length > 0) {
+                            const r = u.roles[0];
+                            if (typeof r === 'string') roleVal = r.toLowerCase();
+                            else if (r && typeof r === 'object') roleVal = String(r.name || r.role || "staff").toLowerCase();
+                        } else if (typeof u.roles === 'string') {
+                            roleVal = u.roles.toLowerCase();
+                        }
+
+                        let emailStr = "";
+                        if (typeof u.email === 'string') emailStr = u.email;
+                        else if (Array.isArray(u.email)) emailStr = String(u.email[0] || "");
+                        else if (u.email && typeof u.email === 'object') emailStr = String(u.email.address || u.email.email || "");
+
+                        return {
+                            id: idStr || "unknown_id",
+                            fullName: String(u.profile?.full_name ?? u.full_name ?? u.fullName ?? emailStr ?? ""),
+                            email: emailStr,
+                            phone: String(u.phone ?? u.phone_number ?? ""),
+                            role: roleVal,
+                            roles: Array.isArray(u.roles) ? u.roles.map((r: any) => typeof r === 'string' ? r : String(r?.name || r?.role || "")).filter(Boolean) : [roleVal],
+                            status: String(u.status ?? "ACTIVE"),
+                            avatar: avatarStr,
+                            createdAt: String(u.created_at ?? u.createdAt ?? ""),
+                            dob: u.profile?.dob ?? u.dob ?? "",
+                            gender: u.profile?.gender ?? u.gender ?? "",
+                            identity_card_number: u.profile?.identity_card_number ?? u.identity_card_number ?? "",
+                            address: u.profile?.address ?? u.address ?? "",
+                        };
+                    }) as unknown as User[]);
                 }
             } catch (err) {
                 console.error('Lỗi tải danh sách người dùng:', err);
@@ -191,16 +224,32 @@ export default function UsersPage() {
         }
     };
 
-    const handleSubmitUser = async (userData: Partial<User>) => {
+    const handleSubmitUser = async (userData: Partial<User> & { file?: File }) => {
         try {
+            const { file, ...coreData } = userData;
+
             if (editingUser) {
-                await userService.updateUser(editingUser.id, userData as any);
+                await userService.updateUser(editingUser.id, coreData as any);
+                let finalUserData = { ...coreData };
+                if (file) {
+                    const uploadRes = await userService.uploadUserAvatar(editingUser.id, file);
+                    if (uploadRes?.data?.url) {
+                        finalUserData.avatar = uploadRes.data.url;
+                    }
+                }
                 setUsers((prev) =>
-                    prev.map((u) => (u.id === editingUser.id ? { ...u, ...userData } : u))
+                    prev.map((u) => (u.id === editingUser.id ? { ...u, ...finalUserData } : u))
                 );
             } else {
-                const created = await userService.createUser(userData as any);
-                setUsers((prev) => [created as unknown as User, ...prev]);
+                const created: any = await userService.createUser(coreData as any);
+                let finalUser = { ...created };
+                if (file && created?.id) {
+                    const uploadRes = await userService.uploadUserAvatar(created.id, file);
+                    if (uploadRes?.data?.url) {
+                        finalUser.avatar = uploadRes.data.url;
+                    }
+                }
+                setUsers((prev) => [finalUser as unknown as User, ...prev]);
             }
         } catch (err) {
             console.error('Lưu người dùng thất bại:', err);
@@ -255,13 +304,6 @@ export default function UsersPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setIsPermissionsOpen(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] text-[#121417] dark:text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
-                        {UI_TEXT.ADMIN.USERS.CONFIGURE_PERMISSIONS}
-                    </button>
                     <label className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] text-[#121417] dark:text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer">
                         <span className="material-symbols-outlined text-[20px]">upload</span>
                         Import
@@ -604,12 +646,6 @@ export default function UsersPage() {
                 onSubmit={handleSubmitUser}
                 initialData={editingUser || undefined}
                 mode={editingUser ? "edit" : "create"}
-            />
-
-            {/* Permissions Modal */}
-            <PermissionsModal
-                isOpen={isPermissionsOpen}
-                onClose={() => setIsPermissionsOpen(false)}
             />
         </>
     );

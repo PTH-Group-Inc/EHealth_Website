@@ -24,6 +24,11 @@ export interface User {
     department?: string;
     createdAt: string;
     updatedAt: string;
+    dob?: string;
+    gender?: 'MALE' | 'FEMALE' | 'OTHER' | string;
+    identity_card_number?: string;
+    address?: string;
+    roles?: string[];
 }
 
 export interface CreateUserData {
@@ -178,6 +183,25 @@ export const deleteUser = async (id: string): Promise<void> => {
         await axiosClient.delete(USER_ENDPOINTS.DETAIL(id));
     } catch (error: any) {
         throw new Error(error.response?.data?.message || 'Xóa người dùng thất bại');
+    }
+};
+
+// ============================================
+// Upload Avatar
+// ============================================
+
+export const uploadUserAvatar = async (id: string, file: File): Promise<{ success: boolean; data: { url: string; public_id: string } }> => {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await axiosClient.post(USER_ENDPOINTS.AVATAR(id), formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Tải ảnh đại diện thất bại');
     }
 };
 
