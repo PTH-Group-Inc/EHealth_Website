@@ -182,7 +182,7 @@ function ReviewsTab() {
                                     <span className="ml-1 font-bold text-sm text-[#121417] dark:text-white">{r.rating}/5</span>
                                 </div>
                             </div>
-                            {r.comment && <p className="text-sm text-[#687582] dark:text-gray-400 italic">"{r.comment}"</p>}
+                            {r.comment && <p className="text-sm text-[#687582] dark:text-gray-400 italic">&quot;{r.comment}&quot;</p>}
                             <div className="text-xs text-[#687582] dark:text-gray-500 mt-2">{formatDT(r.createdAt)}</div>
                         </div>
                     ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
 import { UI_TEXT } from "@/constants/ui-text";
 import { ROLES, ROLE_LABELS, ROLE_COLORS, type Role } from "@/constants/roles";
@@ -32,12 +32,17 @@ export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const debouncedSearch = useDeferredValue(searchQuery);
     const [roleFilter, setRoleFilter] = useState<string>("all");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [sortField, setSortField] = useState<SortField>("createdAt");
     const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
     const [viewMode, setViewMode] = useState<"table" | "card">("card");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [customPageSize, setCustomPageSize] = useState("");
+    const pageInputRef = useRef<HTMLInputElement>(null);
 
     // Load users from API
     useEffect(() => {
@@ -102,42 +107,74 @@ export default function UsersPage() {
         fetchUsers();
     }, []);
 
-    const stats = {
+    const stats = useMemo(() => ({
         total: users.length,
         active: users.filter(u => u.status === USER_STATUS.ACTIVE).length,
         locked: users.filter(u => u.status === USER_STATUS.LOCKED).length,
         inactive: users.filter(u => u.status !== USER_STATUS.ACTIVE && u.status !== USER_STATUS.LOCKED).length,
         roles: new Set(users.map(u => u.role)).size,
-    };
+    }), [users]);
 
     // Filtered and sorted users
     const filteredUsers = useMemo(() => {
+        // Cache toLowerCase 1 lần duy nhất thay vì gọi lại mỗi item
+        const query = debouncedSearch.toLowerCase();
+
         let result = users.filter((user) => {
             const matchesSearch =
-                searchQuery === "" ||
-                (user.fullName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (user.email || "").toLowerCase().includes(searchQuery.toLowerCase());
+                query === "" ||
+                (user.fullName || "").toLowerCase().includes(query) ||
+                (user.email || "").toLowerCase().includes(query);
             const matchesRole = roleFilter === "all" || user.role === roleFilter;
             return matchesSearch && matchesRole;
         });
 
-        // Sort
+        // Sort - dùng Intl.Collator cho performance tốt hơn localeCompare trên dataset lớn
+        const collator = new Intl.Collator("vi", { sensitivity: "base" });
         result.sort((a, b) => {
             let comparison = 0;
             if (sortField === "fullName") {
-                comparison = (a.fullName || "").localeCompare(b.fullName || "");
+                comparison = collator.compare(a.fullName || "", b.fullName || "");
             } else if (sortField === "role") {
-                comparison = (a.role || "").localeCompare(b.role || "");
+                comparison = collator.compare(a.role || "", b.role || "");
             } else if (sortField === "createdAt") {
-                comparison = (a.createdAt || "").localeCompare(b.createdAt || "");
+                comparison = (a.createdAt || "") < (b.createdAt || "") ? -1 : (a.createdAt || "") > (b.createdAt || "") ? 1 : 0;
             } else if (sortField === "status") {
-                comparison = (a.status || "").localeCompare(b.status || "");
+                comparison = collator.compare(a.status || "", b.status || "");
             }
             return sortOrder === "asc" ? comparison : -comparison;
         });
 
         return result;
-    }, [users, searchQuery, roleFilter, sortField, sortOrder]);
+    }, [users, debouncedSearch, roleFilter, sortField, sortOrder]);
+
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+    const paginatedUsers = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredUsers, currentPage, itemsPerPage]);
+
+    // Reset trang về 1 khi đổi bộ lọc
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch, roleFilter]);
+
+    // Handler đổi items per page - cho phép nhập tự do
+    const handleItemsPerPageChange = useCallback((value: number) => {
+        const clamped = Math.max(1, Math.min(500, value));
+        setItemsPerPage(clamped);
+        setCurrentPage(1);
+        setCustomPageSize("");
+    }, []);
+
+    const handleCustomPageSizeSubmit = useCallback(() => {
+        const val = parseInt(customPageSize, 10);
+        if (!isNaN(val) && val > 0) {
+            handleItemsPerPageChange(val);
+        } else {
+            setCustomPageSize("");
+        }
+    }, [customPageSize, handleItemsPerPageChange]);
 
     // Toggle sort
     const toggleSort = (field: SortField) => {
@@ -480,7 +517,7 @@ export default function UsersPage() {
                             <EmptyState icon="person_off" title="Không có user nào" description="Thử điều chỉnh bộ lọc hoặc thêm user mới." />
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {filteredUsers.map((u, idx) => (
+                                {paginatedUsers.map((u, idx) => (
                                     <UserCard
                                         key={`${u.id || "user"}-${idx}`}
                                         id={u.id}
@@ -544,7 +581,7 @@ export default function UsersPage() {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredUsers.map((user) => {
+                                paginatedUsers.map((user) => {
                                     const roleColor = ROLE_COLORS[user.role?.toUpperCase() as Role] ?? ROLE_COLORS[user.role as Role] ?? { bg: "bg-gray-100 dark:bg-gray-700", text: "text-gray-700 dark:text-gray-300", dot: "bg-gray-500" };
                                     return (
                                         <tr key={user.id} className={`group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${user.status === USER_STATUS.LOCKED ? "opacity-60" : ""}`}>
@@ -623,20 +660,80 @@ export default function UsersPage() {
                 )}
 
                 {/* Pagination */}
-                <div className="p-4 border-t border-[#dde0e4] dark:border-[#2d353e] flex items-center justify-between">
-                    <p className="text-sm text-[#687582] dark:text-gray-400">
-                        {UI_TEXT.TABLE.SHOWING} <span className="font-medium text-[#121417] dark:text-white">1</span> {UI_TEXT.TABLE.TO} <span className="font-medium text-[#121417] dark:text-white">{filteredUsers.length}</span> {UI_TEXT.TABLE.OF} <span className="font-medium text-[#121417] dark:text-white">{users.length}</span> {UI_TEXT.TABLE.RESULTS}
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <button className="p-2 rounded-lg border border-[#dde0e4] dark:border-[#2d353e] text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50">
-                            <span className="material-symbols-outlined text-[20px]">chevron_left</span>
-                        </button>
-                        <button className="px-3 py-1.5 rounded-lg bg-[#3C81C6] text-white text-sm font-bold shadow-sm">1</button>
-                        <button className="p-2 rounded-lg border border-[#dde0e4] dark:border-[#2d353e] text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <span className="material-symbols-outlined text-[20px]">chevron_right</span>
-                        </button>
+                {filteredUsers.length > 0 && (
+                    <div className="px-4 py-3 border-t border-[#dde0e4] dark:border-[#2d353e] flex items-center justify-between">
+                        {/* Left: Info + Page size buttons */}
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm text-[#687582] dark:text-gray-400 whitespace-nowrap">
+                                {UI_TEXT.TABLE.SHOWING} <span className="font-medium text-[#121417] dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span> {UI_TEXT.TABLE.TO} <span className="font-medium text-[#121417] dark:text-white">{Math.min(currentPage * itemsPerPage, filteredUsers.length)}</span> {UI_TEXT.TABLE.OF} <span className="font-medium text-[#121417] dark:text-white">{filteredUsers.length}</span> {UI_TEXT.TABLE.RESULTS}
+                            </span>
+                            <div className="flex items-center gap-1">
+                                {[10, 20, 50, 100].map(size => (
+                                    <button
+                                        key={size}
+                                        onClick={() => handleItemsPerPageChange(size)}
+                                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                                            itemsPerPage === size
+                                                ? "bg-[#3C81C6] text-white shadow-sm"
+                                                : "bg-gray-100 dark:bg-gray-800 text-[#687582] hover:bg-gray-200 dark:hover:bg-gray-700"
+                                        }`}
+                                    >
+                                        {size}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        {/* Right: Page navigation */}
+                        <div className="flex items-center gap-1">
+                            <button 
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="p-1.5 flex items-center rounded-lg border border-[#dde0e4] dark:border-[#2d353e] text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                            </button>
+                            
+                            {(() => {
+                                const pages: (number | string)[] = [];
+                                if (totalPages <= 7) {
+                                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                } else {
+                                    if (currentPage <= 4) {
+                                        pages.push(1, 2, 3, 4, 5, '...', totalPages);
+                                    } else if (currentPage >= totalPages - 3) {
+                                        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                                    } else {
+                                        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                                    }
+                                }
+                                
+                                return pages.map((p, i) => (
+                                    p === '...' ? (
+                                        <span key={`ellipsis-${i}`} className="text-[#687582] px-0.5 text-xs">...</span>
+                                    ) : (
+                                        <button 
+                                            key={`page-${p}`}
+                                            onClick={() => setCurrentPage(p as number)}
+                                            className={`min-w-[30px] px-2 py-1.5 rounded-lg text-xs font-bold transition-colors ${currentPage === p ? "bg-[#3C81C6] text-white shadow-sm" : "border border-[#dde0e4] dark:border-[#2d353e] text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800"}`}
+                                        >
+                                            {p}
+                                        </button>
+                                    )
+                                ));
+                            })()}
+
+                            <button 
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                                className="p-1.5 flex items-center rounded-lg border border-[#dde0e4] dark:border-[#2d353e] text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
+
+
             </div>
 
             {/* User Form Modal */}

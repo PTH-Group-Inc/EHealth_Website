@@ -48,13 +48,21 @@ export function UserFormModal({
 
     useEffect(() => {
         if (isOpen) {
+            let roleFallback = initialData?.role 
+                || (Array.isArray((initialData as any)?.roles) && (initialData as any)?.roles.length > 0 ? (initialData as any)?.roles[0] : (ROLES.STAFF as string));
+            
+            if (typeof roleFallback === 'string') {
+                roleFallback = roleFallback.toUpperCase();
+            }
+
             setFormData({
-                fullName: initialData?.fullName || "",
+                fullName: initialData?.fullName || (initialData as any)?.full_name || "",
                 email: initialData?.email || "",
-                phone: initialData?.phone || "",
-                role: initialData?.role || (ROLES.STAFF as string),
+                phone: initialData?.phone || (initialData as any)?.phoneNumber || "",
+                role: roleFallback,
                 password: "",
                 dob: initialData?.dob ? new Date(initialData.dob).toISOString().split('T')[0] : "",
+
                 gender: initialData?.gender || "MALE",
                 identity_card_number: initialData?.identity_card_number || "",
                 address: initialData?.address || "",
