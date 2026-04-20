@@ -2,6 +2,7 @@
 
 import { SettingsDropdown } from "./settings-dropdown";
 import { NotificationBell } from "./NotificationBell";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import AIStatusBadge from '@/components/ai-copilot/AIStatusBadge';
 import AISearchBar from '@/components/ai-copilot/AISearchBar';
 import AIGamificationBadge from '@/components/ai-copilot/AIGamificationBadge';
@@ -15,6 +16,7 @@ export function PharmacistHeader() {
             <div className="flex items-center gap-2">
                 <AIGamificationBadge />
                 <AIStatusBadge />
+                <LanguageSwitcher variant="compact" />
                 <NotificationBell />
                 <SettingsDropdown />
             </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ROUTES, ADMIN_MENU_ITEMS } from "@/constants/routes";
 import { NotificationBell } from "./NotificationBell";
 import { SettingsDropdown } from "./settings-dropdown";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import AIStatusBadge from '@/components/ai-copilot/AIStatusBadge';
 import AISearchBar from '@/components/ai-copilot/AISearchBar';
 import AIGamificationBadge from '@/components/ai-copilot/AIGamificationBadge';
@@ -57,6 +58,7 @@ export function AdminHeader() {
                 <AISearchBar />
                 <AIGamificationBadge />
                 <AIStatusBadge />
+                <LanguageSwitcher variant="compact" />
                 <NotificationBell />
                 <SettingsDropdown />
             </div>

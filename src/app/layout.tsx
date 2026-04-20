@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { FloatingChatBox } from "@/components/shared/FloatingChatBox";
-import DebugFetchInterceptor from "@/components/debug/DebugFetchInterceptor";
 
 export const metadata: Metadata = {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001"),
@@ -18,13 +19,16 @@ export const metadata: Metadata = {
     },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const locale = await getLocale();
+    const messages = await getMessages();
+
     return (
-        <html lang="vi">
+        <html lang={locale}>
             <head>
                 <link
                     rel="stylesheet"
@@ -32,16 +36,22 @@ export default function RootLayout({
                 />
                 <link
                     rel="stylesheet"
+                    href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap"
+                />
+                <link
+                    rel="stylesheet"
                     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
                 />
             </head>
             <body className="antialiased">
-                <ToastProvider>
-                    <AuthProvider>
-                        {children}
-                        <FloatingChatBox />
-                    </AuthProvider>
-                </ToastProvider>
+                <NextIntlClientProvider locale={locale} messages={messages}>
+                    <ToastProvider>
+                        <AuthProvider>
+                            {children}
+                            <FloatingChatBox />
+                        </AuthProvider>
+                    </ToastProvider>
+                </NextIntlClientProvider>
             </body>
         </html>
     );

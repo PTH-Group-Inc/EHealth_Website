@@ -2,6 +2,7 @@
 
 import { SettingsDropdown } from "./settings-dropdown";
 import { NotificationBell } from "./NotificationBell";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import AIStatusBadge from '@/components/ai-copilot/AIStatusBadge';
 import AISearchBar from '@/components/ai-copilot/AISearchBar';
 import AIGamificationBadge from '@/components/ai-copilot/AIGamificationBadge';
@@ -18,6 +19,7 @@ export function ReceptionistHeader() {
             <div className="flex items-center gap-2">
                 <AIGamificationBadge />
                 <AIStatusBadge />
+                <LanguageSwitcher variant="compact" />
                 <NotificationBell />
 
                 <button className="flex items-center gap-2 px-3 py-2 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-lg text-sm font-medium transition-colors">

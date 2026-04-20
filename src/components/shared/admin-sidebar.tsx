@@ -3,9 +3,90 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ADMIN_MENU_ITEMS, type AdminMenuItem } from "@/constants/routes";
 import { UI_TEXT } from "@/constants/ui-text";
 import { useSidebar } from "@/contexts/SidebarContext";
+
+/**
+ * Map key nhóm sidebar admin → i18n key trong common.json/nav.*
+ * Fallback về `item.label` nếu key không có trong map.
+ */
+const GROUP_I18N_KEY: Record<string, string> = {
+    "dashboard": "nav.home",
+    "users": "nav.staffManagement",
+    "hospital": "nav.facilityManagement",
+    "operations": "nav.operations",
+    "ops-config": "nav.opsConfig",
+    "coordination": "nav.coordination",
+    "telemedicine": "nav.telemedicine",
+    "medicines": "nav.pharmacy",
+    "finance": "nav.finance",
+    "system-data": "nav.systemData",
+    "statistics": "nav.statistics",
+    "activity-logs": "nav.activityLogs",
+    "settings": "nav.settings",
+};
+
+/**
+ * Map key menu con → i18n key.
+ */
+const CHILD_I18N_KEY: Record<string, string> = {
+    "users-list": "nav.menu.users",
+    "doctors-list": "nav.menu.doctors",
+    "users-roles": "nav.menu.roles",
+    "permissions": "nav.menu.permissions",
+    "hospitals": "nav.menu.hospitals",
+    "branches": "nav.menu.branches",
+    "departments": "nav.menu.departments",
+    "specialties": "nav.menu.specialties",
+    "services": "nav.menu.services",
+    "clinic-rooms": "nav.menu.clinicRooms",
+    "equipment": "nav.menu.equipment",
+    "beds": "nav.menu.beds",
+    "time-slots": "nav.menu.timeSlots",
+    "shifts": "nav.menu.shifts",
+    "staff-schedule": "nav.menu.staffSchedule",
+    "schedules": "nav.menu.schedules",
+    "leaves": "nav.menu.leaves",
+    "shift-swaps": "nav.menu.shiftSwaps",
+    "slots-config": "nav.menu.slotsConfig",
+    "slots-locked": "nav.menu.slotsLocked",
+    "shift-services": "nav.menu.shiftServices",
+    "service-durations": "nav.menu.serviceDurations",
+    "booking-configs": "nav.menu.bookingConfigs",
+    "operating-hours": "nav.menu.operatingHours",
+    "facility-status": "nav.menu.facilityStatus",
+    "doctor-load": "nav.menu.doctorLoad",
+    "doctor-availability": "nav.menu.doctorAvailability",
+    "appointment-changes": "nav.menu.appointmentChanges",
+    "tele-types": "nav.menu.teleTypes",
+    "tele-bookings": "nav.menu.teleBookings",
+    "tele-rooms": "nav.menu.teleRooms",
+    "tele-results": "nav.menu.teleResults",
+    "tele-prescriptions": "nav.menu.telePrescriptions",
+    "tele-followups": "nav.menu.teleFollowups",
+    "tele-quality": "nav.menu.teleQuality",
+    "medicines-list": "nav.menu.medicinesList",
+    "medicines-import": "nav.menu.medicinesImport",
+    "medicines-export": "nav.menu.medicinesExport",
+    "medicines-stock": "nav.menu.medicinesStock",
+    "warehouses": "nav.menu.warehouses",
+    "suppliers": "nav.menu.suppliers",
+    "pharmacy-categories": "nav.menu.pharmacyCategories",
+    "billing-invoices": "nav.menu.billingInvoices",
+    "pricing-policies": "nav.menu.pricingPolicies",
+    "promotions": "nav.menu.promotions",
+    "e-invoices": "nav.menu.eInvoices",
+    "payment-gateway": "nav.menu.paymentGateway",
+    "reconciliation": "nav.menu.reconciliation",
+    "refunds": "nav.menu.refunds",
+    "master-data": "nav.menu.masterData",
+    "notif-role-configs": "nav.menu.notifRoleConfigs",
+    "notif-broadcast": "nav.menu.notifBroadcast",
+    "statistics-overview": "nav.menu.statisticsOverview",
+    "statistics-revenue": "nav.menu.statisticsRevenue",
+};
 
 // Helper: kiểm tra item có child đang active không
 function isChildActiveForItem(item: AdminMenuItem, pathname: string) {
@@ -58,13 +139,17 @@ function SidebarItem({
     const isChildActive = hasChildren && isChildActiveForItem(item, pathname);
     const isDirectActive = item.href ? isItemActive(item.href, pathname, allHrefs) : false;
     const isActive = hasChildren ? isChildActive : isDirectActive;
+    const t = useTranslations("common");
+
+    // Translate label của nhóm: ưu tiên i18n map, fallback item.label
+    const label = GROUP_I18N_KEY[item.key] ? t(GROUP_I18N_KEY[item.key]) : item.label;
 
     // Item đơn (không có children)
     if (!hasChildren && item.href) {
         return (
             <Link
                 href={item.href}
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? label : undefined}
                 className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-xl transition-all duration-200 group ${isActive
                     ? "bg-[#3C81C6]/10 text-[#3C81C6] dark:bg-[#3C81C6]/20"
                     : "text-[#687582] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -75,7 +160,7 @@ function SidebarItem({
                 </span>
                 {!collapsed && (
                     <span className={`text-sm ${isActive ? "font-bold" : "font-medium"}`}>
-                        {item.label}
+                        {label}
                     </span>
                 )}
             </Link>
@@ -87,7 +172,7 @@ function SidebarItem({
         <div>
             <button
                 onClick={onToggle}
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? label : undefined}
                 className={`w-full flex items-center ${collapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-xl transition-all duration-200 group ${isActive
                     ? "bg-[#3C81C6]/5 text-[#3C81C6] dark:bg-[#3C81C6]/10"
                     : "text-[#687582] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -99,7 +184,7 @@ function SidebarItem({
                 {!collapsed && (
                     <>
                         <span className={`text-sm flex-1 text-left ${isActive ? "font-bold" : "font-medium"}`}>
-                            {item.label}
+                            {label}
                         </span>
                         <span className={`material-symbols-outlined text-[16px] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
                             expand_more
@@ -114,6 +199,7 @@ function SidebarItem({
                     <div className="ml-[22px] pl-4 border-l-2 border-[#e5e7eb] dark:border-[#2d353e] space-y-0.5 py-0.5">
                         {item.children!.map((child) => {
                             const childActive = isItemActive(child.href, pathname, allHrefs);
+                            const childLabel = CHILD_I18N_KEY[child.key] ? t(CHILD_I18N_KEY[child.key]) : child.label;
                             return (
                                 <Link
                                     key={child.key}
@@ -123,7 +209,7 @@ function SidebarItem({
                                         : "text-[#687582] dark:text-gray-400 hover:text-[#3C81C6] hover:bg-gray-50 dark:hover:bg-gray-800 font-medium"
                                         }`}
                                 >
-                                    {child.label}
+                                    {childLabel}
                                 </Link>
                             );
                         })}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ROUTES, DOCTOR_MENU_ITEMS } from "@/constants/routes";
 import { NotificationBell } from "./NotificationBell";
 import { SettingsDropdown } from "./settings-dropdown";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import AIStatusBadge from '@/components/ai-copilot/AIStatusBadge';
 import AISearchBar from '@/components/ai-copilot/AISearchBar';
 import AIGamificationBadge from '@/components/ai-copilot/AIGamificationBadge';
@@ -77,6 +78,7 @@ export function DoctorHeader() {
                 <div className="flex items-center gap-1">
                     <AIGamificationBadge />
                     <AIStatusBadge />
+                    <LanguageSwitcher variant="compact" />
                     <NotificationBell />
                     <SettingsDropdown />
                 </div>

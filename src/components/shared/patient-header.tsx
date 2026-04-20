@@ -6,6 +6,7 @@ import AIStatusBadge from '@/components/ai-copilot/AIStatusBadge';
 import AISearchBar from '@/components/ai-copilot/AISearchBar';
 import AIGamificationBadge from '@/components/ai-copilot/AIGamificationBadge';
 import { NotificationBell } from "./NotificationBell";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function PatientHeader() {
     return (
@@ -19,6 +20,7 @@ export function PatientHeader() {
             <div className="flex items-center gap-2">
                 <AIGamificationBadge />
                 <AIStatusBadge />
+                <LanguageSwitcher variant="compact" />
                 <NotificationBell />
 
                 <Link href="/booking"
