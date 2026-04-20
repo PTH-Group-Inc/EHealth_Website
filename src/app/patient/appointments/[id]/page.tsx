@@ -455,7 +455,7 @@ export default function AppointmentDetailPage() {
                                 ))}
                                 <span className="ml-2 text-sm font-semibold text-gray-700">Đã đánh giá</span>
                             </div>
-                            {raw.feedback && <p className="text-sm italic text-gray-600">"{raw.feedback}"</p>}
+                            {raw.feedback && <p className="text-sm italic text-gray-600">&quot;{raw.feedback}&quot;</p>}
                         </div>
                     ) : (
                         <>

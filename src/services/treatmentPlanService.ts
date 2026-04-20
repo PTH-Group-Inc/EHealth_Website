@@ -3,11 +3,6 @@ import { TREATMENT_PLAN_ENDPOINTS } from "@/api/endpoints";
 import { unwrap, unwrapList } from "@/api/response";
 
 export const treatmentPlanService = {
-  getList: async (params?: any) => {
-    const res = await axiosClient.get(TREATMENT_PLAN_ENDPOINTS.LIST, { params });
-    return unwrapList(res);
-  },
-
   getByPatient: async (patientId: string, params?: any) => {
     const res = await axiosClient.get(TREATMENT_PLAN_ENDPOINTS.BY_PATIENT(patientId), { params });
     return unwrapList(res);

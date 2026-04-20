@@ -11,6 +11,8 @@ import { PermissionsModal } from "@/features/users/components/permissions-modal"
 import * as userService from "@/services/userService";
 import type { User } from "@/types";
 import { validateFile } from "@/utils/fileValidation";
+import { UserCard } from "@/components/shared/cards";
+import { EmptyState } from "@/components/shared/layout";
 
 /** Format ISO date to readable string */
 function formatDate(iso: unknown): string {
@@ -37,6 +39,7 @@ export default function UsersPage() {
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [sortField, setSortField] = useState<SortField>("createdAt");
     const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+    const [viewMode, setViewMode] = useState<"table" | "card">("card");
 
     // Load users from API
     useEffect(() => {
@@ -390,6 +393,18 @@ export default function UsersPage() {
                         </select>
                     </div>
                     <div className="flex items-center gap-2">
+                        <div className="inline-flex p-0.5 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                            <button onClick={() => setViewMode("card")}
+                                className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${viewMode === "card" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] hover:text-[#3C81C6]"}`}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>grid_view</span>
+                                Thẻ
+                            </button>
+                            <button onClick={() => setViewMode("table")}
+                                className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${viewMode === "table" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] hover:text-[#3C81C6]"}`}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>table_rows</span>
+                                Bảng
+                            </button>
+                        </div>
                         <button
                             onClick={handleExport}
                             className="p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-[#687582] dark:text-gray-400 transition-colors"
@@ -410,7 +425,42 @@ export default function UsersPage() {
                     </div>
                 </div>
 
+                {/* Card view */}
+                {viewMode === "card" && (
+                    <div className="p-4">
+                        {isDataLoading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {Array.from({ length: 6 }).map((_, i) => (
+                                    <div key={i} className="h-40 bg-gray-50 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
+                                ))}
+                            </div>
+                        ) : filteredUsers.length === 0 ? (
+                            <EmptyState icon="person_off" title="Không có user nào" description="Thử điều chỉnh bộ lọc hoặc thêm user mới." />
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {filteredUsers.map((u, idx) => (
+                                    <UserCard
+                                        key={`${u.id || "user"}-${idx}`}
+                                        id={u.id}
+                                        fullName={(u as any).fullName || u.email || "—"}
+                                        email={u.email}
+                                        phone={(u as any).phone}
+                                        avatarUrl={(u as any).avatar}
+                                        roles={Array.isArray((u as any).roles) ? (u as any).roles : u.role ? [u.role] : []}
+                                        status={(u as any).status || "ACTIVE"}
+                                        lastLoginAt={(u as any).lastAccess || (u as any).last_login_at}
+                                        branchName={(u as any).branchName}
+                                        onView={() => router.push(`/admin/users/${u.id}`)}
+                                        onEdit={() => { setEditingUser(u); setIsModalOpen(true); }}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Table Content */}
+                {viewMode === "table" && (
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -528,6 +578,7 @@ export default function UsersPage() {
                         </tbody>
                     </table>
                 </div>
+                )}
 
                 {/* Pagination */}
                 <div className="p-4 border-t border-[#dde0e4] dark:border-[#2d353e] flex items-center justify-between">

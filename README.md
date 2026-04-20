@@ -124,6 +124,24 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to the login page.
 
+### Jenkins / CI
+
+If your Jenkins job runs shell steps directly on the server, make sure it activates the repository's Node.js version before installing dependencies or building:
+
+```bash
+cd /var/www/EHealth/EHealth_Website
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+nvm install
+nvm use
+node -v
+npm -v
+npm ci
+npm run build
+```
+
+If your Jenkins agent does not use `nvm`, install Node.js **v22.x** and npm **11+** on the agent itself. This project will show `EBADENGINE` warnings and may fail unpredictably on Node 18.
+
 ### Available Scripts
 
 | Command | Description |

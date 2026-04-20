@@ -19,22 +19,4 @@ export const reportService = {
         const response = await axiosClient.get(REPORT_ENDPOINTS.REVENUE, { params });
         return normalizeRevenueReport(response);
     },
-
-    getPatients: (params?: ReportParams) =>
-        axiosClient.get(REPORT_ENDPOINTS.PATIENTS, { params }),
-
-    getAppointments: (params?: ReportParams) =>
-        axiosClient.get(REPORT_ENDPOINTS.APPOINTMENTS, { params }),
-
-    exportExcel: (params?: ReportParams) =>
-        axiosClient.get(REPORT_ENDPOINTS.EXPORT_EXCEL, {
-            params,
-            responseType: 'blob',
-        }),
-
-    exportPdf: (params?: ReportParams) =>
-        axiosClient.get(REPORT_ENDPOINTS.EXPORT_PDF, {
-            params,
-            responseType: 'blob',
-        }),
 };

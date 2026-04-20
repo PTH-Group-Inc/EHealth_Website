@@ -24,11 +24,20 @@ export const ROUTES = {
     USERS: "/admin/users",
     USERS_ROLES: "/admin/users/roles",
     DOCTORS: "/admin/doctors",
-    // Quản lý bệnh viện
+    // Quản lý cơ sở y tế
     DEPARTMENTS: "/admin/departments",
     HOSPITALS: "/admin/hospitals",
     TIME_SLOTS: "/admin/hospitals/time-slots",
     SCHEDULES: "/admin/schedules",
+    BRANCHES: "/admin/branches",
+    SERVICES: "/admin/services",
+    CLINIC_ROOMS: "/admin/clinic-rooms",
+    EQUIPMENT: "/admin/equipment",
+    BEDS: "/admin/beds",
+    // Vận hành nhân sự
+    SHIFTS: "/admin/shifts",
+    STAFF_SCHEDULE: "/admin/staff-schedule",
+    DOCTOR_LOAD: "/admin/doctor-load",
     // Kho thuốc
     MEDICINES: "/admin/medicines",
     MEDICINES_IMPORT: "/admin/medicines/import",
@@ -235,6 +244,18 @@ export const ADMIN_MENU_ITEMS: AdminMenuItem[] = [
       { key: "rooms", href: ROUTES.ADMIN.ROOMS, label: "Phòng khám" },
       { key: "equipment", href: ROUTES.ADMIN.EQUIPMENT, label: "Thiết bị" },
       { key: "beds", href: ROUTES.ADMIN.BEDS, label: "Giường bệnh" },
+      { key: "time-slots", href: ROUTES.ADMIN.TIME_SLOTS, label: "Cấu hình khung giờ" },
+    ],
+  },
+  {
+    key: "operations",
+    icon: "schedule",
+    label: "Vận hành nhân sự",
+    children: [
+      { key: "shifts", href: ROUTES.ADMIN.SHIFTS, label: "Ca làm việc" },
+      { key: "staff-schedule", href: ROUTES.ADMIN.STAFF_SCHEDULE, label: "Lịch phân ca" },
+      { key: "schedules", href: ROUTES.ADMIN.SCHEDULES, label: "Lịch trực" },
+      { key: "doctor-load", href: ROUTES.ADMIN.DOCTOR_LOAD, label: "Cân bằng tải bác sĩ" },
     ],
   },
   {

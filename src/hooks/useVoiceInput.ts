@@ -25,6 +25,15 @@ interface SpeechRecognitionInstance extends EventTarget {
     stop(): void;
 }
 
+interface SpeechRecognitionConstructor {
+    new(): SpeechRecognitionInstance;
+}
+
+type SpeechRecognitionWindow = Window & typeof globalThis & {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+};
+
 // ============================================
 // Options
 // ============================================
@@ -53,16 +62,14 @@ interface UseVoiceInputReturn {
 export function useVoiceInput(options?: UseVoiceInputOptions): UseVoiceInputReturn {
     const lang = options?.lang ?? 'vi-VN';
     const continuous = options?.continuous ?? false;
+    const speechWindow = typeof window === 'undefined' ? null : (window as SpeechRecognitionWindow);
 
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState('');
     const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
     // Detect support
-    const isSupported =
-        typeof window !== 'undefined' &&
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+    const isSupported = !!(speechWindow?.SpeechRecognition || speechWindow?.webkitSpeechRecognition);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -74,8 +81,8 @@ export function useVoiceInput(options?: UseVoiceInputOptions): UseVoiceInputRetu
     const startListening = useCallback(() => {
         if (!isSupported) return;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        const SpeechRecognition = speechWindow?.SpeechRecognition || speechWindow?.webkitSpeechRecognition;
+        if (!SpeechRecognition) return;
         const recognition: SpeechRecognitionInstance = new SpeechRecognition();
 
         recognition.lang = lang;
@@ -102,7 +109,7 @@ export function useVoiceInput(options?: UseVoiceInputOptions): UseVoiceInputRetu
         recognition.start();
         setIsListening(true);
         setTranscript('');
-    }, [isSupported, lang, continuous]);
+    }, [continuous, isSupported, lang, speechWindow]);
 
     const stopListening = useCallback(() => {
         recognitionRef.current?.stop();

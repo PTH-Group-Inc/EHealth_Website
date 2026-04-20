@@ -92,8 +92,7 @@ export function AILogViewer({ doctorId, visible }: AILogViewerProps) {
                 });
 
                 // Normalise — backend may return different shapes
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const raw = response as any;
+                const raw = response as unknown as { data?: LogsApiResponse } & LogsApiResponse;
                 const data: LogsApiResponse = raw?.data ?? raw;
                 const items: AILogEntry[] = data.items ?? [];
                 const responseTotal: number = data.total ?? items.length;

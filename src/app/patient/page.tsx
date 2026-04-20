@@ -11,6 +11,7 @@ import { AISymptomCheckerWidget, AIHealthCoach, AIAppointmentSuggester } from "@
 import { ehrService } from "@/services/ehrService";
 import { patientProfileService } from "@/services/patientProfileService";
 import { telemedicineService, type TelemedicineSession } from "@/services/telemedicineService";
+import { VitalCard } from "@/components/shared/cards";
 
 interface MedicationReminder {
     id: string; profileId: string; medicationName: string; dosage: string;
@@ -190,17 +191,12 @@ export default function PatientDashboard() {
                         </div>
                     ))
                 ) : (
-                    vitalCards.map(s => (
-                        <div key={s.label} className="bg-white dark:bg-[#1e242b] rounded-xl border border-[#e5e7eb] dark:border-[#2d353e] p-3 flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${s.ok ? "bg-green-50 dark:bg-green-500/10 text-green-600" : "bg-amber-50 dark:bg-amber-500/10 text-amber-600"}`}>
-                                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>{s.icon}</span>
-                            </div>
-                            <div>
-                                <p className="text-xs text-[#687582]">{s.label}</p>
-                                <p className="text-sm font-bold text-[#121417] dark:text-white">{s.value} <span className="text-xs font-normal text-[#687582]">{s.unit}</span></p>
-                            </div>
-                        </div>
-                    ))
+                    <>
+                        <VitalCard kind="bp" value={latestVital?.bloodPressureSystolic ?? null} secondary={latestVital?.bloodPressureDiastolic} compact />
+                        <VitalCard kind="heartRate" value={latestVital?.heartRate ?? null} compact />
+                        <VitalCard kind="bmi" value={latestVital?.bmi ?? null} compact />
+                        <VitalCard kind="spo2" value={latestVital?.spo2 ?? null} compact />
+                    </>
                 )}
             </div>
 

@@ -348,14 +348,14 @@ export const STAFF_ENDPOINTS = {
 // ============================================
 
 export const DOCTOR_ENDPOINTS = {
-    LIST: '/api/doctors',
-    DETAIL: (id: string) => `/api/doctors/${id}`,
-    CREATE: '/api/doctors',
-    UPDATE: (id: string) => `/api/doctors/${id}`,
-    DELETE: (id: string) => `/api/doctors/${id}`,
-    BY_DEPARTMENT: (departmentId: string) => `/api/doctors/department/${departmentId}`,
-    SCHEDULE: (doctorId: string) => `/api/doctors/${doctorId}/schedule`,
-    SERVICES: (doctorId: string) => `/api/doctor-services/${doctorId}/services`,
+    LIST: '/api/doctors', // QC_SKIP: legacy placeholder, FE uses STAFF_ENDPOINTS for doctor listing
+    DETAIL: (id: string) => `/api/doctors/${id}`, // QC_SKIP: legacy placeholder, FE uses STAFF_ENDPOINTS
+    CREATE: '/api/doctors', // QC_SKIP: legacy placeholder, FE uses STAFF endpoints
+    UPDATE: (id: string) => `/api/doctors/${id}`, // QC_SKIP: legacy placeholder, FE uses STAFF endpoints
+    DELETE: (id: string) => `/api/doctors/${id}`, // QC_SKIP: legacy placeholder, FE uses STAFF endpoints
+    BY_DEPARTMENT: (departmentId: string) => `/api/doctors/department/${departmentId}`, // QC_SKIP: legacy placeholder
+    SCHEDULE: (doctorId: string) => `/api/doctors/${doctorId}/schedule`, // QC_SKIP: legacy placeholder, FE uses staff schedules
+    SERVICES: (doctorId: string) => `/api/doctor-services/${doctorId}/services`, // GET
 };
 
 // ============================================
@@ -457,12 +457,12 @@ export const SCHEDULE_ENDPOINTS = {
 };
 
 export const REPORT_ENDPOINTS = {
-    DASHBOARD: '/api/reports/dashboard',
-    REVENUE: '/api/reports/revenue',
-    PATIENTS: '/api/reports/patients',
-    APPOINTMENTS: '/api/reports/appointments',
-    EXPORT_EXCEL: '/api/reports/export/excel',
-    EXPORT_PDF: '/api/reports/export/pdf',
+    DASHBOARD: '/api/reports/dashboard', // GET
+    REVENUE: '/api/reports/revenue', // GET
+    PATIENTS: '/api/reports/patients', // QC_SKIP: backend currently exposes dashboard and revenue only
+    APPOINTMENTS: '/api/reports/appointments', // QC_SKIP: backend currently exposes dashboard and revenue only
+    EXPORT_EXCEL: '/api/reports/export/excel', // QC_SKIP: backend currently exposes dashboard and revenue only
+    EXPORT_PDF: '/api/reports/export/pdf', // QC_SKIP: backend currently exposes dashboard and revenue only
 };
 
 // ✅ Corrected: /api/emr không tồn tại — dùng /api/encounters + /api/medical-records
@@ -517,13 +517,13 @@ export const BILLING_ENDPOINTS = {
 };
 
 export const AI_ENDPOINTS = {
-    CHAT: '/api/ai/chat',
-    SYMPTOM_CHECK: '/api/ai/symptom-check',
-    SUGGEST_APPOINTMENT: '/api/ai/suggest-appointment',
-    SUMMARIZE_RECORD: (recordId: string) => `/api/ai/summarize/${recordId}`,
-    ANALYZE: '/api/ai/analyze',
-    LOGS: '/api/ai/logs',
-    PREFERENCES: (doctorId: string) => `/api/ai/preferences/${doctorId}`,
+    CHAT: '/api/ai/chat', // QC_SKIP: generic AI endpoints are not part of the current backend deployment
+    SYMPTOM_CHECK: '/api/ai/symptom-check', // QC_SKIP: generic AI endpoints are not part of the current backend deployment
+    SUGGEST_APPOINTMENT: '/api/ai/suggest-appointment', // QC_SKIP: generic AI endpoints are not part of the current backend deployment
+    SUMMARIZE_RECORD: (recordId: string) => `/api/ai/summarize/${recordId}`, // QC_SKIP: generic AI endpoints are not part of the current backend deployment
+    ANALYZE: '/api/ai/analyze', // QC_SKIP: generic AI endpoints are not part of the current backend deployment
+    LOGS: '/api/ai/logs', // QC_SKIP: generic AI endpoints are not part of the current backend deployment
+    PREFERENCES: (doctorId: string) => `/api/ai/preferences/${doctorId}`, // QC_SKIP: generic AI endpoints are not part of the current backend deployment
 };
 
 // ✅ Corrected: /api/telemedicine không tồn tại — dùng /api/teleconsultation
@@ -794,7 +794,7 @@ export const SUPPLIER_ENDPOINTS = {
 // ✅ Swagger: /api/treatment-plans/*
 // ============================================
 export const TREATMENT_PLAN_ENDPOINTS = {
-    LIST: '/api/treatment-plans',
+    LIST: '/api/treatment-plans', // QC_SKIP: backend does not expose an aggregate GET /api/treatment-plans endpoint
     BY_PATIENT: (patientId: string) => `/api/treatment-plans/by-patient/${patientId}`,
     DETAIL: (planId: string) => `/api/treatment-plans/${planId}`,
     STATUS: (planId: string) => `/api/treatment-plans/${planId}/status`,
@@ -884,7 +884,7 @@ export const PATIENT_CONTACT_ENDPOINTS = {
 // ✅ Swagger: /api/patient-documents/*
 // ============================================
 export const PATIENT_DOCUMENT_ENDPOINTS = {
-    LIST: '/api/patient-documents',                                                             // GET
+    LIST: (patientId: string) => `/api/patient-documents?patient_id=${patientId}`,              // GET
     UPLOAD: '/api/patient-documents',                                                           // POST (multipart)
     DETAIL: (id: string) => `/api/patient-documents/${id}`,                                     // GET
     UPDATE: (id: string) => `/api/patient-documents/${id}`,                                     // PUT
@@ -1084,7 +1084,7 @@ export const CONSULTATION_DURATION_ENDPOINTS = {
 // ============================================
 export const TREATMENT_PROGRESS_ENDPOINTS = {
     BY_PATIENT: (patientId: string) => `/api/treatment-plans/by-patient/${patientId}`,  // GET
-    LIST: '/api/treatment-plans',                                                        // GET
+    LIST: '/api/treatment-plans',                                                        // QC_SKIP: backend does not expose an aggregate GET /api/treatment-plans endpoint
     CREATE: '/api/treatment-plans',                                                      // POST
     DETAIL: (planId: string) => `/api/treatment-plans/${planId}`,                        // GET/PUT
     STATUS: (planId: string) => `/api/treatment-plans/${planId}/status`,                 // PATCH
@@ -1981,7 +1981,7 @@ export const AI_HEALTH_CHAT_ENDPOINTS = {
 // ============================================
 export const AI_RAG_ENDPOINTS = {
     UPLOAD: '/api/ai/rag/upload',                                                            // POST (multipart)
-    DOCUMENTS: '/api/ai/rag/documents',                                                      // GET
+    DOCUMENTS: '/api/ai/rag/documents',                                                      // QC_SKIP: AI RAG backend is not deployed in the current environment
     DELETE_DOCUMENT: (id: string) => `/api/ai/rag/documents/${id}`,                          // DELETE
 };
 

@@ -10,6 +10,8 @@ import { TimeSlotModal } from "@/features/doctors/components/time-slot-modal";
 import { staffService, unwrapStaffList } from "@/services/staffService";
 import { getDepartments, unwrapDepartments } from "@/services/departmentService";
 import type { Doctor } from "@/types";
+import { DoctorCard } from "@/components/shared/cards";
+import { EmptyState } from "@/components/shared/layout";
 
 type SortField = "fullName" | "departmentName" | "rating" | "status";
 type SortOrder = "asc" | "desc";
@@ -29,6 +31,7 @@ export default function DoctorsPage() {
 
     const [stats, setStats] = useState({ totalDoctors: 0, activeDoctors: 0, pendingAssignment: 0, avgPerformance: 0 });
     const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+    const [viewMode, setViewMode] = useState<"table" | "card">("card");
 
     useEffect(() => {
         setIsLoading(true);
@@ -292,6 +295,24 @@ export default function DoctorsPage() {
                         </select>
                     </div>
                     <div className="flex items-center gap-2">
+                        <div className="inline-flex p-0.5 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                            <button
+                                onClick={() => setViewMode("card")}
+                                className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${viewMode === "card" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] hover:text-[#3C81C6]"}`}
+                                title="Xem dạng thẻ"
+                            >
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>grid_view</span>
+                                Thẻ
+                            </button>
+                            <button
+                                onClick={() => setViewMode("table")}
+                                className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${viewMode === "table" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] hover:text-[#3C81C6]"}`}
+                                title="Xem dạng bảng"
+                            >
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>table_rows</span>
+                                Bảng
+                            </button>
+                        </div>
                         <button
                             onClick={handleExport}
                             className="p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-[#687582] transition-colors"
@@ -312,7 +333,46 @@ export default function DoctorsPage() {
                     </div>
                 </div>
 
+                {/* Card view */}
+                {viewMode === "card" && (
+                    <div className="p-4">
+                        {isLoading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                {Array.from({ length: 6 }).map((_, i) => (
+                                    <div key={i} className="h-40 bg-gray-50 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
+                                ))}
+                            </div>
+                        ) : filteredDoctors.length === 0 ? (
+                            <EmptyState icon="stethoscope" title="Chưa có bác sĩ nào" description="Thêm bác sĩ mới để bắt đầu quản lý." />
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                {filteredDoctors.map((doctor, idx) => (
+                                    <DoctorCard
+                                        key={`${doctor.id || doctor.code || "doc"}-${idx}`}
+                                        id={doctor.id}
+                                        fullName={doctor.fullName}
+                                        avatarUrl={doctor.avatar}
+                                        code={doctor.code}
+                                        specialization={doctor.specialization}
+                                        departmentName={doctor.departmentName}
+                                        phone={doctor.phone}
+                                        email={doctor.email}
+                                        rating={doctor.rating}
+                                        reviewCount={doctor.reviewCount}
+                                        experience={doctor.experience}
+                                        status={doctor.status}
+                                        onView={() => router.push(`/admin/doctors/${doctor.id}`)}
+                                        onEdit={() => handleEditDoctor(doctor)}
+                                        onSchedule={() => setIsTimeSlotOpen(true)}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Table Content */}
+                {viewMode === "table" && (
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-[#dde0e4] dark:border-[#2d353e]">
@@ -441,6 +501,7 @@ export default function DoctorsPage() {
                         </tbody>
                     </table>
                 </div>
+                )}
             </div>
 
             {/* Doctor Form Modal */}

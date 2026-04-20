@@ -293,11 +293,13 @@ export default function BillingPage() {
                 const qrUrl = new URL(imgUrl);
                 const acc  = qrUrl.searchParams.get("acc") ?? "";
                 const bank = qrUrl.searchParams.get("bank") ?? "";
-                if (acc || bank) {
+                // Patient users cannot rely on the admin-only gateway config endpoint here.
+                const holder = data.account_holder ?? data.accountHolder ?? data.holder ?? "";
+                if (acc || bank || holder) {
                     setQrBankInfo({
                         account: data.bank_account_number ?? data.account_number ?? acc,
                         bank:    data.bank_name ?? data.bankName ?? bank,
-                        holder:  data.account_holder ?? data.accountHolder ?? gatewayHolder,
+                        holder,
                     });
                 }
             } catch { /* ignore URL parse error */ }

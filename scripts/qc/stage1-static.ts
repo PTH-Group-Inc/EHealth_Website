@@ -8,9 +8,16 @@
 import { spawn } from 'child_process';
 import { QcStageResult, QcIssue } from './types';
 
+const resolveCommand = (cmd: string): string => {
+    if (process.platform === 'win32' && !cmd.endsWith('.cmd')) {
+        return `${cmd}.cmd`;
+    }
+    return cmd;
+};
+
 function run(cmd: string, args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
     return new Promise(resolve => {
-        const proc = spawn(cmd, args, { shell: false });
+        const proc = spawn(resolveCommand(cmd), args, { shell: process.platform === 'win32' });
         let stdout = '';
         let stderr = '';
         proc.stdout.on('data', d => (stdout += d.toString()));

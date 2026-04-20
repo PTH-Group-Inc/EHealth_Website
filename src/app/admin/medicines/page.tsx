@@ -12,6 +12,8 @@ import { AddStockModal } from "@/features/medicines/components/add-stock-modal";
 import { mapApiDrugToMedicine } from "@/features/medicines/utils/adminMedicineMappers";
 import { inventoryService } from "@/services/inventoryService";
 import type { Medicine } from "@/types";
+import { MedicineCard } from "@/components/shared/cards";
+import { EmptyState } from "@/components/shared/layout";
 
 const MEDICINE_CATEGORIES = [
     "Khang sinh",
@@ -62,11 +64,12 @@ export default function MedicinesPage() {
     const [stockMedicine, setStockMedicine] = useState<Medicine | null>(null);
     const [sortField, setSortField] = useState<SortField>("name");
     const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+    const [viewMode, setViewMode] = useState<"table" | "card">("card");
 
     const loadMedicines = async () => {
         const [response, inventoryResponse] = await Promise.all([
-            getDrugs({ limit: 200 }),
-            inventoryService.getList({ limit: 500 }).catch(() => null),
+            Promise.resolve(getDrugs({ limit: 200 })),
+            Promise.resolve(inventoryService.getList({ limit: 500 })).catch(() => null),
         ]);
 
         const items = Array.isArray(response?.data) ? response.data : [];
@@ -485,6 +488,18 @@ export default function MedicinesPage() {
                         </select>
                     </div>
                     <div className="flex items-center gap-2">
+                        <div className="inline-flex p-0.5 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                            <button onClick={() => setViewMode("card")}
+                                className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${viewMode === "card" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] hover:text-[#3C81C6]"}`}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>grid_view</span>
+                                Thẻ
+                            </button>
+                            <button onClick={() => setViewMode("table")}
+                                className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${viewMode === "table" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] hover:text-[#3C81C6]"}`}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>table_rows</span>
+                                Bảng
+                            </button>
+                        </div>
                         <button
                             onClick={handleExport}
                             className="rounded-xl border border-gray-200 p-2.5 text-[#687582] transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
@@ -505,6 +520,36 @@ export default function MedicinesPage() {
                     </div>
                 </div>
 
+                {viewMode === "card" && (
+                    <div className="p-4">
+                        {filteredMedicines.length === 0 ? (
+                            <EmptyState icon="pill" title="Chưa có thuốc nào" description="Thêm thuốc mới để bắt đầu quản lý kho." />
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                {filteredMedicines.map((m) => (
+                                    <MedicineCard
+                                        key={m.id}
+                                        code={m.code}
+                                        name={m.name}
+                                        unit={m.unit}
+                                        dosageForm={m.unitDetail}
+                                        manufacturer={(m as any).manufacturer || m.category}
+                                        stock={m.stock}
+                                        minStock={(m as any).minStock ?? (m as any).min_stock}
+                                        expiryDate={(m as any).expiryDate ?? (m as any).expiry_date}
+                                        price={m.price}
+                                        status={(m.status === MEDICINE_STATUS.IN_BUSINESS ? "active" : "inactive") as "active" | "inactive"}
+                                        onView={() => router.push(`/admin/medicines/${m.id}`)}
+                                        onEdit={() => handleEditMedicine(m)}
+                                        onImport={() => handleAddStock(m)}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {viewMode === "table" && (
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="border-b border-[#dde0e4] bg-gray-50/50 dark:border-[#2d353e] dark:bg-gray-800/50">
@@ -615,6 +660,7 @@ export default function MedicinesPage() {
                         </tbody>
                     </table>
                 </div>
+                )}
             </div>
 
             <MedicineFormModal

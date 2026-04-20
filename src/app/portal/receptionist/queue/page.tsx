@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { getAppointments } from "@/services/appointmentService";
 import { appointmentStatusService } from "@/services/appointmentStatusService";
+import { QueueCard, type QueueStatus, type QueuePriority } from "@/components/shared/cards";
+import { EmptyState } from "@/components/shared/layout";
 
 
 const STATUS_CFG: Record<string, { label: string; cls: string; icon: string }> = {
@@ -16,8 +18,11 @@ const STATUS_CFG: Record<string, { label: string; cls: string; icon: string }> =
 export default function ReceptionistQueue() {
     const [queue, setQueue] = useState<any[]>([]);
     const [search, setSearch] = useState("");
+    const [viewMode, setViewMode] = useState<"table" | "card">("card");
+    const [autoRefresh, setAutoRefresh] = useState(true);
+    const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
-    useEffect(() => {
+    const loadQueue = () => {
         const mapStatus = (s: string) => {
             if (s === "WAITING") return "waiting";
             if (s === "IN_PROGRESS" || s === "EXAMINING") return "examining";
@@ -41,6 +46,7 @@ export default function ReceptionistQueue() {
                         status: mapStatus(a.status ?? ""),
                         waitTime: a.waitTime ?? "—",
                     })));
+                    setLastRefresh(new Date());
                 }
             })
             .catch(() => {
@@ -60,10 +66,18 @@ export default function ReceptionistQueue() {
                             status: a.status === "confirmed" ? "checked_in" : a.status,
                             waitTime: "—",
                         })));
+                        setLastRefresh(new Date());
                     })
                     .catch(() => setQueue([]));
             });
-    }, []);
+    };
+
+    useEffect(() => {
+        loadQueue();
+        if (!autoRefresh) return;
+        const id = setInterval(loadQueue, 30_000);
+        return () => clearInterval(id);
+    }, [autoRefresh]);
     const [filter, setFilter] = useState("all");
     const [transferModal, setTransferModal] = useState<{ id: number; type: "doctor" | "dept" } | null>(null);
     const [transferTarget, setTransferTarget] = useState("");
@@ -105,7 +119,21 @@ export default function ReceptionistQueue() {
                     <h1 className="text-2xl font-bold text-[#121417] dark:text-white">Quản lý Hàng đợi</h1>
                     <p className="text-sm text-[#687582] mt-1">Theo dõi và điều phối bệnh nhân chờ khám</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
+                    <button onClick={() => setAutoRefresh(!autoRefresh)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${autoRefresh
+                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                            : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                        }`}
+                        title={autoRefresh ? "Tự động cập nhật mỗi 30s" : "Cập nhật thủ công"}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${autoRefresh ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`} />
+                        {autoRefresh ? "Live" : "Đã tắt"}
+                    </button>
+                    <button onClick={loadQueue}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-xs font-medium hover:border-[#3C81C6] transition-colors">
+                        <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>refresh</span>
+                        Cập nhật ({lastRefresh.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })})
+                    </button>
                     <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm font-medium hover:border-[#3C81C6] transition-colors">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>print</span>In số thứ tự
                     </button>
@@ -150,7 +178,49 @@ export default function ReceptionistQueue() {
                             </button>
                         ))}
                     </div>
+                    <div className="inline-flex p-0.5 bg-gray-100 dark:bg-gray-800 rounded-xl ml-auto">
+                        <button onClick={() => setViewMode("card")}
+                            className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${viewMode === "card" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] hover:text-[#3C81C6]"}`}>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>grid_view</span>
+                            Thẻ
+                        </button>
+                        <button onClick={() => setViewMode("table")}
+                            className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${viewMode === "table" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] hover:text-[#3C81C6]"}`}>
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>table_rows</span>
+                            Bảng
+                        </button>
+                    </div>
                 </div>
+                {viewMode === "card" && (
+                    <div className="p-4">
+                        {filtered.length === 0 ? (
+                            <EmptyState icon="event_busy" title="Hàng đợi trống" description="Chưa có bệnh nhân nào hôm nay." />
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                                {filtered.map(q => {
+                                    const isPriority = q.age >= 60 || q.age <= 6;
+                                    return (
+                                        <QueueCard
+                                            key={q.id}
+                                            queueNumber={q.number}
+                                            patientName={q.patient}
+                                            patientAge={q.age}
+                                            department={q.dept}
+                                            note={[q.doctor ? `BS: ${q.doctor}` : "", q.room && q.room !== "—" ? `Phòng ${q.room}` : ""].filter(Boolean).join(" • ")}
+                                            waitMinutes={typeof q.waitTime === "number" ? q.waitTime : undefined}
+                                            priority={(isPriority ? "urgent" : "normal") as QueuePriority}
+                                            status={(q.status === "examining" ? "examining" : q.status === "completed" ? "done" : q.status === "checked_in" ? "called" : "waiting") as QueueStatus}
+                                            onCall={q.status === "waiting" ? () => handleCall(q.id) : undefined}
+                                            onSkip={q.status === "waiting" ? () => handleCancel(q.id) : undefined}
+                                            onDetail={() => { setTransferModal({ id: q.id, type: "doctor" }); setTransferTarget(""); }}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+                {viewMode === "table" && (
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead><tr className="border-b border-[#dde0e4] dark:border-[#2d353e]">
@@ -203,6 +273,7 @@ export default function ReceptionistQueue() {
                         </tbody>
                     </table>
                 </div>
+                )}
             </div>
 
             {/* Transfer Modal */}
