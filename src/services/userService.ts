@@ -186,6 +186,16 @@ export const deleteUser = async (id: string): Promise<void> => {
     }
 };
 
+/** DELETE /api/users/bulk — Vô hiệu hóa nhiều users */
+export const bulkDeleteUsers = async (userIds: string[]): Promise<any> => {
+    try {
+        const response = await axiosClient.delete(USER_ENDPOINTS.BULK_DELETE, { data: { userIds } });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Vô hiệu hóa hàng loạt thất bại');
+    }
+};
+
 // ============================================
 // Upload Avatar
 // ============================================
@@ -283,7 +293,7 @@ export const adminChangePassword = async (id: string, data: { oldPassword: strin
 };
 
 // ============================================
-// 1.1.5 Gán vai trò cho người dùng
+// 1.1.5 Đổi vai trò hiệu lực cho người dùng
 // ============================================
 
 /** GET /api/users/{userId}/roles — Lấy vai trò của user */
@@ -296,13 +306,13 @@ export const getUserRoles = async (id: string): Promise<any> => {
     }
 };
 
-/** POST /api/users/{userId}/roles — Gán vai trò cho user */
+/** POST /api/users/{userId}/roles — Đổi vai trò hiệu lực của user */
 export const assignUserRole = async (id: string, data: { role: string }): Promise<any> => {
     try {
         const response = await axiosClient.post(USER_ENDPOINTS.ROLES(id), { role: data.role.toUpperCase() });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Gán vai trò thất bại');
+        throw new Error(error.response?.data?.message || 'Đổi vai trò thất bại');
     }
 };
 

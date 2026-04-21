@@ -53,6 +53,7 @@ export interface User extends BaseEntity {
     phone?: string;
     avatar?: string;
     role: Role;
+    roles?: string[];
     status: UserStatus;
     lastAccess?: string;
 }

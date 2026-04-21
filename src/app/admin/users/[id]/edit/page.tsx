@@ -37,13 +37,13 @@ export default function EditUserPage() {
                 const d = (res as any)?.data ?? res as any;
                 if (d) {
                     const roleVal = Array.isArray(d.roles) && d.roles.length > 0
-                        ? d.roles[0].toLowerCase()
-                        : (d.role?.toLowerCase() ?? ROLES.STAFF);
+                        ? String(d.roles[0]).toUpperCase()
+                        : String(d.role ?? ROLES.STAFF).toUpperCase();
                     setUser({
                         id: d.users_id ?? d.id ?? userId,
                         fullName: d.profile?.full_name ?? d.full_name ?? d.fullName ?? "",
                         email: d.email ?? "",
-                        role: roleVal,
+                        role: roleVal as Role,
                         status: (d.status ?? "ACTIVE") as User["status"],
                         avatar: d.profile?.avatar_url ?? d.avatar ?? "",
                         createdAt: d.created_at ?? d.createdAt ?? "",

@@ -61,7 +61,7 @@ export const UI_TEXT = {
 
         // Users
         USERS: {
-            TITLE: "Người dùng & Phân quyền",
+            TITLE: "Quản lý người dùng",
             SUBTITLE: "Quản lý danh sách tài khoản, vai trò và phân quyền truy cập hệ thống.",
             ADD_USER: "Thêm người dùng",
             CONFIGURE_PERMISSIONS: "Thiết lập quyền",

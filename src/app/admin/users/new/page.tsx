@@ -119,8 +119,7 @@ export default function NewUserPage() {
         setLoadingDropdowns(p => ({ ...p, specialty: true }));
         getSpecialtiesByDepartment(formData.departmentId)
             .then(res => {
-                const items = (res as any)?.data?.items ?? (res as any)?.items ?? (res as any)?.data?.data ?? res?.data ?? res ?? [];
-                setSpecialties(Array.isArray(items) ? items : []);
+                setSpecialties(Array.isArray(res) ? res : []);
             })
             .catch(() => {})
             .finally(() => setLoadingDropdowns(p => ({ ...p, specialty: false })));

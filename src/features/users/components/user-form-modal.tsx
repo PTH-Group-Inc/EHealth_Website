@@ -123,6 +123,7 @@ export function UserFormModal({
             email: formData.email,
             phone: formData.phone,
             role: formData.role as Role,
+            roles: [formData.role as string],
             dob: formData.dob || undefined,
             gender: formData.gender,
             identity_card_number: formData.identity_card_number || undefined,
@@ -186,22 +187,49 @@ export function UserFormModal({
 
                     <div className="w-full space-y-4 pt-6 mt-auto border-t border-[#dde0e4] dark:border-[#2d353e]">
                         <div>
-                            <label className="block text-[11px] font-bold text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-widest">
-                                Phân Quyền Hệ Thống
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                                Vai trò
                             </label>
-                            <select
-                                name="role"
-                                value={formData.role}
-                                onChange={handleChange}
-                                className="w-full px-4 py-3 text-sm font-semibold text-[#121417] dark:text-white bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6] focus:border-[#3C81C6] shadow-sm transition-all cursor-pointer appearance-none"
-                                style={{ backgroundImage: `url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5%22%20stroke%3D%22%23687582%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center' }}
-                            >
-                                {Object.entries(ROLES).map(([key, value]) => (
-                                    <option key={key} value={value}>
-                                        {ROLE_LABELS[value as Role]}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="flex flex-col gap-2">
+                                {Object.entries(ROLES).map(([key, value]) => {
+                                    const roleVal = value as Role;
+                                    const isSelected = formData.role === roleVal;
+                                    return (
+                                        <div
+                                            key={key}
+                                            onClick={() => setFormData((prev) => ({ ...prev, role: roleVal }))}
+                                            className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between group ${
+                                                isSelected 
+                                                    ? "border-[#3C81C6] bg-[#3C81C6]/5 dark:bg-[#3C81C6]/10" 
+                                                    : "border-transparent bg-white dark:bg-[#1e242b] hover:border-gray-200 dark:hover:border-gray-700 shadow-sm"
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                                                    isSelected ? "bg-[#3C81C6]/10 text-[#3C81C6]" : "bg-gray-100 dark:bg-gray-800 text-gray-500 group-hover:bg-gray-200 dark:group-hover:bg-gray-700"
+                                                }`}>
+                                                    <span className="material-symbols-outlined text-[20px]">
+                                                        {roleVal === ROLES.ADMIN ? "shield_person" : roleVal === ROLES.DOCTOR ? "stethoscope" : roleVal === ROLES.PHARMACIST ? "medical_information" : "person"}
+                                                    </span>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className={`text-sm font-bold ${isSelected ? "text-[#3C81C6]" : "text-[#121417] dark:text-gray-200"}`}>
+                                                        {ROLE_LABELS[roleVal] || roleVal}
+                                                    </span>
+                                                    <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+                                                        {roleVal === ROLES.ADMIN ? "Toàn quyền hệ thống" : roleVal === ROLES.DOCTOR ? "Quản lý khám bệnh" : roleVal === ROLES.PHARMACIST ? "Hỗ trợ y tế" : "Nhân viên phòng khám"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                                isSelected ? "border-[#3C81C6]" : "border-gray-300 dark:border-gray-600"
+                                            }`}>
+                                                {isSelected && <div className="w-2.5 h-2.5 bg-[#3C81C6] rounded-full" />}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 </div>

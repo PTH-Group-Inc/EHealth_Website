@@ -61,8 +61,8 @@ export function UserCard({
     onResetPassword,
     onToggleStatus,
 }: UserCardProps) {
-    const primaryRole = (roles[0] ?? "").toLowerCase();
-    const roleCfg = ROLE_STYLE[primaryRole] ?? ROLE_STYLE.patient;
+    const effectiveRole = (roles[0] ?? "").toLowerCase();
+    const roleCfg = ROLE_STYLE[effectiveRole] ?? ROLE_STYLE.patient;
 
     return (
         <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm hover:shadow-md hover:border-[#3C81C6]/40 transition-all group">
@@ -91,21 +91,14 @@ export function UserCard({
                         </div>
                         {email && <p className="text-xs text-[#687582] dark:text-gray-400 truncate">{email}</p>}
                         {phone && <p className="text-xs text-[#687582] dark:text-gray-500 truncate">{phone}</p>}
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                            {roles.slice(0, 3).map((r) => {
-                                const rl = r.toLowerCase();
-                                const cfg = ROLE_STYLE[rl] ?? ROLE_STYLE.patient;
-                                return (
-                                    <span key={r} className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.badge}`}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>{cfg.icon}</span>
-                                        {ROLE_LABEL[rl] ?? r}
-                                    </span>
-                                );
-                            })}
-                            {roles.length > 3 && (
-                                <span className="text-[10px] text-[#687582] dark:text-gray-500">+{roles.length - 3}</span>
-                            )}
-                        </div>
+                        {effectiveRole && (
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${roleCfg.badge}`}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>{roleCfg.icon}</span>
+                                    {ROLE_LABEL[effectiveRole] ?? roles[0]}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 

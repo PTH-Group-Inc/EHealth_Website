@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ROLE_LABELS, ROLE_COLORS, type Role } from "@/constants/roles";
+import { ROLES, ROLE_LABELS, ROLE_COLORS, type Role } from "@/constants/roles";
 import { USER_STATUS } from "@/constants/status";
 import type { User } from "@/types";
 
@@ -43,13 +43,16 @@ export default function UserDetailPage() {
                 if (cancelled) return;
                 const raw = res?.data?.data ?? res?.data ?? res;
                 if (raw) {
+                    const normalizedRole = Array.isArray(raw.roles) && raw.roles.length > 0
+                        ? String(raw.roles[0]).toUpperCase()
+                        : String(raw.role ?? ROLES.STAFF).toUpperCase();
                     setUser({
                         ...raw,
                         id: String(raw.users_id ?? raw.id ?? userId),
                         fullName: raw.profile?.full_name ?? raw.full_name ?? raw.fullName ?? raw.email ?? "",
                         email: raw.email ?? "",
                         phone: raw.phone ?? raw.phone_number ?? "",
-                        role: Array.isArray(raw.roles) && raw.roles.length > 0 ? raw.roles[0].toLowerCase() : (raw.role ?? "staff"),
+                        role: normalizedRole as Role,
                         status: raw.status ?? "ACTIVE",
                         avatar: raw.profile?.avatar_url ?? raw.avatar ?? "",
                         createdAt: formatDate(raw.created_at ?? raw.createdAt ?? ""),

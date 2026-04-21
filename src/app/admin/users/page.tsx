@@ -7,6 +7,10 @@ import { ROLES, ROLE_LABELS, ROLE_COLORS, type Role } from "@/constants/roles";
 import { USER_STATUS } from "@/constants/status";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { UserFormModal } from "@/features/users/components/user-form-modal";
+import { AssignRoleModal } from "@/features/users/components/assign-role-modal";
+import { AssignFacilityModal } from "@/features/users/components/assign-facility-modal";
+import { ResetPasswordModal } from "@/features/users/components/reset-password-modal";
+import { UserDetailsModal } from "@/features/users/components/user-details-modal";
 import * as userService from "@/services/userService";
 import type { User } from "@/types";
 import { validateFile } from "@/utils/fileValidation";
@@ -26,16 +30,102 @@ function formatDate(iso: unknown): string {
 type SortField = "fullName" | "role" | "createdAt" | "lastAccess" | "status";
 type SortOrder = "asc" | "desc";
 
+type AdminUser = User & {
+    phone?: string;
+    avatar?: string;
+    roles?: string[];
+    dob?: string;
+    gender?: string;
+    identity_card_number?: string;
+    address?: string;
+};
+
+function normalizeUserRoles(rawRoles: unknown): string[] {
+    if (Array.isArray(rawRoles)) {
+        const normalizedRoles = rawRoles
+            .map((role) => {
+                if (typeof role === "string") return role.trim().toUpperCase();
+                if (role && typeof role === "object") {
+                    return String((role as Record<string, unknown>).code ?? (role as Record<string, unknown>).role ?? (role as Record<string, unknown>).name ?? "")
+                        .trim()
+                        .toUpperCase();
+                }
+                return "";
+            })
+            .filter(Boolean);
+
+        return normalizedRoles.length > 0 ? [normalizedRoles[0]] : [ROLES.STAFF];
+    }
+
+    if (typeof rawRoles === "string" && rawRoles.trim().length > 0) {
+        return [rawRoles.trim().toUpperCase()];
+    }
+
+    return [ROLES.STAFF];
+}
+
+function mapApiUserToAdminUser(u: any): AdminUser {
+    let idStr = "";
+    if (u.users_id) idStr = typeof u.users_id === "object" ? String(u.users_id.id || u.users_id._id || "") : String(u.users_id);
+    else if (u.id) idStr = typeof u.id === "object" ? String(u.id.id || u.id._id || "") : String(u.id);
+
+    let avatarStr = "";
+    const uAvatar = u.profile?.avatar_url ?? u.avatar;
+    if (typeof uAvatar === "string") {
+        avatarStr = uAvatar;
+    } else if (Array.isArray(uAvatar) && uAvatar.length > 0) {
+        avatarStr = typeof uAvatar[0] === "string" ? uAvatar[0] : (uAvatar[0]?.url || uAvatar[0]?.path || "");
+    } else if (uAvatar && typeof uAvatar === "object") {
+        avatarStr = uAvatar.url || uAvatar.path || "";
+    }
+
+    let emailStr = "";
+    if (typeof u.email === "string") emailStr = u.email;
+    else if (Array.isArray(u.email)) emailStr = String(u.email[0] || "");
+    else if (u.email && typeof u.email === "object") emailStr = String(u.email.address || u.email.email || "");
+
+    const roles = normalizeUserRoles(u.roles);
+    const roleVal = roles[0] ?? ROLES.STAFF;
+
+    return {
+        id: idStr || "unknown_id",
+        fullName: String(u.profile?.full_name ?? u.full_name ?? u.fullName ?? emailStr ?? ""),
+        email: emailStr,
+        phone: String(u.phone ?? u.phone_number ?? ""),
+        role: roleVal as Role,
+        roles,
+        status: String(u.status ?? "ACTIVE") as AdminUser["status"],
+        avatar: avatarStr,
+        createdAt: String(u.created_at ?? u.createdAt ?? ""),
+        updatedAt: String(u.updated_at ?? u.updatedAt ?? ""),
+        dob: u.profile?.dob ?? u.dob ?? "",
+        gender: u.profile?.gender ?? u.gender ?? "",
+        identity_card_number: u.profile?.identity_card_number ?? u.identity_card_number ?? "",
+        address: u.profile?.address ?? u.address ?? "",
+    };
+}
+
+function extractUserItems(response: any): any[] {
+    return response?.data?.items ?? response?.items ?? response?.data?.data ?? response?.data ?? response ?? [];
+}
+
 export default function UsersPage() {
     // State
     const router = useRouter();
-    const [users, setUsers] = useState<User[]>([]);
+    const [users, setUsers] = useState<AdminUser[]>([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearch = useDeferredValue(searchQuery);
     const [roleFilter, setRoleFilter] = useState<string>("all");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+
+    const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+    const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedActionUser, setSelectedActionUser] = useState<AdminUser | null>(null);
+
     const [sortField, setSortField] = useState<SortField>("createdAt");
     const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
     const [viewMode, setViewMode] = useState<"table" | "card">("card");
@@ -43,69 +133,29 @@ export default function UsersPage() {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [customPageSize, setCustomPageSize] = useState("");
     const pageInputRef = useRef<HTMLInputElement>(null);
+    const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
 
-    // Load users from API
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                setIsDataLoading(true);
-                const res: any = await userService.getUsers({ limit: 100 });
-                const items = res?.data?.items ?? res?.items ?? res?.data?.data ?? res?.data ?? res ?? [];
-                if (Array.isArray(items) && items.length > 0) {
-                    setUsers(items.map((u: any) => {
-                        let idStr = "";
-                        if (u.users_id) idStr = typeof u.users_id === 'object' ? String(u.users_id.id || u.users_id._id || "") : String(u.users_id);
-                        else if (u.id) idStr = typeof u.id === 'object' ? String(u.id.id || u.id._id || "") : String(u.id);
-
-                        let avatarStr = "";
-                        const uAvatar = u.profile?.avatar_url ?? u.avatar;
-                        if (typeof uAvatar === 'string') {
-                            avatarStr = uAvatar;
-                        } else if (Array.isArray(uAvatar) && uAvatar.length > 0) {
-                            avatarStr = typeof uAvatar[0] === 'string' ? uAvatar[0] : (uAvatar[0]?.url || uAvatar[0]?.path || "");
-                        } else if (uAvatar && typeof uAvatar === 'object') {
-                            avatarStr = uAvatar.url || uAvatar.path || "";
-                        }
-
-                        let roleVal = "staff";
-                        if (Array.isArray(u.roles) && u.roles.length > 0) {
-                            const r = u.roles[0];
-                            if (typeof r === 'string') roleVal = r.toLowerCase();
-                            else if (r && typeof r === 'object') roleVal = String(r.name || r.role || "staff").toLowerCase();
-                        } else if (typeof u.roles === 'string') {
-                            roleVal = u.roles.toLowerCase();
-                        }
-
-                        let emailStr = "";
-                        if (typeof u.email === 'string') emailStr = u.email;
-                        else if (Array.isArray(u.email)) emailStr = String(u.email[0] || "");
-                        else if (u.email && typeof u.email === 'object') emailStr = String(u.email.address || u.email.email || "");
-
-                        return {
-                            id: idStr || "unknown_id",
-                            fullName: String(u.profile?.full_name ?? u.full_name ?? u.fullName ?? emailStr ?? ""),
-                            email: emailStr,
-                            phone: String(u.phone ?? u.phone_number ?? ""),
-                            role: roleVal,
-                            roles: Array.isArray(u.roles) ? u.roles.map((r: any) => typeof r === 'string' ? r : String(r?.name || r?.role || "")).filter(Boolean) : [roleVal],
-                            status: String(u.status ?? "ACTIVE"),
-                            avatar: avatarStr,
-                            createdAt: String(u.created_at ?? u.createdAt ?? ""),
-                            dob: u.profile?.dob ?? u.dob ?? "",
-                            gender: u.profile?.gender ?? u.gender ?? "",
-                            identity_card_number: u.profile?.identity_card_number ?? u.identity_card_number ?? "",
-                            address: u.profile?.address ?? u.address ?? "",
-                        };
-                    }) as unknown as User[]);
-                }
-            } catch (err) {
-                console.error('Lỗi tải danh sách người dùng:', err);
-            } finally {
-                setIsDataLoading(false);
+    const loadUsers = useCallback(async () => {
+        try {
+            setIsDataLoading(true);
+            const res: any = await userService.getUsers({ limit: 100 });
+            const items = extractUserItems(res);
+            if (Array.isArray(items)) {
+                setUsers(items.map(mapApiUserToAdminUser));
+            } else {
+                setUsers([]);
             }
-        };
-        fetchUsers();
+        } catch (err) {
+                console.error('Lỗi tải danh sách người dùng:', err);
+                setUsers([]);
+        } finally {
+            setIsDataLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        loadUsers();
+    }, [loadUsers]);
 
     const stats = useMemo(() => ({
         total: users.length,
@@ -157,7 +207,41 @@ export default function UsersPage() {
     // Reset trang về 1 khi đổi bộ lọc
     useEffect(() => {
         setCurrentPage(1);
+        setSelectedUserIds(new Set());
     }, [debouncedSearch, roleFilter]);
+
+    useEffect(() => {
+        setSelectedUserIds(new Set());
+    }, [currentPage, itemsPerPage]);
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedUserIds(new Set(paginatedUsers.map(u => u.id)));
+        } else {
+            setSelectedUserIds(new Set());
+        }
+    };
+
+    const handleSelectUser = (id: string, checked: boolean) => {
+        const newSet = new Set(selectedUserIds);
+        if (checked) newSet.add(id);
+        else newSet.delete(id);
+        setSelectedUserIds(newSet);
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedUserIds.size === 0) return;
+        if (!confirm(`Bạn có chắc chắn muốn vô hiệu hóa ${selectedUserIds.size} người dùng đã chọn?`)) return;
+        try {
+            await userService.bulkDeleteUsers(Array.from(selectedUserIds));
+            setUsers((prev) => prev.map(u => selectedUserIds.has(u.id) ? { ...u, status: USER_STATUS.LOCKED } : u));
+            setSelectedUserIds(new Set());
+            alert(`Đã vô hiệu hóa thành công ${selectedUserIds.size} người dùng.`);
+        } catch (err: any) {
+            console.error('Vô hiệu hóa hàng loạt thất bại:', err);
+            alert(err?.message || 'Vô hiệu hóa hàng loạt thất bại. Vui lòng thử lại.');
+        }
+    };
 
     // Handler đổi items per page - cho phép nhập tự do
     const handleItemsPerPageChange = useCallback((value: number) => {
@@ -267,30 +351,60 @@ export default function UsersPage() {
 
             if (editingUser) {
                 await userService.updateUser(editingUser.id, coreData as any);
-                let finalUserData = { ...coreData };
                 if (file) {
-                    const uploadRes = await userService.uploadUserAvatar(editingUser.id, file);
-                    if (uploadRes?.data?.url) {
-                        finalUserData.avatar = uploadRes.data.url;
-                    }
+                    await userService.uploadUserAvatar(editingUser.id, file);
                 }
-                setUsers((prev) =>
-                    prev.map((u) => (u.id === editingUser.id ? { ...u, ...finalUserData } : u))
-                );
             } else {
                 const created: any = await userService.createUser(coreData as any);
-                let finalUser = { ...created };
-                if (file && created?.id) {
-                    const uploadRes = await userService.uploadUserAvatar(created.id, file);
-                    if (uploadRes?.data?.url) {
-                        finalUser.avatar = uploadRes.data.url;
-                    }
+                const createdUserId =
+                    created?.userId ??
+                    created?.data?.userId ??
+                    created?.id ??
+                    created?.data?.id ??
+                    created?.users_id ??
+                    created?.data?.users_id;
+                if (file && createdUserId) {
+                    await userService.uploadUserAvatar(String(createdUserId), file);
                 }
-                setUsers((prev) => [finalUser as unknown as User, ...prev]);
             }
+            await loadUsers();
         } catch (err) {
             console.error('Lưu người dùng thất bại:', err);
             alert('Lưu người dùng thất bại. Vui lòng thử lại.');
+        }
+    };
+
+    const handleAssignRole = async (role: string) => {
+        if (!selectedActionUser) return;
+        try {
+            await userService.assignUserRole(selectedActionUser.id, { role });
+            await loadUsers();
+            alert("Đổi vai trò thành công");
+            setIsRoleModalOpen(false);
+        } catch (error: any) {
+            alert(error?.message || "Đổi vai trò thất bại");
+        }
+    };
+
+    const handleAssignFacility = async (data: { branchId: string; departmentId?: string; roleTitle?: string }) => {
+        if (!selectedActionUser) return;
+        try {
+            await userService.assignUserFacility(selectedActionUser.id, data);
+            alert("Gán cơ sở thành công");
+            setIsFacilityModalOpen(false);
+        } catch (error: any) {
+            alert(error?.message || "Gán cơ sở thất bại");
+        }
+    };
+
+    const handleResetPassword = async (newPassword?: string) => {
+        if (!selectedActionUser) return;
+        try {
+            await userService.adminResetPassword(selectedActionUser.id, newPassword);
+            alert("Cấp lại mật khẩu thành công. " + (!newPassword ? "Hệ thống đã gửi mật khẩu mới qua email." : ""));
+            setIsPasswordModalOpen(false);
+        } catch (error: any) {
+            alert(error?.message || "Cấp lại mật khẩu thất bại");
         }
     };
 
@@ -312,8 +426,10 @@ export default function UsersPage() {
                 return UI_TEXT.STATUS.ACTIVE;
             case USER_STATUS.LOCKED:
                 return UI_TEXT.STATUS.LOCKED;
+            case USER_STATUS.INACTIVE:
+                return UI_TEXT.STATUS.INACTIVE;
             default:
-                return UI_TEXT.STATUS.OFFLINE;
+                return UI_TEXT.STATUS.INACTIVE;
         }
     };
 
@@ -355,25 +471,9 @@ export default function UsersPage() {
                                 const count = res?.data?.count ?? res?.count ?? "nhiều";
                                 alert(`Import thành công ${count} người dùng.`);
                                 // Reload danh sách
-                                setIsDataLoading(true);
-                                const reloadRes: any = await userService.getUsers({ limit: 100 });
-                                const items = reloadRes?.data?.items ?? reloadRes?.items ?? reloadRes?.data?.data ?? reloadRes?.data ?? reloadRes ?? [];
-                                if (Array.isArray(items)) {
-                                    setUsers(items.map((u: Record<string, unknown>) => ({
-                                        id: String(u.users_id ?? u.id ?? ""),
-                                        fullName: (u as any).profile?.full_name ?? u.full_name ?? u.fullName ?? u.email ?? "",
-                                        email: u.email ?? "",
-                                        phone: u.phone ?? u.phone_number ?? "",
-                                        role: Array.isArray(u.roles) && (u.roles as string[]).length > 0 ? (u.roles as string[])[0].toLowerCase() : "staff",
-                                        status: u.status ?? "ACTIVE",
-                                        avatar: (u as any).profile?.avatar_url ?? u.avatar ?? "",
-                                        createdAt: u.created_at ?? u.createdAt ?? "",
-                                    })) as unknown as User[]);
-                                }
+                                await loadUsers();
                             } catch (err: any) {
                                 alert(err?.message || "Import thất bại. Vui lòng kiểm tra định dạng file và thử lại.");
-                            } finally {
-                                setIsDataLoading(false);
                             }
                         }} />
                     </label>
@@ -472,6 +572,15 @@ export default function UsersPage() {
                         </select>
                     </div>
                     <div className="flex items-center gap-2">
+                        {selectedUserIds.size > 0 && viewMode === "table" && (
+                            <button
+                                onClick={handleBulkDelete}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold transition-colors mr-2 shadow-sm"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+                                Vô hiệu hóa ({selectedUserIds.size})
+                            </button>
+                        )}
                         <div className="inline-flex p-0.5 bg-gray-100 dark:bg-gray-800 rounded-xl">
                             <button onClick={() => setViewMode("card")}
                                 className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${viewMode === "card" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] hover:text-[#3C81C6]"}`}>
@@ -544,15 +653,26 @@ export default function UsersPage() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-[#dde0e4] dark:border-[#2d353e]">
+                                <th className="w-12 py-4 px-4 text-center">
+                                    <input 
+                                        type="checkbox" 
+                                        onChange={handleSelectAll}
+                                        checked={paginatedUsers.length > 0 && selectedUserIds.size === paginatedUsers.length}
+                                        className="w-4 h-4 text-[#3C81C6] bg-white border-gray-300 rounded focus:ring-[#3C81C6] cursor-pointer"
+                                        title="Chọn tất cả"
+                                        aria-label="Chọn tất cả"
+                                    />
+                                </th>
                                 <th onClick={() => toggleSort("fullName")} className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-[#3C81C6] select-none">
                                     <span className="flex items-center gap-1">
                                         Thông tin người dùng
                                         {sortField === "fullName" && <span className="material-symbols-outlined text-[14px]">{sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}</span>}
                                     </span>
                                 </th>
+                                <th className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase tracking-wider">Số điện thoại</th>
                                 <th onClick={() => toggleSort("role")} className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-[#3C81C6] select-none">
                                     <span className="flex items-center gap-1">
-                                        Vai trò (Role)
+                                        VAI TRÒ
                                         {sortField === "role" && <span className="material-symbols-outlined text-[14px]">{sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}</span>}
                                     </span>
                                 </th>
@@ -562,7 +682,6 @@ export default function UsersPage() {
                                         {sortField === "createdAt" && <span className="material-symbols-outlined text-[14px]">{sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}</span>}
                                     </span>
                                 </th>
-                                <th className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase tracking-wider">Truy cập cuối</th>
                                 <th onClick={() => toggleSort("status")} className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-[#3C81C6] select-none">
                                     <span className="flex items-center gap-1">
                                         Trạng thái
@@ -575,7 +694,7 @@ export default function UsersPage() {
                         <tbody className="divide-y divide-[#dde0e4] dark:divide-[#2d353e]">
                             {filteredUsers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="py-12 text-center text-[#687582] dark:text-gray-400">
+                                    <td colSpan={7} className="py-12 text-center text-[#687582] dark:text-gray-400">
                                         <span className="material-symbols-outlined text-4xl mb-2 block">search_off</span>
                                         {UI_TEXT.TABLE.NO_RESULTS}
                                     </td>
@@ -584,7 +703,17 @@ export default function UsersPage() {
                                 paginatedUsers.map((user) => {
                                     const roleColor = ROLE_COLORS[user.role?.toUpperCase() as Role] ?? ROLE_COLORS[user.role as Role] ?? { bg: "bg-gray-100 dark:bg-gray-700", text: "text-gray-700 dark:text-gray-300", dot: "bg-gray-500" };
                                     return (
-                                        <tr key={user.id} className={`group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${user.status === USER_STATUS.LOCKED ? "opacity-60" : ""}`}>
+                                        <tr key={user.id} className={`group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${user.status === USER_STATUS.LOCKED ? "opacity-60" : ""} ${selectedUserIds.has(user.id) ? "bg-[#3C81C6]/5 dark:bg-[#3C81C6]/10" : ""}`}>
+                                            <td className="py-4 px-4 text-center">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={selectedUserIds.has(user.id)}
+                                                    onChange={(e) => handleSelectUser(user.id, e.target.checked)}
+                                                    className="w-4 h-4 text-[#3C81C6] bg-white border-gray-300 rounded focus:ring-[#3C81C6] cursor-pointer"
+                                                    title={`Chọn ${user.fullName}`}
+                                                    aria-label={`Chọn ${user.fullName}`}
+                                                />
+                                            </td>
                                             <td className="py-4 px-6">
                                                 <div className="flex items-center gap-3">
                                                     <div className="relative">
@@ -607,16 +736,16 @@ export default function UsersPage() {
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6">
-                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${roleColor.bg} ${roleColor.text} border border-current/10`}>
+                                                <p className="text-sm text-[#121417] dark:text-gray-200 font-medium">{user.phone || "—"}</p>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${roleColor.bg} ${roleColor.text} border border-current/10 shadow-sm`}>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${roleColor.dot} mr-1.5`}></span>
-                                                    {ROLE_LABELS[user.role as Role]}
+                                                    {ROLE_LABELS[user.role?.toUpperCase() as Role] || ROLE_LABELS[user.role as Role] || user.role}
                                                 </span>
                                             </td>
                                             <td className="py-4 px-6">
                                                 <p className="text-sm text-[#121417] dark:text-gray-200">{formatDate(user.createdAt)}</p>
-                                            </td>
-                                            <td className="py-4 px-6">
-                                                <p className="text-sm text-[#121417] dark:text-gray-200">{user.lastAccess ? formatDate(user.lastAccess) : "—"}</p>
                                             </td>
                                             <td className="py-4 px-6">
                                                 <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusStyle(user.status)}`}>
@@ -626,16 +755,11 @@ export default function UsersPage() {
                                             <td className="py-4 px-6 text-right">
                                                 <DropdownMenu
                                                     items={[
-                                                        {
-                                                            label: "Xem chi tiết",
-                                                            icon: "visibility",
-                                                            onClick: () => router.push(`/admin/users/${user.id}`),
-                                                        },
-                                                        {
-                                                            label: "Chỉnh sửa",
-                                                            icon: "edit",
-                                                            onClick: () => router.push(`/admin/users/${user.id}/edit`),
-                                                        },
+                                                        { label: "Xem chi tiết", icon: "visibility", onClick: () => { setSelectedActionUser(user); setIsDetailsModalOpen(true); } },
+                                                        { label: "Chỉnh sửa", icon: "edit", onClick: () => handleEditUser(user) },
+                                                        { label: "Đổi vai trò", icon: "assignment_ind", onClick: () => { setSelectedActionUser(user); setIsRoleModalOpen(true); } },
+                                                        { label: "Gán vào chi nhánh", icon: "domain", onClick: () => { setSelectedActionUser(user); setIsFacilityModalOpen(true); } },
+                                                        { label: "Quản lý mật khẩu", icon: "password", onClick: () => { setSelectedActionUser(user); setIsPasswordModalOpen(true); } },
                                                         {
                                                             label: user.status === USER_STATUS.LOCKED ? "Mở khóa" : "Khóa tài khoản",
                                                             icon: user.status === USER_STATUS.LOCKED ? "lock_open" : "lock",
@@ -736,13 +860,39 @@ export default function UsersPage() {
 
             </div>
 
-            {/* User Form Modal */}
             <UserFormModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleSubmitUser}
                 initialData={editingUser || undefined}
                 mode={editingUser ? "edit" : "create"}
+            />
+
+            <AssignRoleModal
+                isOpen={isRoleModalOpen}
+                onClose={() => setIsRoleModalOpen(false)}
+                onSubmit={handleAssignRole}
+                user={selectedActionUser}
+            />
+
+            <AssignFacilityModal
+                isOpen={isFacilityModalOpen}
+                onClose={() => setIsFacilityModalOpen(false)}
+                onSubmit={handleAssignFacility}
+                user={selectedActionUser}
+            />
+
+            <ResetPasswordModal
+                isOpen={isPasswordModalOpen}
+                onClose={() => setIsPasswordModalOpen(false)}
+                onSubmit={handleResetPassword}
+                user={selectedActionUser}
+            />
+
+            <UserDetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                user={selectedActionUser}
             />
         </>
     );

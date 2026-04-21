@@ -58,6 +58,7 @@ export const USER_ENDPOINTS = {
     LIST: '/api/users',                           // GET: danh sách users
     CREATE: '/api/users',                         // POST: tạo user
     SEARCH: '/api/users/search',                  // GET: tìm kiếm user
+    BULK_DELETE: '/api/users/bulk',               // DELETE: vô hiệu hóa nhiều users
     DETAIL: (id: string) => `/api/users/${id}`,   // GET: chi tiết user
     AVATAR: (id: string) => `/api/users/${id}/avatar`, // POST: upload avatar
 
@@ -73,7 +74,7 @@ export const USER_ENDPOINTS = {
     RESET_PASSWORD: (id: string) => `/api/users/${id}/reset-password`,   // POST: admin reset pw
     CHANGE_PASSWORD: (id: string) => `/api/users/${id}/change-password`, // POST: admin đổi pw
 
-    // 1.1.5 Gán vai trò cho người dùng
+    // 1.1.5 Đổi vai trò hiệu lực cho người dùng
     ROLES: (id: string) => `/api/users/${id}/roles`,                         // GET/POST
     ROLE_DELETE: (userId: string, roleId: string) => `/api/users/${userId}/roles/${roleId}`, // DELETE
 
