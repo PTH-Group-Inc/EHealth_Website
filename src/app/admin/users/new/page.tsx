@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ROLES, ROLE_LABELS, type Role } from "@/constants/roles";
-import { createUser } from "@/services/userService";
+import { createUser, uploadUserAvatar } from "@/services/userService";
+import { staffService } from "@/services/staffService";
 import { facilityService } from "@/services/facilityService";
 import { branchService } from "@/services/branchService";
 import { getDepartments, unwrapDepartments } from "@/services/departmentService";
@@ -41,6 +42,14 @@ export default function NewUserPage() {
         branchId: "",
         departmentId: "",
         specialtyId: "",
+        
+        // Công việc
+        role_title: "",
+        
+        // Doctor info
+        title: "",
+        biography: "",
+        consultation_fee: "",
     });
 
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -197,7 +206,7 @@ export default function NewUserPage() {
         setSaving(true);
         setApiError(null);
         try {
-            await createUser({
+            const payload = {
                 fullName: formData.fullName,
                 full_name: formData.fullName,
                 email: formData.email,
@@ -214,7 +223,34 @@ export default function NewUserPage() {
                 branch_id: formData.branchId || undefined,
                 department_id: formData.departmentId || undefined,
                 specialty_id: formData.specialtyId || undefined,
-            } as any);
+                role_title: formData.role_title || undefined,
+                
+                // Doctor info
+                title: formData.title || undefined,
+                biography: formData.biography || undefined,
+                consultation_fee: formData.consultation_fee ? Number(formData.consultation_fee) : undefined,
+            };
+
+            let newUserId: string | undefined;
+
+            if (formData.role !== ROLES.PATIENT) {
+                const res = await staffService.create(payload as any);
+                newUserId = (res as any)?.users_id || (res as any)?.id;
+            } else {
+                const res = await createUser(payload as any);
+                newUserId = (res as any)?.users_id || (res as any)?.id;
+            }
+
+            // Upload ảnh nếu có
+            if (avatarFile && newUserId) {
+                try {
+                    await uploadUserAvatar(newUserId, avatarFile);
+                } catch (uploadErr) {
+                    console.error("Upload avatar failed:", uploadErr);
+                    // Không throw error để vẫn redirect về danh sách
+                }
+            }
+
             router.push("/admin/users");
         } catch (err: any) {
             setApiError(err?.message || "Tạo tài khoản thất bại. Vui lòng thử lại.");
@@ -472,6 +508,33 @@ export default function NewUserPage() {
                                         />
                                     </div>
                                 )}
+
+                                {/* Chức vụ / Vị trí */}
+                                <div>
+                                    <FormField label="Vị trí công tác" name="role_title" value={formData.role_title} onChange={handleChange} placeholder="VD: Trưởng khoa, Quản lý..." icon="work" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Section: Thông tin Bác sĩ */}
+                    {currentRole === ROLES.DOCTOR && (
+                        <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-3xl shadow-sm animate-in fade-in duration-300">
+                            <div className="p-6 border-b border-[#dde0e4] dark:border-[#2d353e] flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
+                                    <span className="material-symbols-outlined">medical_information</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-[#121417] dark:text-white">Thông tin Chuyên môn</h2>
+                                    <p className="text-xs text-gray-500">Dành riêng cho Bác sĩ</p>
+                                </div>
+                            </div>
+                            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                <FormField label="Chức danh / Học vị" name="title" value={formData.title} onChange={handleChange} placeholder="VD: Ths. Bs., TS. Bs..." icon="badge" />
+                                <FormField label="Giá khám bệnh (VND)" name="consultation_fee" type="number" value={formData.consultation_fee} onChange={handleChange} placeholder="VD: 500000" icon="payments" />
+                                <div className="md:col-span-2">
+                                    <FormField label="Tiểu sử / Giới thiệu" name="biography" value={formData.biography} onChange={handleChange} placeholder="Nhập tiểu sử, kinh nghiệm công tác..." icon="description" />
+                                </div>
                             </div>
                         </div>
                     )}

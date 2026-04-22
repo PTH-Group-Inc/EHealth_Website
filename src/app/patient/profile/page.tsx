@@ -7,6 +7,7 @@ import axiosClient from "@/api/axiosClient";
 import { PROFILE_ENDPOINTS } from "@/api/endpoints";
 import { getProfileSessions, deleteProfileSession } from "@/services/authService";
 import { validateName, validatePhone, validateDob, validateIdNumber } from "@/utils/validation";
+import { getImageUrl } from "@/utils/helpers";
 
 const TABS = [
     { id: "personal", label: "Thông tin cá nhân", icon: "person" },
@@ -248,7 +249,7 @@ export default function ProfilePage() {
                 <div className="relative">
                     {profile.avatar ? (
                         <div className="w-20 h-20 rounded-full border border-gray-200 overflow-hidden shadow-lg">
-                            <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                            <img src={getImageUrl(profile.avatar)} alt="Avatar" className="w-full h-full object-cover" />
                         </div>
                     ) : (
                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#3C81C6] to-[#60a5fa] flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-[#3C81C6]/20">

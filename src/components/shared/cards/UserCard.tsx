@@ -4,7 +4,7 @@
  * UserCard — card user/account cho admin users list.
  */
 
-import { getInitials } from "@/utils/helpers";
+import { getInitials, getImageUrl } from "@/utils/helpers";
 import { formatRelativeTime } from "@/utils/formatters";
 
 const ROLE_STYLE: Record<string, { badge: string; icon: string }> = {
@@ -70,7 +70,7 @@ export function UserCard({
                 <div className="flex items-start gap-3">
                     {avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={avatarUrl} alt={fullName}
+                        <img src={getImageUrl(avatarUrl)} alt={fullName}
                             className="w-12 h-12 rounded-xl object-cover border border-gray-100 dark:border-gray-800 flex-shrink-0" />
                     ) : (
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3C81C6] to-[#1d4ed8] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">

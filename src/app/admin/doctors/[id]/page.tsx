@@ -6,6 +6,14 @@ import Link from "next/link";
 import { DOCTOR_STATUS } from "@/constants/status";
 import type { Doctor } from "@/types";
 import { staffService } from "@/services/staffService";
+import { getImageUrl } from "@/utils/helpers";
+
+const TABS = [
+    { key: "overview", label: "Tổng quan", icon: "person" },
+    { key: "professional", label: "Chuyên môn", icon: "workspace_premium" },
+    { key: "schedule", label: "Lịch làm việc", icon: "calendar_month" },
+    { key: "education", label: "Học vấn & KN", icon: "school" },
+];
 
 export default function DoctorDetailPage() {
     const router = useRouter();
@@ -14,6 +22,7 @@ export default function DoctorDetailPage() {
 
     const [doctor, setDoctor] = useState<Doctor | null>(null);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState("overview");
 
     useEffect(() => {
         if (!doctorId) return;
@@ -107,8 +116,8 @@ export default function DoctorDetailPage() {
                 <div className="h-36 bg-gradient-to-r from-[#3C81C6] via-[#60a5fa] to-[#93c5fd] relative">
                     <div className="absolute -bottom-14 left-8">
                         <div className="w-28 h-28 rounded-2xl bg-white dark:bg-[#1e242b] border-4 border-white dark:border-[#1e242b] shadow-lg flex items-center justify-center overflow-hidden">
-                            {doctor.avatar ? (
-                                <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('${doctor.avatar}')` }} />
+                            {getImageUrl(doctor.avatar) ? (
+                                <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('${getImageUrl(doctor.avatar)}')` }} />
                             ) : (
                                 <span className="material-symbols-outlined text-5xl text-[#3C81C6]">person</span>
                             )}
@@ -134,65 +143,115 @@ export default function DoctorDetailPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Tab Navigation */}
+                <div className="px-8 border-t border-[#dde0e4] dark:border-[#2d353e]">
+                    <div className="flex gap-1 -mb-px overflow-x-auto">
+                        {TABS.map((tab) => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className={`flex items-center gap-2 px-4 py-3.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+                                    activeTab === tab.key
+                                        ? "border-[#3C81C6] text-[#3C81C6]"
+                                        : "border-transparent text-[#687582] hover:text-[#3C81C6] hover:border-gray-300"
+                                }`}
+                            >
+                                <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
-            {/* Detail Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Thông tin cá nhân */}
-                <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-[#121417] dark:text-white mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#3C81C6]">badge</span>
-                        Thông tin cá nhân
-                    </h2>
-                    <div className="space-y-4">
-                        <InfoRow label="Họ và tên" value={doctor.fullName} icon="person" />
-                        <InfoRow label="Email" value={doctor.email || "—"} icon="email" />
-                        <InfoRow label="Số điện thoại" value={doctor.phone || "—"} icon="phone" />
-                        <InfoRow label="Mã bác sĩ" value={doctor.code} icon="fingerprint" />
-                        <InfoRow label="Giới tính" value="Nam" icon="wc" />
-                    </div>
-                </div>
-
-                {/* Thông tin chuyên môn */}
-                <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-[#121417] dark:text-white mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#3C81C6]">stethoscope</span>
-                        Thông tin chuyên môn
-                    </h2>
-                    <div className="space-y-4">
-                        <InfoRow label="Chuyên khoa" value={doctor.departmentName} icon="domain" />
-                        <InfoRow label="Chuyên ngành" value={doctor.specialization || "—"} icon="medical_information" />
-                        <InfoRow label="Kinh nghiệm" value={`${doctor.experience || 5} năm`} icon="work_history" />
-                        <InfoRow label="Đánh giá" value={`${doctor.rating}/5 (${doctor.reviewCount} đánh giá)`} icon="star" />
-                        <InfoRow label="Ngày tạo" value={doctor.createdAt || "—"} icon="event" />
-                    </div>
-                </div>
-
-                {/* Lịch làm việc */}
-                <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm p-6 lg:col-span-2">
-                    <h2 className="text-lg font-bold text-[#121417] dark:text-white mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#3C81C6]">calendar_month</span>
-                        Lịch làm việc
-                    </h2>
-                    {doctor.workingSchedule && doctor.workingSchedule.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {doctor.workingSchedule.map((schedule, idx) => (
-                                <div key={idx} className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                                    <p className="text-sm font-bold text-[#121417] dark:text-white mb-1">
-                                        {schedule.shift === "MORNING" ? "Ca sáng" : schedule.shift === "AFTERNOON" ? "Ca chiều" : "Ca tối"}
-                                    </p>
-                                    <p className="text-xs text-[#687582] dark:text-gray-400">
-                                        {schedule.days.join(", ")}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Chưa có lịch làm việc</p>
-                    )}
-                </div>
+            {/* Tab Content */}
+            <div className="mt-6">
+                {activeTab === "overview" && <OverviewTab doctor={doctor} />}
+                {activeTab === "professional" && <ProfessionalTab doctor={doctor} />}
+                {activeTab === "schedule" && <ScheduleTab doctor={doctor} />}
+                {activeTab === "education" && <EducationTab doctor={doctor} />}
             </div>
         </>
+    );
+}
+
+function OverviewTab({ doctor }: { doctor: Doctor }) {
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm p-6">
+                <h2 className="text-lg font-bold text-[#121417] dark:text-white mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#3C81C6]">badge</span>
+                    Thông tin cá nhân
+                </h2>
+                <div className="space-y-4">
+                    <InfoRow label="Họ và tên" value={doctor.fullName} icon="person" />
+                    <InfoRow label="Email" value={doctor.email || "—"} icon="email" />
+                    <InfoRow label="Số điện thoại" value={doctor.phone || "—"} icon="phone" />
+                    <InfoRow label="Mã bác sĩ" value={doctor.code} icon="fingerprint" />
+                    <InfoRow label="Giới tính" value="Nam" icon="wc" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function ProfessionalTab({ doctor }: { doctor: Doctor }) {
+    return (
+        <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-bold text-[#121417] dark:text-white mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#3C81C6]">stethoscope</span>
+                Thông tin chuyên môn
+            </h2>
+            <div className="space-y-4">
+                <InfoRow label="Chuyên khoa" value={doctor.departmentName} icon="domain" />
+                <InfoRow label="Chuyên ngành" value={doctor.specialization || "—"} icon="medical_information" />
+                <InfoRow label="Kinh nghiệm" value={`${doctor.experience || 5} năm`} icon="work_history" />
+                <InfoRow label="Đánh giá" value={`${doctor.rating}/5 (${doctor.reviewCount} đánh giá)`} icon="star" />
+                <InfoRow label="Ngày tạo" value={doctor.createdAt || "—"} icon="event" />
+            </div>
+        </div>
+    );
+}
+
+function ScheduleTab({ doctor }: { doctor: Doctor }) {
+    return (
+        <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-bold text-[#121417] dark:text-white mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#3C81C6]">calendar_month</span>
+                Lịch làm việc
+            </h2>
+            {doctor.workingSchedule && doctor.workingSchedule.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {doctor.workingSchedule.map((schedule, idx) => (
+                        <div key={idx} className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                            <p className="text-sm font-bold text-[#121417] dark:text-white mb-1">
+                                {schedule.shift === "MORNING" ? "Ca sáng" : schedule.shift === "AFTERNOON" ? "Ca chiều" : "Ca tối"}
+                            </p>
+                            <p className="text-xs text-[#687582] dark:text-gray-400">
+                                {schedule.days.join(", ")}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <p className="text-sm text-[#687582] dark:text-gray-400">Chưa có lịch làm việc</p>
+            )}
+        </div>
+    );
+}
+
+function EducationTab({ doctor }: { doctor: Doctor }) {
+    return (
+        <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm p-6">
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-gray-50/50 dark:bg-gray-800/30 rounded-xl border border-gray-100 dark:border-gray-700/50">
+                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 shadow-sm">
+                    <span className="material-symbols-outlined text-3xl text-gray-400">school</span>
+                </div>
+                <h3 className="text-base font-bold text-[#121417] dark:text-white mb-2">Chưa có dữ liệu</h3>
+                <p className="text-sm text-gray-500 max-w-sm">Chưa có dữ liệu học vấn và kinh nghiệm làm việc.</p>
+            </div>
+        </div>
     );
 }
 

@@ -18,6 +18,7 @@ import { MOCK_PATIENT_PROFILES, getProfilesByUserId, type PatientProfile } from 
 import { patientProfileService } from "@/services/patientProfileService";
 import { telemedicineService } from "@/services/telemedicineService";
 import { validateName, validatePhone, validateAppointmentDate } from "@/utils/validation";
+import { getImageUrl } from "@/utils/helpers";
 
 const STEPS = [
     { label: "Hình thức", icon: "category" },
@@ -881,7 +882,7 @@ function BookingPageInner() {
                                                     <button key={doc.id} onClick={() => { setSelectedDoctor(doc.id); setSelectedDoctorObj(doc); }}
                                                         className={`text-left flex items-center gap-3 p-3 rounded-xl border transition-all
                                                         ${selectedDoctor === doc.id ? "border-[#3C81C6] bg-[#3C81C6]/[0.02] shadow-sm ring-1 ring-[#3C81C6]/30" : "border-gray-100 bg-white hover:border-gray-200"}`}>
-                                                        <img src={doc.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.fullName)}&background=3C81C6&color=fff`} 
+                                                        <img src={doc.avatar ? getImageUrl(doc.avatar) : `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.fullName)}&background=3C81C6&color=fff`} 
                                                             alt={doc.fullName} 
                                                             className="w-12 h-12 rounded-full object-cover shrink-0 border border-gray-100" />
                                                         <div className="min-w-0 flex-1">

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/modal";
 import { UI_TEXT } from "@/constants/ui-text";
 import { branchService, type Branch } from "@/services/branchService";
-import { getDepartments, type Department } from "@/services/departmentService";
+import { getDepartments, unwrapDepartments, type Department } from "@/services/departmentService";
 import type { User } from "@/types";
 
 interface AssignFacilityModalProps {
@@ -31,27 +31,37 @@ export function AssignFacilityModal({
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (isOpen) {
-            setFormData({ branchId: "", departmentId: "", roleTitle: "" });
-            fetchData();
-        }
-    }, [isOpen]);
+        if (!isOpen || !user) return;
 
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const [branchesRes, deptsRes] = await Promise.all([
-                branchService.getDropdown(),
-                getDepartments({ limit: 100 })
-            ]);
-            setBranches(branchesRes.data || []);
-            setDepartments(deptsRes.data || []);
-        } catch (error) {
-            console.error("Failed to load facilities", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        let cancelled = false;
+        setFormData({ branchId: "", departmentId: "", roleTitle: "" });
+
+        (async () => {
+            try {
+                setLoading(true);
+                const [branchesRes, deptsRes] = await Promise.all([
+                    branchService.getDropdown(),
+                    getDepartments({ limit: 100 }),
+                ]);
+
+                if (cancelled) return;
+                setBranches(Array.isArray(branchesRes?.data) ? branchesRes.data : []);
+                setDepartments(unwrapDepartments(deptsRes));
+            } catch (error) {
+                if (!cancelled) {
+                    setBranches([]);
+                    setDepartments([]);
+                }
+                console.error("Failed to load facilities", error);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [isOpen, user]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

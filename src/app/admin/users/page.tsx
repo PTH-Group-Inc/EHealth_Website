@@ -10,12 +10,13 @@ import { UserFormModal } from "@/features/users/components/user-form-modal";
 import { AssignRoleModal } from "@/features/users/components/assign-role-modal";
 import { AssignFacilityModal } from "@/features/users/components/assign-facility-modal";
 import { ResetPasswordModal } from "@/features/users/components/reset-password-modal";
-import { UserDetailsModal } from "@/features/users/components/user-details-modal";
 import * as userService from "@/services/userService";
+import { staffService } from "@/services/staffService";
 import type { User } from "@/types";
 import { validateFile } from "@/utils/fileValidation";
 import { UserCard } from "@/components/shared/cards";
 import { EmptyState } from "@/components/shared/layout";
+import { getImageUrl } from "@/utils/helpers";
 
 /** Format ISO date to readable string */
 function formatDate(iso: unknown): string {
@@ -78,6 +79,7 @@ function mapApiUserToAdminUser(u: any): AdminUser {
     } else if (uAvatar && typeof uAvatar === "object") {
         avatarStr = uAvatar.url || uAvatar.path || "";
     }
+    avatarStr = getImageUrl(avatarStr);
 
     let emailStr = "";
     if (typeof u.email === "string") emailStr = u.email;
@@ -112,6 +114,7 @@ function extractUserItems(response: any): any[] {
 export default function UsersPage() {
     // State
     const router = useRouter();
+    const [mainTab, setMainTab] = useState<"PATIENT" | "STAFF">("PATIENT");
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -123,7 +126,6 @@ export default function UsersPage() {
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [selectedActionUser, setSelectedActionUser] = useState<AdminUser | null>(null);
 
     const [sortField, setSortField] = useState<SortField>("createdAt");
@@ -138,7 +140,7 @@ export default function UsersPage() {
     const loadUsers = useCallback(async () => {
         try {
             setIsDataLoading(true);
-            const res: any = await userService.getUsers({ limit: 100 });
+            const res: any = await userService.getUsers({ limit: 10000 });
             const items = extractUserItems(res);
             if (Array.isArray(items)) {
                 setUsers(items.map(mapApiUserToAdminUser));
@@ -175,6 +177,11 @@ export default function UsersPage() {
                 query === "" ||
                 (user.fullName || "").toLowerCase().includes(query) ||
                 (user.email || "").toLowerCase().includes(query);
+            
+            const isPatient = user.role === ROLES.PATIENT || user.role === 'USER';
+            if (mainTab === 'STAFF' && isPatient) return false;
+            if (mainTab === 'PATIENT' && !isPatient) return false;
+
             const matchesRole = roleFilter === "all" || user.role === roleFilter;
             return matchesSearch && matchesRole;
         });
@@ -196,7 +203,7 @@ export default function UsersPage() {
         });
 
         return result;
-    }, [users, debouncedSearch, roleFilter, sortField, sortOrder]);
+    }, [users, debouncedSearch, roleFilter, sortField, sortOrder, mainTab]);
 
     const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
     const paginatedUsers = useMemo(() => {
@@ -208,7 +215,7 @@ export default function UsersPage() {
     useEffect(() => {
         setCurrentPage(1);
         setSelectedUserIds(new Set());
-    }, [debouncedSearch, roleFilter]);
+    }, [debouncedSearch, roleFilter, mainTab]);
 
     useEffect(() => {
         setSelectedUserIds(new Set());
@@ -309,8 +316,57 @@ export default function UsersPage() {
         setIsModalOpen(true);
     };
 
-    const handleEditUser = (user: User) => {
-        setEditingUser(user);
+    const handleEditUser = async (user: User) => {
+        try {
+            const roleStr = typeof user.role === 'string' ? user.role.toUpperCase() : '';
+            if (roleStr !== 'PATIENT' && roleStr !== 'USER') {
+                const staffDetail: any = await staffService.getById(user.id);
+                const fac = staffDetail?.facilities?.[0];
+                
+                setEditingUser({
+                    ...user,
+                    // Profile fields — prefer staffDetail (from staff API) over list data
+                    fullName: staffDetail?.full_name || (user as any).fullName || "",
+                    email: staffDetail?.email || user.email || "",
+                    phone: staffDetail?.phone || (user as any).phone || "",
+                    avatar: getImageUrl(staffDetail?.avatar_url || (user as any).avatar || ""),
+                    dob: staffDetail?.dob || (user as any).dob || "",
+                    gender: staffDetail?.gender || (user as any).gender || "",
+                    address: staffDetail?.address || (user as any).address || "",
+                    identity_card_number: staffDetail?.identity_card_number || (user as any).identity_card_number || "",
+                    // Role
+                    role: (Array.isArray(staffDetail?.roles) && staffDetail.roles.length > 0 
+                        ? staffDetail.roles[0].toUpperCase() 
+                        : user.role) as Role,
+                    roles: staffDetail?.roles || (user as any).roles || [],
+                    // Facility assignment
+                    facilityId: fac?.facility_id || "",
+                    branchId: fac?.branch_id || "",
+                    departmentId: fac?.department_id || "",
+                    role_title: fac?.role_title || "",
+                    // Doctor-specific
+                    title: staffDetail?.doctor_title || staffDetail?.title || "",
+                    biography: staffDetail?.biography || "",
+                    consultation_fee: staffDetail?.consultation_fee ?? "",
+                    specialtyId: staffDetail?.specialty_id || "",
+                });
+            } else {
+                const userDetail: any = await userService.getUserById(user.id);
+                const profile = userDetail?.profile;
+                setEditingUser({
+                    ...user,
+                    fullName: profile?.full_name || (user as any).fullName || "",
+                    avatar: getImageUrl(profile?.avatar_url || (user as any).avatar || ""),
+                    dob: profile?.dob || (user as any).dob || "",
+                    gender: profile?.gender || (user as any).gender || "",
+                    address: profile?.address || (user as any).address || "",
+                    identity_card_number: profile?.identity_card_number || (user as any).identity_card_number || "",
+                });
+            }
+        } catch (error) {
+            console.error("Lỗi khi lấy thông tin chi tiết:", error);
+            setEditingUser(user);
+        }
         setIsModalOpen(true);
     };
 
@@ -348,25 +404,79 @@ export default function UsersPage() {
     const handleSubmitUser = async (userData: Partial<User> & { file?: File }) => {
         try {
             const { file, ...coreData } = userData;
+            let userIdToUpdate = "";
+            let roleChanged = false;
+            let newRole = "";
 
             if (editingUser) {
-                await userService.updateUser(editingUser.id, coreData as any);
-                if (file) {
-                    await userService.uploadUserAvatar(editingUser.id, file);
-                }
+                userIdToUpdate = editingUser.id;
+                roleChanged = !!coreData.role && coreData.role !== editingUser.role;
+                newRole = coreData.role as string;
             } else {
                 const created: any = await userService.createUser(coreData as any);
-                const createdUserId =
+                userIdToUpdate =
                     created?.userId ??
                     created?.data?.userId ??
                     created?.id ??
                     created?.data?.id ??
                     created?.users_id ??
                     created?.data?.users_id;
-                if (file && createdUserId) {
-                    await userService.uploadUserAvatar(String(createdUserId), file);
+                roleChanged = !!coreData.role;
+                newRole = coreData.role as string;
+            }
+
+            if (userIdToUpdate) {
+                if (file) {
+                    await userService.uploadUserAvatar(String(userIdToUpdate), file);
+                }
+
+                // 1. Phải gán vai trò trước để API bên BE nhận diện được chức vụ (vd: DOCTOR)
+                if (roleChanged && newRole) {
+                    try {
+                        await userService.assignUserRole(String(userIdToUpdate), { role: newRole });
+                    } catch (e) {
+                        console.error('Lỗi khi gán vai trò:', e);
+                    }
+                }
+
+                // Lấy vai trò hiện tại (từ form hoặc từ user đang sửa)
+                const roleStr = String(coreData.role || (editingUser && editingUser.role) || '').toUpperCase();
+
+                if (roleStr !== 'PATIENT' && roleStr !== 'USER') {
+                    // Update nhân sự
+                    const staffPayload: any = {
+                        email: coreData.email,
+                        phone_number: coreData.phone || (coreData as any).phoneNumber,
+                        full_name: coreData.fullName || (coreData as any).full_name,
+                        dob: coreData.dob,
+                        gender: coreData.gender,
+                        identity_card_number: coreData.identity_card_number,
+                        address: coreData.address,
+                        branch_id: (coreData as any).branchId || (coreData as any).branch_id,
+                        department_id: (coreData as any).departmentId || (coreData as any).department_id,
+                        role_title: (coreData as any).role_title,
+                        specialty_id: (coreData as any).specialtyId || (coreData as any).specialty_id,
+                        title: (coreData as any).title,
+                        biography: (coreData as any).biography,
+                        consultation_fee: (coreData as any).consultation_fee
+                            ? Number((coreData as any).consultation_fee)
+                            : undefined,
+                    };
+
+                    Object.keys(staffPayload).forEach(key => staffPayload[key] === undefined && delete staffPayload[key]);
+
+                    try {
+                        await staffService.update(String(userIdToUpdate), staffPayload);
+                    } catch (e) {
+                        console.error('Lỗi cập nhật nhân sự / chuyên môn:', e);
+                        // Thử gọi update user cơ bản nếu rớt
+                        await userService.updateUser(userIdToUpdate, coreData as any);
+                    }
+                } else if (editingUser) {
+                    await userService.updateUser(userIdToUpdate, coreData as any);
                 }
             }
+
             await loadUsers();
         } catch (err) {
             console.error('Lưu người dùng thất bại:', err);
@@ -543,6 +653,27 @@ export default function UsersPage() {
 
             {/* Users Table */}
             <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm flex flex-col">
+                {/* Tabs */}
+                <div className="flex border-b border-[#dde0e4] dark:border-[#2d353e]">
+                    <button
+                        onClick={() => { setMainTab("PATIENT"); setRoleFilter("all"); }}
+                        className={`px-6 py-3 font-medium text-sm transition-colors relative ${mainTab === "PATIENT" ? "text-[#3C81C6]" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"}`}
+                    >
+                        Bệnh nhân
+                        {mainTab === "PATIENT" && (
+                            <span className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-[#3C81C6] rounded-t-full"></span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => { setMainTab("STAFF"); setRoleFilter("all"); }}
+                        className={`px-6 py-3 font-medium text-sm transition-colors relative ${mainTab === "STAFF" ? "text-[#3C81C6]" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"}`}
+                    >
+                        Nhân sự y tế
+                        {mainTab === "STAFF" && (
+                            <span className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-[#3C81C6] rounded-t-full"></span>
+                        )}
+                    </button>
+                </div>
                 {/* Table Header */}
                 <div className="p-4 border-b border-[#dde0e4] dark:border-[#2d353e] flex flex-col sm:flex-row justify-between gap-4 items-center">
                     <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
@@ -558,18 +689,22 @@ export default function UsersPage() {
                                 placeholder={UI_TEXT.ADMIN.USERS.SEARCH_PLACEHOLDER}
                             />
                         </div>
-                        <select
-                            value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value)}
-                            className="py-2.5 pl-3 pr-10 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 focus:border-[#3C81C6] transition-all text-[#687582] dark:text-gray-400 cursor-pointer"
-                        >
-                            <option value="all">{UI_TEXT.ADMIN.USERS.ALL_ROLES}</option>
-                            {Object.entries(ROLES).map(([key, value]) => (
-                                <option key={key} value={value}>
-                                    {ROLE_LABELS[value as Role]}
-                                </option>
-                            ))}
-                        </select>
+                        {mainTab === "STAFF" && (
+                            <select
+                                value={roleFilter}
+                                onChange={(e) => setRoleFilter(e.target.value)}
+                                className="py-2.5 pl-3 pr-10 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 focus:border-[#3C81C6] transition-all text-[#687582] dark:text-gray-400 cursor-pointer"
+                            >
+                                <option value="all">{UI_TEXT.ADMIN.USERS.ALL_ROLES}</option>
+                                {Object.entries(ROLES)
+                                    .filter(([_, value]) => value !== ROLES.PATIENT && value !== 'USER')
+                                    .map(([key, value]) => (
+                                    <option key={key} value={value}>
+                                        {ROLE_LABELS[value as Role] || value}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
                         {selectedUserIds.size > 0 && viewMode === "table" && (
@@ -639,7 +774,7 @@ export default function UsersPage() {
                                         lastLoginAt={(u as any).lastAccess || (u as any).last_login_at}
                                         branchName={(u as any).branchName}
                                         onView={() => router.push(`/admin/users/${u.id}`)}
-                                        onEdit={() => { setEditingUser(u); setIsModalOpen(true); }}
+                                        onEdit={() => handleEditUser(u)}
                                     />
                                 ))}
                             </div>
@@ -755,10 +890,8 @@ export default function UsersPage() {
                                             <td className="py-4 px-6 text-right">
                                                 <DropdownMenu
                                                     items={[
-                                                        { label: "Xem chi tiết", icon: "visibility", onClick: () => { setSelectedActionUser(user); setIsDetailsModalOpen(true); } },
+                                                        { label: "Xem chi tiết", icon: "visibility", onClick: () => router.push(`/admin/users/${user.id}`) },
                                                         { label: "Chỉnh sửa", icon: "edit", onClick: () => handleEditUser(user) },
-                                                        { label: "Đổi vai trò", icon: "assignment_ind", onClick: () => { setSelectedActionUser(user); setIsRoleModalOpen(true); } },
-                                                        { label: "Gán vào chi nhánh", icon: "domain", onClick: () => { setSelectedActionUser(user); setIsFacilityModalOpen(true); } },
                                                         { label: "Quản lý mật khẩu", icon: "password", onClick: () => { setSelectedActionUser(user); setIsPasswordModalOpen(true); } },
                                                         {
                                                             label: user.status === USER_STATUS.LOCKED ? "Mở khóa" : "Khóa tài khoản",
@@ -862,7 +995,7 @@ export default function UsersPage() {
 
             <UserFormModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={() => { setIsModalOpen(false); setEditingUser(null); }}
                 onSubmit={handleSubmitUser}
                 initialData={editingUser || undefined}
                 mode={editingUser ? "edit" : "create"}
@@ -889,11 +1022,6 @@ export default function UsersPage() {
                 user={selectedActionUser}
             />
 
-            <UserDetailsModal
-                isOpen={isDetailsModalOpen}
-                onClose={() => setIsDetailsModalOpen(false)}
-                user={selectedActionUser}
-            />
         </>
     );
 }

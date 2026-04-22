@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { API_CONFIG } from "@/config";
+import { getImageUrl } from "@/utils/helpers";
 
 interface DoctorCardProps {
     id: string; // users_id
@@ -54,7 +55,7 @@ export function DoctorCard({ id, doctorId, fullName, title, department, speciali
                 <div className={`relative flex-shrink-0 ${compact ? "w-16 h-16" : "w-20 h-20"} rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50`}>
                     {avatar ? (
                         <img
-                            src={avatar}
+                            src={getImageUrl(avatar)}
                             alt={fullName}
                             className="w-full h-full object-cover"
                             onError={(e) => {

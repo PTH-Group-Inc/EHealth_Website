@@ -5,12 +5,25 @@ import { Modal } from "@/components/ui/modal";
 import { ROLES, ROLE_LABELS, type Role } from "@/constants/roles";
 import { UI_TEXT } from "@/constants/ui-text";
 import type { User } from "@/types";
+import { CustomSelect } from "@/components/ui/custom-select";
+import { facilityService } from "@/services/facilityService";
+import { branchService } from "@/services/branchService";
+import { getDepartments, unwrapDepartments } from "@/services/departmentService";
+import { getSpecialties, getSpecialtiesByDepartment } from "@/services/specialtyService";
 
 interface ExtendedUser extends User {
     dob?: string;
     gender?: string;
     identity_card_number?: string;
     address?: string;
+    facilityId?: string;
+    branchId?: string;
+    departmentId?: string;
+    specialtyId?: string;
+    role_title?: string;
+    title?: string;
+    biography?: string;
+    consultation_fee?: string;
 }
 
 interface UserFormModalProps {
@@ -38,6 +51,14 @@ export function UserFormModal({
         gender: "MALE",
         identity_card_number: "",
         address: "",
+        facilityId: "",
+        branchId: "",
+        departmentId: "",
+        specialtyId: "",
+        role_title: "",
+        title: "",
+        biography: "",
+        consultation_fee: "",
     });
 
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -45,6 +66,72 @@ export function UserFormModal({
     const [errors, setErrors] = useState<Record<string, string>>({});
     
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [facilities, setFacilities] = useState<any[]>([]);
+    const [branches, setBranches] = useState<any[]>([]);
+    const [departments, setDepartments] = useState<any[]>([]);
+    const [specialties, setSpecialties] = useState<any[]>([]);
+
+    const [loadingDropdowns, setLoadingDropdowns] = useState({
+        facility: false,
+        branch: false,
+        department: false,
+        specialty: false,
+    });
+
+    const currentRole = formData.role;
+    const showSpecialty = currentRole === ROLES.DOCTOR || currentRole === ROLES.PHARMACIST;
+
+    // Fetch Facilities on mount
+    useEffect(() => {
+        if (!isOpen) return;
+        setLoadingDropdowns(p => ({ ...p, facility: true }));
+        facilityService.getList({ limit: 100 })
+            .then(res => setFacilities(res.data || []))
+            .catch(() => {})
+            .finally(() => setLoadingDropdowns(p => ({ ...p, facility: false })));
+    }, [isOpen]);
+
+    // Fetch Branches when Facility changes
+    useEffect(() => {
+        if (!isOpen || !formData.facilityId) {
+            setBranches([]);
+            return;
+        }
+        setLoadingDropdowns(p => ({ ...p, branch: true }));
+        branchService.getList({ facility_id: formData.facilityId, limit: 100 } as any)
+            .then(res => setBranches(res.data || []))
+            .catch(() => {})
+            .finally(() => setLoadingDropdowns(p => ({ ...p, branch: false })));
+    }, [formData.facilityId, isOpen]);
+
+    // Fetch Departments when Branch changes
+    useEffect(() => {
+        if (!isOpen || !formData.branchId) {
+            setDepartments([]);
+            return;
+        }
+        setLoadingDropdowns(p => ({ ...p, department: true }));
+        getDepartments({ branch_id: formData.branchId, limit: 100 } as any)
+            .then(res => setDepartments(unwrapDepartments(res)))
+            .catch(() => {})
+            .finally(() => setLoadingDropdowns(p => ({ ...p, department: false })));
+    }, [formData.branchId, isOpen]);
+
+    // Fetch Specialties when Department/Role changes
+    useEffect(() => {
+        if (!isOpen || !showSpecialty || !formData.departmentId) {
+            setSpecialties([]);
+            return;
+        }
+        setLoadingDropdowns(p => ({ ...p, specialty: true }));
+        getSpecialtiesByDepartment(formData.departmentId)
+            .then(res => {
+                setSpecialties(Array.isArray(res) ? res : []);
+            })
+            .catch(() => {})
+            .finally(() => setLoadingDropdowns(p => ({ ...p, specialty: false })));
+    }, [formData.departmentId, showSpecialty, isOpen]);
 
     useEffect(() => {
         if (isOpen) {
@@ -62,10 +149,17 @@ export function UserFormModal({
                 role: roleFallback,
                 password: "",
                 dob: initialData?.dob ? new Date(initialData.dob).toISOString().split('T')[0] : "",
-
                 gender: initialData?.gender || "MALE",
                 identity_card_number: initialData?.identity_card_number || "",
                 address: initialData?.address || "",
+                facilityId: initialData?.facilityId || (initialData as any)?.facility_id || "",
+                branchId: initialData?.branchId || (initialData as any)?.branch_id || "",
+                departmentId: initialData?.departmentId || (initialData as any)?.department_id || "",
+                specialtyId: initialData?.specialtyId || (initialData as any)?.specialty_id || "",
+                role_title: initialData?.role_title || "",
+                title: initialData?.title || "",
+                biography: initialData?.biography || "",
+                consultation_fee: initialData?.consultation_fee?.toString() || "",
             });
             setAvatarPreview(initialData?.avatar || null);
             setAvatarFile(null);
@@ -73,8 +167,20 @@ export function UserFormModal({
         }
     }, [isOpen, initialData]);
 
+    const handleSelectChange = (name: string, val: string | number) => {
+        const value = String(val);
+        setFormData((prev) => {
+            const next = { ...prev, [name]: value };
+            if (name === "facilityId") { next.branchId = ""; next.departmentId = ""; next.specialtyId = ""; }
+            else if (name === "branchId") { next.departmentId = ""; next.specialtyId = ""; }
+            else if (name === "departmentId") { next.specialtyId = ""; }
+            return next;
+        });
+        if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    };
+
     const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
     ) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
@@ -128,6 +234,14 @@ export function UserFormModal({
             gender: formData.gender,
             identity_card_number: formData.identity_card_number || undefined,
             address: formData.address || undefined,
+            facilityId: formData.facilityId || undefined,
+            branchId: formData.branchId || undefined,
+            departmentId: formData.departmentId || undefined,
+            specialtyId: formData.specialtyId || undefined,
+            role_title: formData.role_title || undefined,
+            title: formData.title || undefined,
+            biography: formData.biography || undefined,
+            consultation_fee: formData.consultation_fee || undefined,
             ...(formData.password ? { password: formData.password } : {}),
             file: avatarFile || undefined,
             avatar: avatarPreview || undefined
@@ -343,7 +457,104 @@ export function UserFormModal({
                                 className="w-full px-5 py-3.5 bg-gray-50/50 dark:bg-[#1a2027]/50 border border-[#dde0e4] dark:border-[#2d353e] focus:border-[#3C81C6] focus:ring-[#3C81C6] rounded-xl text-sm transition-all shadow-sm focus:bg-white dark:focus:bg-[#1e242b] focus:ring-2 focus:ring-opacity-20 outline-none text-[#121417] dark:text-white"
                             />
                         </div>
+                    </div>
 
+                    {currentRole !== ROLES.PATIENT && currentRole !== 'USER' && (
+                        <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-3xl shadow-sm mt-5 mb-8 animate-in fade-in duration-300">
+                            <div className="p-6 border-b border-[#dde0e4] dark:border-[#2d353e] flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
+                                    <span className="material-symbols-outlined text-[20px]">badge</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-[#121417] dark:text-white">Công tác & Phân công</h2>
+                                    <p className="text-xs text-gray-500">Phân luồng cơ sở và phòng ban</p>
+                                </div>
+                            </div>
+                            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                
+                                <div>
+                                    <label className="block text-[13px] font-semibold text-[#121417] dark:text-gray-300 mb-2">Cơ sở y tế</label>
+                                    <CustomSelect
+                                        options={facilities}
+                                        value={formData.facilityId}
+                                        onChange={(val) => handleSelectChange("facilityId", val)}
+                                        placeholder="-- Chọn cơ sở --"
+                                        icon="business"
+                                        disabled={loadingDropdowns.facility}
+                                        loading={loadingDropdowns.facility}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[13px] font-semibold text-[#121417] dark:text-gray-300 mb-2">Chi nhánh</label>
+                                    <CustomSelect
+                                        options={branches}
+                                        value={formData.branchId}
+                                        onChange={(val) => handleSelectChange("branchId", val)}
+                                        placeholder="-- Chọn chi nhánh --"
+                                        icon="store"
+                                        disabled={loadingDropdowns.branch || !formData.facilityId}
+                                        loading={loadingDropdowns.branch}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[13px] font-semibold text-[#121417] dark:text-gray-300 mb-2">Khoa / Phòng ban</label>
+                                    <CustomSelect
+                                        options={departments}
+                                        value={formData.departmentId}
+                                        onChange={(val) => handleSelectChange("departmentId", val)}
+                                        placeholder="-- Chọn phòng ban --"
+                                        icon="account_tree"
+                                        disabled={loadingDropdowns.department || !formData.branchId}
+                                        loading={loadingDropdowns.department}
+                                    />
+                                </div>
+
+                                {showSpecialty && (
+                                    <div className="animate-in fade-in duration-300">
+                                        <label className="block text-[13px] font-semibold text-[#121417] dark:text-gray-300 mb-2">Chuyên khoa</label>
+                                        <CustomSelect
+                                            options={specialties}
+                                            value={formData.specialtyId}
+                                            onChange={(val) => handleSelectChange("specialtyId", val)}
+                                            placeholder="-- Chọn chuyên khoa --"
+                                            icon="psychology"
+                                            disabled={loadingDropdowns.specialty || !formData.departmentId}
+                                            loading={loadingDropdowns.specialty}
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="md:col-span-2">
+                                    <FormField label="Vị trí công tác" name="role_title" value={formData.role_title as string} onChange={handleChange} placeholder="VD: Trưởng khoa, Quản lý..." icon="work" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {currentRole === ROLES.DOCTOR && (
+                        <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-3xl shadow-sm mb-8 animate-in fade-in duration-300">
+                            <div className="p-6 border-b border-[#dde0e4] dark:border-[#2d353e] flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
+                                    <span className="material-symbols-outlined">medical_information</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-[#121417] dark:text-white">Thông tin Chuyên môn</h2>
+                                    <p className="text-xs text-gray-500">Dành riêng cho Bác sĩ</p>
+                                </div>
+                            </div>
+                            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                <FormField label="Chức danh / Học vị" name="title" value={formData.title as string} onChange={handleChange} placeholder="VD: Ths. Bs., TS. Bs..." icon="badge" />
+                                <FormField label="Giá khám bệnh (VND)" name="consultation_fee" type="number" value={formData.consultation_fee as string} onChange={handleChange} placeholder="VD: 500000" icon="payments" />
+                                <div className="md:col-span-2">
+                                    <FormField label="Tiểu sử / Giới thiệu" name="biography" value={formData.biography as string} onChange={handleChange} placeholder="Nhập tiểu sử, kinh nghiệm công tác..." icon="description" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div>
                         {mode === "create" && (
                             <div className="md:col-span-2 mt-2 pt-6 border-t border-[#dde0e4] dark:border-[#2d353e]">
                                 <label className="block text-[13px] font-semibold text-[#121417] dark:text-gray-300 mb-2">
@@ -386,5 +597,35 @@ export function UserFormModal({
                 </div>
             </form>
         </Modal>
+    );
+}
+
+
+// Reusable Form Field Component with nice styling
+function FormField({ label, name, type = "text", value, onChange, error, placeholder, icon, bgColor = "bg-gray-50 dark:bg-[#161b22]" }: {
+    label: string; name: string; type?: string; value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    error?: string; placeholder?: string; icon?: string; bgColor?: string;
+}) {
+    return (
+        <div>
+            <label className="block text-sm font-bold text-[#121417] dark:text-gray-300 mb-2">{label}</label>
+            <div className="relative group">
+                {icon && (
+                    <span className={`absolute inset-y-0 left-0 flex items-center pl-4 transition-colors ${error ? "text-red-500" : "text-gray-400 group-focus-within:text-[#3C81C6]"}`}>
+                        <span className="material-symbols-outlined text-[18px]">{icon}</span>
+                    </span>
+                )}
+                <input
+                    type={type} name={name} value={value} onChange={onChange} placeholder={placeholder}
+                    className={`w-full py-3.5 ${icon ? "pl-11" : "pl-4"} pr-4 text-sm font-medium ${bgColor} border ${error ? "border-red-400 ring-2 ring-red-400/20" : "border-[#dde0e4] dark:border-[#2d353e]"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/30 dark:text-white placeholder:text-gray-400 transition-all hover:bg-white dark:hover:bg-gray-800 focus:bg-white dark:focus:bg-[#1e242b]`}
+                />
+            </div>
+            {error && (
+                <p className="text-xs font-bold text-red-500 mt-2 flex items-center gap-1 animate-in fade-in">
+                    <span className="material-symbols-outlined text-[14px]">info</span> {error}
+                </p>
+            )}
+        </div>
     );
 }
