@@ -101,6 +101,23 @@ export const getSpecialtiesByFacility = async (facilityId: string): Promise<any[
     }
 };
 
+/** GET /api/department-specialties/:departmentId/specialties — Lấy chuyên khoa theo phòng ban */
+export const getSpecialtiesByDepartment = async (departmentId: string): Promise<any[]> => {
+    try {
+        const response = await axiosClient.get(`/api/department-specialties/${departmentId}/specialties`);
+        if (response.data && Array.isArray(response.data.data)) {
+            return response.data.data.map((item: any) => ({
+                ...item,
+                id: item.specialty_id || item.specialties_id || item.id,
+                name: item.specialty_name || item.name,
+            }));
+        }
+        return response.data?.data || [];
+    } catch (error: any) {
+        return [];
+    }
+};
+
 export const getServicesBySpecialty = async (id: string, facilityId?: string): Promise<any[]> => {
     try {
         const query = facilityId ? `?facilityId=${facilityId}` : '';
@@ -119,5 +136,6 @@ export default {
     updateSpecialty,
     deleteSpecialty,
     getSpecialtiesByFacility,
+    getSpecialtiesByDepartment,
     getServicesBySpecialty,
 };

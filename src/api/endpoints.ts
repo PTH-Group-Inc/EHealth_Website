@@ -40,6 +40,7 @@ export const AUTH_ENDPOINTS = {
 // ============================================
 export const PROFILE_ENDPOINTS = {
     ME: '/api/profile/me',                    // GET: lấy profile, PUT: cập nhật profile
+    AVATAR: '/api/profile/avatar',             // POST: upload avatar, DELETE: xóa avatar
     CHANGE_PASSWORD: '/api/profile/password',  // PUT: đổi mật khẩu
     SESSIONS: '/api/profile/sessions',         // GET: xem lịch sử/thiết bị đăng nhập
     SESSIONS_LOGOUT_ALL: '/api/profile/sessions',         // DELETE: đăng xuất tất cả thiết bị khác
@@ -57,7 +58,9 @@ export const USER_ENDPOINTS = {
     LIST: '/api/users',                           // GET: danh sách users
     CREATE: '/api/users',                         // POST: tạo user
     SEARCH: '/api/users/search',                  // GET: tìm kiếm user
+    BULK_DELETE: '/api/users/bulk',               // DELETE: vô hiệu hóa nhiều users
     DETAIL: (id: string) => `/api/users/${id}`,   // GET: chi tiết user
+    AVATAR: (id: string) => `/api/users/${id}/avatar`, // POST: upload avatar
 
     // 1.1.2 Khóa / mở khóa tài khoản
     LOCK: (id: string) => `/api/users/${id}/lock`,     // PATCH: khóa tài khoản

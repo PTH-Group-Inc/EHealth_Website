@@ -1,19 +1,22 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { UI_TEXT } from "@/constants/ui-text";
 import { ROLES, ROLE_LABELS, ROLE_COLORS, type Role } from "@/constants/roles";
 import { USER_STATUS } from "@/constants/status";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { UserFormModal } from "@/features/users/components/user-form-modal";
-import { PermissionsModal } from "@/features/users/components/permissions-modal";
+import { AssignRoleModal } from "@/features/users/components/assign-role-modal";
+import { AssignFacilityModal } from "@/features/users/components/assign-facility-modal";
+import { ResetPasswordModal } from "@/features/users/components/reset-password-modal";
 import * as userService from "@/services/userService";
+import { staffService } from "@/services/staffService";
 import type { User } from "@/types";
 import { validateFile } from "@/utils/fileValidation";
 import { UserCard } from "@/components/shared/cards";
 import { EmptyState } from "@/components/shared/layout";
+import { getImageUrl } from "@/utils/helpers";
 
 /** Format ISO date to readable string */
 function formatDate(iso: unknown): string {
@@ -28,86 +31,249 @@ function formatDate(iso: unknown): string {
 type SortField = "fullName" | "role" | "createdAt" | "lastAccess" | "status";
 type SortOrder = "asc" | "desc";
 
+type AdminUser = User & {
+    phone?: string;
+    avatar?: string;
+    roles?: string[];
+    dob?: string;
+    gender?: string;
+    identity_card_number?: string;
+    address?: string;
+    facilityId?: string;
+    branchId?: string;
+    departmentId?: string;
+    role_title?: string;
+    title?: string;
+    biography?: string;
+    consultation_fee?: string;
+    specialtyId?: string;
+};
+
+function normalizeUserRoles(rawRoles: unknown): string[] {
+    if (Array.isArray(rawRoles)) {
+        const normalizedRoles = rawRoles
+            .map((role) => {
+                if (typeof role === "string") return role.trim().toUpperCase();
+                if (role && typeof role === "object") {
+                    return String((role as Record<string, unknown>).code ?? (role as Record<string, unknown>).role ?? (role as Record<string, unknown>).name ?? "")
+                        .trim()
+                        .toUpperCase();
+                }
+                return "";
+            })
+            .filter(Boolean);
+
+        return normalizedRoles.length > 0 ? [normalizedRoles[0]] : [ROLES.STAFF];
+    }
+
+    if (typeof rawRoles === "string" && rawRoles.trim().length > 0) {
+        return [rawRoles.trim().toUpperCase()];
+    }
+
+    return [ROLES.STAFF];
+}
+
+function mapApiUserToAdminUser(u: any): AdminUser {
+    let idStr = "";
+    if (u.users_id) idStr = typeof u.users_id === "object" ? String(u.users_id.id || u.users_id._id || "") : String(u.users_id);
+    else if (u.id) idStr = typeof u.id === "object" ? String(u.id.id || u.id._id || "") : String(u.id);
+
+    let avatarStr = "";
+    const uAvatar = u.profile?.avatar_url ?? u.avatar;
+    if (typeof uAvatar === "string") {
+        avatarStr = uAvatar;
+    } else if (Array.isArray(uAvatar) && uAvatar.length > 0) {
+        avatarStr = typeof uAvatar[0] === "string" ? uAvatar[0] : (uAvatar[0]?.url || uAvatar[0]?.path || "");
+    } else if (uAvatar && typeof uAvatar === "object") {
+        avatarStr = uAvatar.url || uAvatar.path || "";
+    }
+    avatarStr = getImageUrl(avatarStr);
+
+    let emailStr = "";
+    if (typeof u.email === "string") emailStr = u.email;
+    else if (Array.isArray(u.email)) emailStr = String(u.email[0] || "");
+    else if (u.email && typeof u.email === "object") emailStr = String(u.email.address || u.email.email || "");
+
+    const roles = normalizeUserRoles(u.roles);
+    const roleVal = roles[0] ?? ROLES.STAFF;
+
+    return {
+        id: idStr || "unknown_id",
+        fullName: String(u.profile?.full_name ?? u.full_name ?? u.fullName ?? emailStr ?? ""),
+        email: emailStr,
+        phone: String(u.phone ?? u.phone_number ?? ""),
+        role: roleVal as Role,
+        roles,
+        status: String(u.status ?? "ACTIVE") as AdminUser["status"],
+        avatar: avatarStr,
+        createdAt: String(u.created_at ?? u.createdAt ?? ""),
+        updatedAt: String(u.updated_at ?? u.updatedAt ?? ""),
+        dob: u.profile?.dob ?? u.dob ?? "",
+        gender: u.profile?.gender ?? u.gender ?? "",
+        identity_card_number: u.profile?.identity_card_number ?? u.identity_card_number ?? "",
+        address: u.profile?.address ?? u.address ?? "",
+    };
+}
+
+function extractUserItems(response: any): any[] {
+    return response?.data?.items ?? response?.items ?? response?.data?.data ?? response?.data ?? response ?? [];
+}
+
 export default function UsersPage() {
     // State
     const router = useRouter();
-    const t = useTranslations("pages.users");
-    const tc = useTranslations("common");
-    const [users, setUsers] = useState<User[]>([]);
+    const [mainTab, setMainTab] = useState<"PATIENT" | "STAFF">("PATIENT");
+    const [users, setUsers] = useState<AdminUser[]>([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const debouncedSearch = useDeferredValue(searchQuery);
     const [roleFilter, setRoleFilter] = useState<string>("all");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+
+    const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+    const [isFacilityModalOpen, setIsFacilityModalOpen] = useState(false);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [selectedActionUser, setSelectedActionUser] = useState<AdminUser | null>(null);
+
     const [sortField, setSortField] = useState<SortField>("createdAt");
     const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
     const [viewMode, setViewMode] = useState<"table" | "card">("card");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [customPageSize, setCustomPageSize] = useState("");
+    const pageInputRef = useRef<HTMLInputElement>(null);
+    const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
 
-    // Load users from API
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                setIsDataLoading(true);
-                const res: any = await userService.getUsers({ limit: 100 });
-                const items = res?.data?.items ?? res?.items ?? res?.data?.data ?? res?.data ?? res ?? [];
-                if (Array.isArray(items) && items.length > 0) {
-                    setUsers(items.map((u: Record<string, unknown>) => ({
-                        id: String(u.users_id ?? u.id ?? ""),
-                        fullName: (u as Record<string, unknown> & { profile?: { full_name?: string } }).profile?.full_name ?? u.full_name ?? u.fullName ?? u.email ?? "",
-                        email: u.email ?? "",
-                        phone: u.phone ?? u.phone_number ?? "",
-                        role: Array.isArray(u.roles) && (u.roles as string[]).length > 0 ? (u.roles as string[])[0].toLowerCase() : "staff",
-                        status: u.status ?? "ACTIVE",
-                        avatar: (u as Record<string, unknown> & { profile?: { avatar_url?: string } }).profile?.avatar_url ?? u.avatar ?? "",
-                        createdAt: u.created_at ?? u.createdAt ?? "",
-                    })) as unknown as User[]);
-                }
-            } catch (err) {
-                console.error('Lỗi tải danh sách người dùng:', err);
-            } finally {
-                setIsDataLoading(false);
+    const loadUsers = useCallback(async () => {
+        try {
+            setIsDataLoading(true);
+            const res: any = await userService.getUsers({ limit: 10000 });
+            const items = extractUserItems(res);
+            if (Array.isArray(items)) {
+                setUsers(items.map(mapApiUserToAdminUser));
+            } else {
+                setUsers([]);
             }
-        };
-        fetchUsers();
+        } catch (err) {
+                console.error('Lỗi tải danh sách người dùng:', err);
+                setUsers([]);
+        } finally {
+            setIsDataLoading(false);
+        }
     }, []);
 
-    const stats = {
+    useEffect(() => {
+        loadUsers();
+    }, [loadUsers]);
+
+    const stats = useMemo(() => ({
         total: users.length,
         active: users.filter(u => u.status === USER_STATUS.ACTIVE).length,
         locked: users.filter(u => u.status === USER_STATUS.LOCKED).length,
         inactive: users.filter(u => u.status !== USER_STATUS.ACTIVE && u.status !== USER_STATUS.LOCKED).length,
         roles: new Set(users.map(u => u.role)).size,
-    };
+    }), [users]);
 
     // Filtered and sorted users
     const filteredUsers = useMemo(() => {
+        // Cache toLowerCase 1 lần duy nhất thay vì gọi lại mỗi item
+        const query = debouncedSearch.toLowerCase();
+
         let result = users.filter((user) => {
             const matchesSearch =
-                searchQuery === "" ||
-                (user.fullName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (user.email || "").toLowerCase().includes(searchQuery.toLowerCase());
+                query === "" ||
+                (user.fullName || "").toLowerCase().includes(query) ||
+                (user.email || "").toLowerCase().includes(query);
+            
+            const isPatient = (user.role as string) === ROLES.PATIENT || (user.role as string) === 'USER';
+            if (mainTab === 'STAFF' && isPatient) return false;
+            if (mainTab === 'PATIENT' && !isPatient) return false;
+
             const matchesRole = roleFilter === "all" || user.role === roleFilter;
             return matchesSearch && matchesRole;
         });
 
-        // Sort
+        // Sort - dùng Intl.Collator cho performance tốt hơn localeCompare trên dataset lớn
+        const collator = new Intl.Collator("vi", { sensitivity: "base" });
         result.sort((a, b) => {
             let comparison = 0;
             if (sortField === "fullName") {
-                comparison = (a.fullName || "").localeCompare(b.fullName || "");
+                comparison = collator.compare(a.fullName || "", b.fullName || "");
             } else if (sortField === "role") {
-                comparison = (a.role || "").localeCompare(b.role || "");
+                comparison = collator.compare(a.role || "", b.role || "");
             } else if (sortField === "createdAt") {
-                comparison = (a.createdAt || "").localeCompare(b.createdAt || "");
+                comparison = (a.createdAt || "") < (b.createdAt || "") ? -1 : (a.createdAt || "") > (b.createdAt || "") ? 1 : 0;
             } else if (sortField === "status") {
-                comparison = (a.status || "").localeCompare(b.status || "");
+                comparison = collator.compare(a.status || "", b.status || "");
             }
             return sortOrder === "asc" ? comparison : -comparison;
         });
 
         return result;
-    }, [users, searchQuery, roleFilter, sortField, sortOrder]);
+    }, [users, debouncedSearch, roleFilter, sortField, sortOrder, mainTab]);
+
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+    const paginatedUsers = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredUsers, currentPage, itemsPerPage]);
+
+    // Reset trang về 1 khi đổi bộ lọc
+    useEffect(() => {
+        setCurrentPage(1);
+        setSelectedUserIds(new Set());
+    }, [debouncedSearch, roleFilter, mainTab]);
+
+    useEffect(() => {
+        setSelectedUserIds(new Set());
+    }, [currentPage, itemsPerPage]);
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedUserIds(new Set(paginatedUsers.map(u => u.id)));
+        } else {
+            setSelectedUserIds(new Set());
+        }
+    };
+
+    const handleSelectUser = (id: string, checked: boolean) => {
+        const newSet = new Set(selectedUserIds);
+        if (checked) newSet.add(id);
+        else newSet.delete(id);
+        setSelectedUserIds(newSet);
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedUserIds.size === 0) return;
+        if (!confirm(`Bạn có chắc chắn muốn vô hiệu hóa ${selectedUserIds.size} người dùng đã chọn?`)) return;
+        try {
+            await userService.bulkDeleteUsers(Array.from(selectedUserIds));
+            setUsers((prev) => prev.map(u => selectedUserIds.has(u.id) ? { ...u, status: USER_STATUS.LOCKED } : u));
+            setSelectedUserIds(new Set());
+            alert(`Đã vô hiệu hóa thành công ${selectedUserIds.size} người dùng.`);
+        } catch (err: any) {
+            console.error('Vô hiệu hóa hàng loạt thất bại:', err);
+            alert(err?.message || 'Vô hiệu hóa hàng loạt thất bại. Vui lòng thử lại.');
+        }
+    };
+
+    // Handler đổi items per page - cho phép nhập tự do
+    const handleItemsPerPageChange = useCallback((value: number) => {
+        const clamped = Math.max(1, Math.min(500, value));
+        setItemsPerPage(clamped);
+        setCurrentPage(1);
+        setCustomPageSize("");
+    }, []);
+
+    const handleCustomPageSizeSubmit = useCallback(() => {
+        const val = parseInt(customPageSize, 10);
+        if (!isNaN(val) && val > 0) {
+            handleItemsPerPageChange(val);
+        } else {
+            setCustomPageSize("");
+        }
+    }, [customPageSize, handleItemsPerPageChange]);
 
     // Toggle sort
     const toggleSort = (field: SortField) => {
@@ -158,8 +324,57 @@ export default function UsersPage() {
         setIsModalOpen(true);
     };
 
-    const handleEditUser = (user: User) => {
-        setEditingUser(user);
+    const handleEditUser = async (user: User) => {
+        try {
+            const roleStr = typeof user.role === 'string' ? user.role.toUpperCase() : '';
+            if (roleStr !== 'PATIENT' && roleStr !== 'USER') {
+                const staffDetail: any = await staffService.getById(user.id);
+                const fac = staffDetail?.facilities?.[0];
+                
+                setEditingUser({
+                    ...user,
+                    // Profile fields — prefer staffDetail (from staff API) over list data
+                    fullName: staffDetail?.full_name || (user as any).fullName || "",
+                    email: staffDetail?.email || user.email || "",
+                    phone: staffDetail?.phone || (user as any).phone || "",
+                    avatar: getImageUrl(staffDetail?.avatar_url || (user as any).avatar || ""),
+                    dob: staffDetail?.dob || (user as any).dob || "",
+                    gender: staffDetail?.gender || (user as any).gender || "",
+                    address: staffDetail?.address || (user as any).address || "",
+                    identity_card_number: staffDetail?.identity_card_number || (user as any).identity_card_number || "",
+                    // Role
+                    role: (Array.isArray(staffDetail?.roles) && staffDetail.roles.length > 0 
+                        ? staffDetail.roles[0].toUpperCase() 
+                        : user.role) as Role,
+                    roles: staffDetail?.roles || (user as any).roles || [],
+                    // Facility assignment
+                    facilityId: fac?.facility_id || "",
+                    branchId: fac?.branch_id || "",
+                    departmentId: fac?.department_id || "",
+                    role_title: fac?.role_title || "",
+                    // Doctor-specific
+                    title: staffDetail?.doctor_title || staffDetail?.title || "",
+                    biography: staffDetail?.biography || "",
+                    consultation_fee: staffDetail?.consultation_fee != null ? String(staffDetail.consultation_fee) : "",
+                    specialtyId: staffDetail?.specialty_id || "",
+                });
+            } else {
+                const userDetail: any = await userService.getUserById(user.id);
+                const profile = userDetail?.profile;
+                setEditingUser({
+                    ...user,
+                    fullName: profile?.full_name || (user as any).fullName || "",
+                    avatar: getImageUrl(profile?.avatar_url || (user as any).avatar || ""),
+                    dob: profile?.dob || (user as any).dob || "",
+                    gender: profile?.gender || (user as any).gender || "",
+                    address: profile?.address || (user as any).address || "",
+                    identity_card_number: profile?.identity_card_number || (user as any).identity_card_number || "",
+                });
+            }
+        } catch (error) {
+            console.error("Lỗi khi lấy thông tin chi tiết:", error);
+            setEditingUser(user);
+        }
         setIsModalOpen(true);
     };
 
@@ -194,20 +409,120 @@ export default function UsersPage() {
         }
     };
 
-    const handleSubmitUser = async (userData: Partial<User>) => {
+    const handleSubmitUser = async (userData: Partial<AdminUser> & { file?: File }) => {
         try {
+            const { file, ...coreData } = userData;
+            let userIdToUpdate = "";
+            let roleChanged = false;
+            let newRole = "";
+
             if (editingUser) {
-                await userService.updateUser(editingUser.id, userData as any);
-                setUsers((prev) =>
-                    prev.map((u) => (u.id === editingUser.id ? { ...u, ...userData } : u))
-                );
+                userIdToUpdate = editingUser.id;
+                roleChanged = !!coreData.role && coreData.role !== editingUser.role;
+                newRole = coreData.role as string;
             } else {
-                const created = await userService.createUser(userData as any);
-                setUsers((prev) => [created as unknown as User, ...prev]);
+                const created: any = await userService.createUser(coreData as any);
+                userIdToUpdate =
+                    created?.userId ??
+                    created?.data?.userId ??
+                    created?.id ??
+                    created?.data?.id ??
+                    created?.users_id ??
+                    created?.data?.users_id;
+                roleChanged = !!coreData.role;
+                newRole = coreData.role as string;
             }
+
+            if (userIdToUpdate) {
+                if (file) {
+                    await userService.uploadUserAvatar(String(userIdToUpdate), file);
+                }
+
+                // 1. Phải gán vai trò trước để API bên BE nhận diện được chức vụ (vd: DOCTOR)
+                if (roleChanged && newRole) {
+                    try {
+                        await userService.assignUserRole(String(userIdToUpdate), { role: newRole });
+                    } catch (e) {
+                        console.error('Lỗi khi gán vai trò:', e);
+                    }
+                }
+
+                // Lấy vai trò hiện tại (từ form hoặc từ user đang sửa)
+                const roleStr = String(coreData.role || (editingUser && editingUser.role) || '').toUpperCase();
+
+                if (roleStr !== 'PATIENT' && roleStr !== 'USER') {
+                    // Update nhân sự
+                    const staffPayload: any = {
+                        email: coreData.email,
+                        phone_number: coreData.phone || (coreData as any).phoneNumber,
+                        full_name: coreData.fullName || (coreData as any).full_name,
+                        dob: coreData.dob,
+                        gender: coreData.gender,
+                        identity_card_number: coreData.identity_card_number,
+                        address: coreData.address,
+                        branch_id: (coreData as any).branchId || (coreData as any).branch_id,
+                        department_id: (coreData as any).departmentId || (coreData as any).department_id,
+                        role_title: (coreData as any).role_title,
+                        specialty_id: (coreData as any).specialtyId || (coreData as any).specialty_id,
+                        title: (coreData as any).title,
+                        biography: (coreData as any).biography,
+                        consultation_fee: (coreData as any).consultation_fee
+                            ? Number((coreData as any).consultation_fee)
+                            : undefined,
+                    };
+
+                    Object.keys(staffPayload).forEach(key => staffPayload[key] === undefined && delete staffPayload[key]);
+
+                    try {
+                        await staffService.update(String(userIdToUpdate), staffPayload);
+                    } catch (e) {
+                        console.error('Lỗi cập nhật nhân sự / chuyên môn:', e);
+                        // Thử gọi update user cơ bản nếu rớt
+                        await userService.updateUser(userIdToUpdate, coreData as any);
+                    }
+                } else if (editingUser) {
+                    await userService.updateUser(userIdToUpdate, coreData as any);
+                }
+            }
+
+            await loadUsers();
         } catch (err) {
             console.error('Lưu người dùng thất bại:', err);
             alert('Lưu người dùng thất bại. Vui lòng thử lại.');
+        }
+    };
+
+    const handleAssignRole = async (role: string) => {
+        if (!selectedActionUser) return;
+        try {
+            await userService.assignUserRole(selectedActionUser.id, { role });
+            await loadUsers();
+            alert("Đổi vai trò thành công");
+            setIsRoleModalOpen(false);
+        } catch (error: any) {
+            alert(error?.message || "Đổi vai trò thất bại");
+        }
+    };
+
+    const handleAssignFacility = async (data: { branchId: string; departmentId?: string; roleTitle?: string }) => {
+        if (!selectedActionUser) return;
+        try {
+            await userService.assignUserFacility(selectedActionUser.id, data);
+            alert("Gán cơ sở thành công");
+            setIsFacilityModalOpen(false);
+        } catch (error: any) {
+            alert(error?.message || "Gán cơ sở thất bại");
+        }
+    };
+
+    const handleResetPassword = async (newPassword?: string) => {
+        if (!selectedActionUser) return;
+        try {
+            await userService.adminResetPassword(selectedActionUser.id, newPassword);
+            alert("Cấp lại mật khẩu thành công. " + (!newPassword ? "Hệ thống đã gửi mật khẩu mới qua email." : ""));
+            setIsPasswordModalOpen(false);
+        } catch (error: any) {
+            alert(error?.message || "Cấp lại mật khẩu thất bại");
         }
     };
 
@@ -229,8 +544,10 @@ export default function UsersPage() {
                 return UI_TEXT.STATUS.ACTIVE;
             case USER_STATUS.LOCKED:
                 return UI_TEXT.STATUS.LOCKED;
+            case USER_STATUS.INACTIVE:
+                return UI_TEXT.STATUS.INACTIVE;
             default:
-                return UI_TEXT.STATUS.OFFLINE;
+                return UI_TEXT.STATUS.INACTIVE;
         }
     };
 
@@ -251,20 +568,13 @@ export default function UsersPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div className="space-y-1">
                     <h1 className="text-3xl font-black tracking-tight text-[#121417] dark:text-white">
-                        {t("title")}
+                        {UI_TEXT.ADMIN.USERS.TITLE}
                     </h1>
                     <p className="text-[#687582] dark:text-gray-400">
-                        {t("subtitle")}
+                        {UI_TEXT.ADMIN.USERS.SUBTITLE}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setIsPermissionsOpen(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] text-[#121417] dark:text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
-                        {UI_TEXT.ADMIN.USERS.CONFIGURE_PERMISSIONS}
-                    </button>
                     <label className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] text-[#121417] dark:text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer">
                         <span className="material-symbols-outlined text-[20px]">upload</span>
                         Import
@@ -279,25 +589,9 @@ export default function UsersPage() {
                                 const count = res?.data?.count ?? res?.count ?? "nhiều";
                                 alert(`Import thành công ${count} người dùng.`);
                                 // Reload danh sách
-                                setIsDataLoading(true);
-                                const reloadRes: any = await userService.getUsers({ limit: 100 });
-                                const items = reloadRes?.data?.items ?? reloadRes?.items ?? reloadRes?.data?.data ?? reloadRes?.data ?? reloadRes ?? [];
-                                if (Array.isArray(items)) {
-                                    setUsers(items.map((u: Record<string, unknown>) => ({
-                                        id: String(u.users_id ?? u.id ?? ""),
-                                        fullName: (u as any).profile?.full_name ?? u.full_name ?? u.fullName ?? u.email ?? "",
-                                        email: u.email ?? "",
-                                        phone: u.phone ?? u.phone_number ?? "",
-                                        role: Array.isArray(u.roles) && (u.roles as string[]).length > 0 ? (u.roles as string[])[0].toLowerCase() : "staff",
-                                        status: u.status ?? "ACTIVE",
-                                        avatar: (u as any).profile?.avatar_url ?? u.avatar ?? "",
-                                        createdAt: u.created_at ?? u.createdAt ?? "",
-                                    })) as unknown as User[]);
-                                }
+                                await loadUsers();
                             } catch (err: any) {
                                 alert(err?.message || "Import thất bại. Vui lòng kiểm tra định dạng file và thử lại.");
-                            } finally {
-                                setIsDataLoading(false);
                             }
                         }} />
                     </label>
@@ -313,7 +607,7 @@ export default function UsersPage() {
                         className="flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform hover:-translate-y-0.5"
                     >
                         <span className="material-symbols-outlined text-[20px]">person_add</span>
-                        {t("addButton")}
+                        {UI_TEXT.ADMIN.USERS.ADD_USER}
                     </button>
                 </div>
             </div>
@@ -325,7 +619,7 @@ export default function UsersPage() {
                         <span className="material-symbols-outlined">group</span>
                     </div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">{t("stats.total")}</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">{UI_TEXT.ADMIN.USERS.TOTAL_USERS}</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{users.length}</p>
                     </div>
                 </div>
@@ -335,7 +629,7 @@ export default function UsersPage() {
                         <span className="material-symbols-outlined">verified_user</span>
                     </div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">{t("stats.active")}</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">{UI_TEXT.ADMIN.USERS.ACTIVE_USERS}</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">
                             {users.filter((u) => u.status === USER_STATUS.ACTIVE).length}
                         </p>
@@ -347,7 +641,7 @@ export default function UsersPage() {
                         <span className="material-symbols-outlined">manage_accounts</span>
                     </div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">{t("stats.rolesCount")}</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">{UI_TEXT.ADMIN.USERS.ROLES_COUNT}</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{stats.roles}</p>
                     </div>
                 </div>
@@ -357,7 +651,7 @@ export default function UsersPage() {
                         <span className="material-symbols-outlined">block</span>
                     </div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">{t("stats.banned")}</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">{UI_TEXT.ADMIN.USERS.LOCKED_USERS}</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">
                             {users.filter((u) => u.status === USER_STATUS.LOCKED).length}
                         </p>
@@ -367,6 +661,27 @@ export default function UsersPage() {
 
             {/* Users Table */}
             <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm flex flex-col">
+                {/* Tabs */}
+                <div className="flex border-b border-[#dde0e4] dark:border-[#2d353e]">
+                    <button
+                        onClick={() => { setMainTab("PATIENT"); setRoleFilter("all"); }}
+                        className={`px-6 py-3 font-medium text-sm transition-colors relative ${mainTab === "PATIENT" ? "text-[#3C81C6]" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"}`}
+                    >
+                        Bệnh nhân
+                        {mainTab === "PATIENT" && (
+                            <span className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-[#3C81C6] rounded-t-full"></span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => { setMainTab("STAFF"); setRoleFilter("all"); }}
+                        className={`px-6 py-3 font-medium text-sm transition-colors relative ${mainTab === "STAFF" ? "text-[#3C81C6]" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"}`}
+                    >
+                        Nhân sự y tế
+                        {mainTab === "STAFF" && (
+                            <span className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-[#3C81C6] rounded-t-full"></span>
+                        )}
+                    </button>
+                </div>
                 {/* Table Header */}
                 <div className="p-4 border-b border-[#dde0e4] dark:border-[#2d353e] flex flex-col sm:flex-row justify-between gap-4 items-center">
                     <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
@@ -382,20 +697,33 @@ export default function UsersPage() {
                                 placeholder={UI_TEXT.ADMIN.USERS.SEARCH_PLACEHOLDER}
                             />
                         </div>
-                        <select
-                            value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value)}
-                            className="py-2.5 pl-3 pr-10 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 focus:border-[#3C81C6] transition-all text-[#687582] dark:text-gray-400 cursor-pointer"
-                        >
-                            <option value="all">{UI_TEXT.ADMIN.USERS.ALL_ROLES}</option>
-                            {Object.entries(ROLES).map(([key, value]) => (
-                                <option key={key} value={value}>
-                                    {ROLE_LABELS[value as Role]}
-                                </option>
-                            ))}
-                        </select>
+                        {mainTab === "STAFF" && (
+                            <select
+                                value={roleFilter}
+                                onChange={(e) => setRoleFilter(e.target.value)}
+                                className="py-2.5 pl-3 pr-10 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 focus:border-[#3C81C6] transition-all text-[#687582] dark:text-gray-400 cursor-pointer"
+                            >
+                                <option value="all">{UI_TEXT.ADMIN.USERS.ALL_ROLES}</option>
+                                {Object.entries(ROLES)
+                                    .filter(([_, value]) => value !== ROLES.PATIENT && (value as string) !== 'USER')
+                                    .map(([key, value]) => (
+                                    <option key={key} value={value}>
+                                        {ROLE_LABELS[value as Role] || value}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
+                        {selectedUserIds.size > 0 && viewMode === "table" && (
+                            <button
+                                onClick={handleBulkDelete}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold transition-colors mr-2 shadow-sm"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+                                Vô hiệu hóa ({selectedUserIds.size})
+                            </button>
+                        )}
                         <div className="inline-flex p-0.5 bg-gray-100 dark:bg-gray-800 rounded-xl">
                             <button onClick={() => setViewMode("card")}
                                 className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${viewMode === "card" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] hover:text-[#3C81C6]"}`}>
@@ -441,7 +769,7 @@ export default function UsersPage() {
                             <EmptyState icon="person_off" title="Không có user nào" description="Thử điều chỉnh bộ lọc hoặc thêm user mới." />
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {filteredUsers.map((u, idx) => (
+                                {paginatedUsers.map((u, idx) => (
                                     <UserCard
                                         key={`${u.id || "user"}-${idx}`}
                                         id={u.id}
@@ -453,8 +781,12 @@ export default function UsersPage() {
                                         status={(u as any).status || "ACTIVE"}
                                         lastLoginAt={(u as any).lastAccess || (u as any).last_login_at}
                                         branchName={(u as any).branchName}
-                                        onView={() => router.push(`/admin/users/${u.id}`)}
-                                        onEdit={() => { setEditingUser(u); setIsModalOpen(true); }}
+                                        onView={() => {
+                                            const role = u.role?.toUpperCase();
+                                            const isPatient = role === "PATIENT" || role === "USER";
+                                            router.push(isPatient ? `/admin/users/patient/${u.id}` : `/admin/users/staff/${u.id}`);
+                                        }}
+                                        onEdit={() => handleEditUser(u)}
                                     />
                                 ))}
                             </div>
@@ -468,15 +800,26 @@ export default function UsersPage() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-[#dde0e4] dark:border-[#2d353e]">
+                                <th className="w-12 py-4 px-4 text-center">
+                                    <input 
+                                        type="checkbox" 
+                                        onChange={handleSelectAll}
+                                        checked={paginatedUsers.length > 0 && selectedUserIds.size === paginatedUsers.length}
+                                        className="w-4 h-4 text-[#3C81C6] bg-white border-gray-300 rounded focus:ring-[#3C81C6] cursor-pointer"
+                                        title="Chọn tất cả"
+                                        aria-label="Chọn tất cả"
+                                    />
+                                </th>
                                 <th onClick={() => toggleSort("fullName")} className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-[#3C81C6] select-none">
                                     <span className="flex items-center gap-1">
                                         Thông tin người dùng
                                         {sortField === "fullName" && <span className="material-symbols-outlined text-[14px]">{sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}</span>}
                                     </span>
                                 </th>
+                                <th className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase tracking-wider">Số điện thoại</th>
                                 <th onClick={() => toggleSort("role")} className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-[#3C81C6] select-none">
                                     <span className="flex items-center gap-1">
-                                        Vai trò (Role)
+                                        VAI TRÒ
                                         {sortField === "role" && <span className="material-symbols-outlined text-[14px]">{sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}</span>}
                                     </span>
                                 </th>
@@ -486,7 +829,6 @@ export default function UsersPage() {
                                         {sortField === "createdAt" && <span className="material-symbols-outlined text-[14px]">{sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}</span>}
                                     </span>
                                 </th>
-                                <th className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase tracking-wider">Truy cập cuối</th>
                                 <th onClick={() => toggleSort("status")} className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-[#3C81C6] select-none">
                                     <span className="flex items-center gap-1">
                                         Trạng thái
@@ -499,16 +841,26 @@ export default function UsersPage() {
                         <tbody className="divide-y divide-[#dde0e4] dark:divide-[#2d353e]">
                             {filteredUsers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="py-12 text-center text-[#687582] dark:text-gray-400">
+                                    <td colSpan={7} className="py-12 text-center text-[#687582] dark:text-gray-400">
                                         <span className="material-symbols-outlined text-4xl mb-2 block">search_off</span>
                                         {UI_TEXT.TABLE.NO_RESULTS}
                                     </td>
                                 </tr>
                             ) : (
-                                filteredUsers.map((user) => {
+                                paginatedUsers.map((user) => {
                                     const roleColor = ROLE_COLORS[user.role?.toUpperCase() as Role] ?? ROLE_COLORS[user.role as Role] ?? { bg: "bg-gray-100 dark:bg-gray-700", text: "text-gray-700 dark:text-gray-300", dot: "bg-gray-500" };
                                     return (
-                                        <tr key={user.id} className={`group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${user.status === USER_STATUS.LOCKED ? "opacity-60" : ""}`}>
+                                        <tr key={user.id} className={`group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${user.status === USER_STATUS.LOCKED ? "opacity-60" : ""} ${selectedUserIds.has(user.id) ? "bg-[#3C81C6]/5 dark:bg-[#3C81C6]/10" : ""}`}>
+                                            <td className="py-4 px-4 text-center">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={selectedUserIds.has(user.id)}
+                                                    onChange={(e) => handleSelectUser(user.id, e.target.checked)}
+                                                    className="w-4 h-4 text-[#3C81C6] bg-white border-gray-300 rounded focus:ring-[#3C81C6] cursor-pointer"
+                                                    title={`Chọn ${user.fullName}`}
+                                                    aria-label={`Chọn ${user.fullName}`}
+                                                />
+                                            </td>
                                             <td className="py-4 px-6">
                                                 <div className="flex items-center gap-3">
                                                     <div className="relative">
@@ -531,16 +883,16 @@ export default function UsersPage() {
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6">
-                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${roleColor.bg} ${roleColor.text} border border-current/10`}>
+                                                <p className="text-sm text-[#121417] dark:text-gray-200 font-medium">{user.phone || "—"}</p>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${roleColor.bg} ${roleColor.text} border border-current/10 shadow-sm`}>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${roleColor.dot} mr-1.5`}></span>
-                                                    {ROLE_LABELS[user.role as Role]}
+                                                    {ROLE_LABELS[user.role?.toUpperCase() as Role] || ROLE_LABELS[user.role as Role] || user.role}
                                                 </span>
                                             </td>
                                             <td className="py-4 px-6">
                                                 <p className="text-sm text-[#121417] dark:text-gray-200">{formatDate(user.createdAt)}</p>
-                                            </td>
-                                            <td className="py-4 px-6">
-                                                <p className="text-sm text-[#121417] dark:text-gray-200">{user.lastAccess ? formatDate(user.lastAccess) : "—"}</p>
                                             </td>
                                             <td className="py-4 px-6">
                                                 <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusStyle(user.status)}`}>
@@ -550,16 +902,13 @@ export default function UsersPage() {
                                             <td className="py-4 px-6 text-right">
                                                 <DropdownMenu
                                                     items={[
-                                                        {
-                                                            label: "Xem chi tiết",
-                                                            icon: "visibility",
-                                                            onClick: () => router.push(`/admin/users/${user.id}`),
-                                                        },
-                                                        {
-                                                            label: "Chỉnh sửa",
-                                                            icon: "edit",
-                                                            onClick: () => router.push(`/admin/users/${user.id}/edit`),
-                                                        },
+                                                        { label: "Xem chi tiết", icon: "visibility", onClick: () => {
+                                                            const role = user.role?.toUpperCase();
+                                                            const isPatient = role === "PATIENT" || role === "USER";
+                                                            router.push(isPatient ? `/admin/users/patient/${user.id}` : `/admin/users/staff/${user.id}`);
+                                                        } },
+                                                        { label: "Chỉnh sửa", icon: "edit", onClick: () => handleEditUser(user) },
+                                                        { label: "Quản lý mật khẩu", icon: "password", onClick: () => { setSelectedActionUser(user); setIsPasswordModalOpen(true); } },
                                                         {
                                                             label: user.status === USER_STATUS.LOCKED ? "Mở khóa" : "Khóa tài khoản",
                                                             icon: user.status === USER_STATUS.LOCKED ? "lock_open" : "lock",
@@ -584,36 +933,111 @@ export default function UsersPage() {
                 )}
 
                 {/* Pagination */}
-                <div className="p-4 border-t border-[#dde0e4] dark:border-[#2d353e] flex items-center justify-between">
-                    <p className="text-sm text-[#687582] dark:text-gray-400">
-                        {UI_TEXT.TABLE.SHOWING} <span className="font-medium text-[#121417] dark:text-white">1</span> {UI_TEXT.TABLE.TO} <span className="font-medium text-[#121417] dark:text-white">{filteredUsers.length}</span> {UI_TEXT.TABLE.OF} <span className="font-medium text-[#121417] dark:text-white">{users.length}</span> {UI_TEXT.TABLE.RESULTS}
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <button className="p-2 rounded-lg border border-[#dde0e4] dark:border-[#2d353e] text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50">
-                            <span className="material-symbols-outlined text-[20px]">chevron_left</span>
-                        </button>
-                        <button className="px-3 py-1.5 rounded-lg bg-[#3C81C6] text-white text-sm font-bold shadow-sm">1</button>
-                        <button className="p-2 rounded-lg border border-[#dde0e4] dark:border-[#2d353e] text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <span className="material-symbols-outlined text-[20px]">chevron_right</span>
-                        </button>
+                {filteredUsers.length > 0 && (
+                    <div className="px-4 py-3 border-t border-[#dde0e4] dark:border-[#2d353e] flex items-center justify-between">
+                        {/* Left: Info + Page size buttons */}
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm text-[#687582] dark:text-gray-400 whitespace-nowrap">
+                                {UI_TEXT.TABLE.SHOWING} <span className="font-medium text-[#121417] dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span> {UI_TEXT.TABLE.TO} <span className="font-medium text-[#121417] dark:text-white">{Math.min(currentPage * itemsPerPage, filteredUsers.length)}</span> {UI_TEXT.TABLE.OF} <span className="font-medium text-[#121417] dark:text-white">{filteredUsers.length}</span> {UI_TEXT.TABLE.RESULTS}
+                            </span>
+                            <div className="flex items-center gap-1">
+                                {[10, 20, 50, 100].map(size => (
+                                    <button
+                                        key={size}
+                                        onClick={() => handleItemsPerPageChange(size)}
+                                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                                            itemsPerPage === size
+                                                ? "bg-[#3C81C6] text-white shadow-sm"
+                                                : "bg-gray-100 dark:bg-gray-800 text-[#687582] hover:bg-gray-200 dark:hover:bg-gray-700"
+                                        }`}
+                                    >
+                                        {size}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        {/* Right: Page navigation */}
+                        <div className="flex items-center gap-1">
+                            <button 
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="p-1.5 flex items-center rounded-lg border border-[#dde0e4] dark:border-[#2d353e] text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                            </button>
+                            
+                            {(() => {
+                                const pages: (number | string)[] = [];
+                                if (totalPages <= 7) {
+                                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                } else {
+                                    if (currentPage <= 4) {
+                                        pages.push(1, 2, 3, 4, 5, '...', totalPages);
+                                    } else if (currentPage >= totalPages - 3) {
+                                        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                                    } else {
+                                        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                                    }
+                                }
+                                
+                                return pages.map((p, i) => (
+                                    p === '...' ? (
+                                        <span key={`ellipsis-${i}`} className="text-[#687582] px-0.5 text-xs">...</span>
+                                    ) : (
+                                        <button 
+                                            key={`page-${p}`}
+                                            onClick={() => setCurrentPage(p as number)}
+                                            className={`min-w-[30px] px-2 py-1.5 rounded-lg text-xs font-bold transition-colors ${currentPage === p ? "bg-[#3C81C6] text-white shadow-sm" : "border border-[#dde0e4] dark:border-[#2d353e] text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800"}`}
+                                        >
+                                            {p}
+                                        </button>
+                                    )
+                                ));
+                            })()}
+
+                            <button 
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                                className="p-1.5 flex items-center rounded-lg border border-[#dde0e4] dark:border-[#2d353e] text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
+
+
             </div>
 
-            {/* User Form Modal */}
             <UserFormModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={() => { setIsModalOpen(false); setEditingUser(null); }}
                 onSubmit={handleSubmitUser}
                 initialData={editingUser || undefined}
                 mode={editingUser ? "edit" : "create"}
             />
 
-            {/* Permissions Modal */}
-            <PermissionsModal
-                isOpen={isPermissionsOpen}
-                onClose={() => setIsPermissionsOpen(false)}
+            <AssignRoleModal
+                isOpen={isRoleModalOpen}
+                onClose={() => setIsRoleModalOpen(false)}
+                onSubmit={handleAssignRole}
+                user={selectedActionUser}
             />
+
+            <AssignFacilityModal
+                isOpen={isFacilityModalOpen}
+                onClose={() => setIsFacilityModalOpen(false)}
+                onSubmit={handleAssignFacility}
+                user={selectedActionUser}
+            />
+
+            <ResetPasswordModal
+                isOpen={isPasswordModalOpen}
+                onClose={() => setIsPasswordModalOpen(false)}
+                onSubmit={handleResetPassword}
+                user={selectedActionUser}
+            />
+
         </>
     );
 }

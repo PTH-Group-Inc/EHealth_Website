@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Cấu hình theo vai trò
 const PORTAL_CONFIG: Record<string, { label: string; settingsRoute: string; initials: string; name: string; role: string }> = {
@@ -56,7 +57,7 @@ export function SettingsDropdown() {
     const [isDarkMode, setIsDarkMode] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const pathname = usePathname();
-    const router = useRouter();
+    const { logout } = useAuth();
 
     const config = getPortalConfig(pathname);
 
@@ -81,11 +82,8 @@ export function SettingsDropdown() {
 
     const handleLogout = () => {
         setIsOpen(false);
-        // Xóa token/session khỏi localStorage
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
-        router.push(ROUTES.PUBLIC.LOGIN);
+        // Sử dụng AuthContext.logout() để xóa cả state lẫn localStorage
+        logout();
     };
 
     return (

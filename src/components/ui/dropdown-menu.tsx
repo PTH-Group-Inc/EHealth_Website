@@ -45,25 +45,37 @@ export function DropdownMenu({ items, trigger }: DropdownMenuProps) {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-lg z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-150">
-                    {items.map((item, index) => (
-                        <button
-                            key={index}
-                            onClick={() => {
-                                item.onClick();
-                                setIsOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${item.variant === "danger"
-                                    ? "text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                    : "text-[#121417] dark:text-white"
+                <div className="absolute right-0 top-full mt-1.5 w-56 bg-white dark:bg-[#1e242b] border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg z-50 p-1.5 animate-in fade-in zoom-in-95 duration-100">
+                    <div className="flex flex-col gap-0.5">
+                    {items.map((item, index) => {
+                        const isDanger = item.variant === "danger";
+                        return (
+                            <button
+                                key={index}
+                                onClick={() => {
+                                    item.onClick();
+                                    setIsOpen(false);
+                                }}
+                                className={`w-full flex items-center gap-3 px-3 py-2 text-[14px] rounded-lg transition-all duration-200 ${
+                                    isDanger
+                                        ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                        : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                                 }`}
-                        >
-                            {item.icon && (
-                                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                            )}
-                            {item.label}
-                        </button>
-                    ))}
+                            >
+                                {item.icon && (
+                                    <span 
+                                        className={`material-symbols-outlined text-[20px] ${
+                                            isDanger ? "text-red-500" : "text-gray-400 dark:text-gray-500"
+                                        }`}
+                                    >
+                                        {item.icon}
+                                    </span>
+                                )}
+                                <span className="font-medium">{item.label}</span>
+                            </button>
+                        );
+                    })}
+                    </div>
                 </div>
             )}
         </div>

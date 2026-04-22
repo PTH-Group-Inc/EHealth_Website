@@ -36,10 +36,6 @@ export function Modal({
         if (isOpen) {
             document.addEventListener("keydown", handleEscape);
             document.body.style.overflow = "hidden";
-            // Focus vào nút close khi modal mở
-            setTimeout(() => {
-                closeButtonRef.current?.focus();
-            }, 50);
         }
 
         return () => {
@@ -47,6 +43,16 @@ export function Modal({
             document.body.style.overflow = "unset";
         };
     }, [isOpen, onClose]);
+
+    // Focus close button when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            const timer = setTimeout(() => {
+                closeButtonRef.current?.focus();
+            }, 50);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen]);
 
     // Close on backdrop click
     const handleBackdropClick = (e: React.MouseEvent) => {
@@ -67,10 +73,10 @@ export function Modal({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-title"
-                className={`${sizeClasses[size]} w-full bg-white dark:bg-[#1e242b] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200`}
+                className={`${sizeClasses[size]} w-full max-h-[90vh] flex flex-col bg-white dark:bg-[#1e242b] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200`}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-[#dde0e4] dark:border-[#2d353e]">
+                <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-[#dde0e4] dark:border-[#2d353e]">
                     <h2 id="modal-title" className="text-xl font-bold text-[#121417] dark:text-white">
                         {title}
                     </h2>
@@ -85,7 +91,7 @@ export function Modal({
                 </div>
 
                 {/* Content */}
-                <div className="p-6">{children}</div>
+                <div className="p-6 overflow-y-auto min-h-0 custom-scrollbar">{children}</div>
             </div>
         </div>
     );

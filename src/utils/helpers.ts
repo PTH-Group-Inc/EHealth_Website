@@ -2,6 +2,8 @@
  * Helper Utilities
  * Các hàm tiện ích chung
  */
+import { API_CONFIG } from '@/config';
+
 
 // ============================================
 // Generate unique ID
@@ -235,3 +237,33 @@ export const toQueryString = (obj: Record<string, any>): string => {
     });
     return params.toString();
 };
+
+// ============================================
+// Get Image URL (Appends BASE_URL if relative)
+// ============================================
+export const getImageUrl = (url?: any): string => {
+    if (!url) return '';
+    
+    let path = '';
+    
+    if (typeof url === 'string') {
+        path = url;
+    } else if (Array.isArray(url) && url.length > 0) {
+        path = typeof url[0] === 'string' ? url[0] : (url[0]?.url || url[0]?.path || '');
+    } else if (typeof url === 'object') {
+        path = url.url || url.path || '';
+    }
+    
+    if (!path || typeof path !== 'string') return '';
+    
+    // Convert backslashes to forward slashes for URLs
+    path = path.replace(/\\/g, '/');
+    
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) {
+        return path;
+    }
+    const baseUrl = API_CONFIG.BASE_URL.endsWith('/') ? API_CONFIG.BASE_URL.slice(0, -1) : API_CONFIG.BASE_URL;
+    const pathUrl = path.startsWith('/') ? path : `/${path}`;
+    return `${baseUrl}${pathUrl}`;
+};
+

@@ -142,14 +142,23 @@ describe('validateDateRange', () => {
 });
 
 describe('validateAppointmentDate — ngày đặt lịch khám', () => {
+    // Dùng local date (YYYY-MM-DD theo TZ máy chạy test), không dùng toISOString
+    // vì toISOString() trả UTC → edge case khi chạy gần nửa đêm local + TZ lệch UTC
+    // (ví dụ GMT+7 lúc 02:00 local = UTC 19:00 ngày trước → toISOString = ngày hôm qua).
+    const localDateString = (offsetDays = 0): string => {
+        const d = new Date();
+        d.setDate(d.getDate() + offsetDays);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
+
     it('Chấp nhận ngày hôm nay', () => {
-        const today = new Date().toISOString().slice(0, 10);
-        expect(validateAppointmentDate(today).valid).toBe(true);
+        expect(validateAppointmentDate(localDateString(0)).valid).toBe(true);
     });
     it('Chấp nhận ngày tương lai', () => {
-        const future = new Date();
-        future.setDate(future.getDate() + 7);
-        expect(validateAppointmentDate(future.toISOString().slice(0, 10)).valid).toBe(true);
+        expect(validateAppointmentDate(localDateString(7)).valid).toBe(true);
     });
     it('Từ chối ngày quá khứ', () => {
         expect(validateAppointmentDate('2020-01-01').valid).toBe(false);
