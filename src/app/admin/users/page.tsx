@@ -39,6 +39,14 @@ type AdminUser = User & {
     gender?: string;
     identity_card_number?: string;
     address?: string;
+    facilityId?: string;
+    branchId?: string;
+    departmentId?: string;
+    role_title?: string;
+    title?: string;
+    biography?: string;
+    consultation_fee?: string;
+    specialtyId?: string;
 };
 
 function normalizeUserRoles(rawRoles: unknown): string[] {
@@ -178,7 +186,7 @@ export default function UsersPage() {
                 (user.fullName || "").toLowerCase().includes(query) ||
                 (user.email || "").toLowerCase().includes(query);
             
-            const isPatient = user.role === ROLES.PATIENT || user.role === 'USER';
+            const isPatient = (user.role as string) === ROLES.PATIENT || (user.role as string) === 'USER';
             if (mainTab === 'STAFF' && isPatient) return false;
             if (mainTab === 'PATIENT' && !isPatient) return false;
 
@@ -347,7 +355,7 @@ export default function UsersPage() {
                     // Doctor-specific
                     title: staffDetail?.doctor_title || staffDetail?.title || "",
                     biography: staffDetail?.biography || "",
-                    consultation_fee: staffDetail?.consultation_fee ?? "",
+                    consultation_fee: staffDetail?.consultation_fee != null ? String(staffDetail.consultation_fee) : "",
                     specialtyId: staffDetail?.specialty_id || "",
                 });
             } else {
@@ -401,7 +409,7 @@ export default function UsersPage() {
         }
     };
 
-    const handleSubmitUser = async (userData: Partial<User> & { file?: File }) => {
+    const handleSubmitUser = async (userData: Partial<AdminUser> & { file?: File }) => {
         try {
             const { file, ...coreData } = userData;
             let userIdToUpdate = "";
@@ -697,7 +705,7 @@ export default function UsersPage() {
                             >
                                 <option value="all">{UI_TEXT.ADMIN.USERS.ALL_ROLES}</option>
                                 {Object.entries(ROLES)
-                                    .filter(([_, value]) => value !== ROLES.PATIENT && value !== 'USER')
+                                    .filter(([_, value]) => value !== ROLES.PATIENT && (value as string) !== 'USER')
                                     .map(([key, value]) => (
                                     <option key={key} value={value}>
                                         {ROLE_LABELS[value as Role] || value}
@@ -773,7 +781,11 @@ export default function UsersPage() {
                                         status={(u as any).status || "ACTIVE"}
                                         lastLoginAt={(u as any).lastAccess || (u as any).last_login_at}
                                         branchName={(u as any).branchName}
-                                        onView={() => router.push(`/admin/users/${u.id}`)}
+                                        onView={() => {
+                                            const role = u.role?.toUpperCase();
+                                            const isPatient = role === "PATIENT" || role === "USER";
+                                            router.push(isPatient ? `/admin/users/patient/${u.id}` : `/admin/users/staff/${u.id}`);
+                                        }}
                                         onEdit={() => handleEditUser(u)}
                                     />
                                 ))}
@@ -890,7 +902,11 @@ export default function UsersPage() {
                                             <td className="py-4 px-6 text-right">
                                                 <DropdownMenu
                                                     items={[
-                                                        { label: "Xem chi tiết", icon: "visibility", onClick: () => router.push(`/admin/users/${user.id}`) },
+                                                        { label: "Xem chi tiết", icon: "visibility", onClick: () => {
+                                                            const role = user.role?.toUpperCase();
+                                                            const isPatient = role === "PATIENT" || role === "USER";
+                                                            router.push(isPatient ? `/admin/users/patient/${user.id}` : `/admin/users/staff/${user.id}`);
+                                                        } },
                                                         { label: "Chỉnh sửa", icon: "edit", onClick: () => handleEditUser(user) },
                                                         { label: "Quản lý mật khẩu", icon: "password", onClick: () => { setSelectedActionUser(user); setIsPasswordModalOpen(true); } },
                                                         {

@@ -206,7 +206,7 @@ export default function UserDetailPage() {
                 </div>
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={() => router.push(`/admin/users/${userId}/edit`)}
+                        onClick={() => router.push(`/admin/users/staff/${userId}/edit`)}
                         className="flex items-center gap-2 px-4 py-2 bg-[#3C81C6] text-white rounded-xl text-sm font-bold hover:bg-[#2a6da8] transition-all shadow-md shadow-blue-200 dark:shadow-none"
                     >
                         <span className="material-symbols-outlined text-[18px]">edit</span>
@@ -281,7 +281,7 @@ export default function UserDetailPage() {
             {/* Tab Content */}
             <div className="pb-10">
                 {activeTab === "overview" && <OverviewTab user={user} isActive={isActive} />}
-                {activeTab === "roles" && <RolesTab userId={userId} roles={user.roles} onRefresh={triggerRefresh} />}
+                {activeTab === "roles" && <RolesTab userId={userId} roles={user.roles || []} onRefresh={triggerRefresh} />}
                 {activeTab === "security" && <SecurityTab userId={userId} isActive={isActive} onRefresh={triggerRefresh} />}
                 {activeTab === "activity" && <ActivityTab userId={userId} />}
             </div>
