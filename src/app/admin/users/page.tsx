@@ -15,6 +15,13 @@ import { validateFile } from "@/utils/fileValidation";
 import { UserCard } from "@/components/shared/cards";
 import { EmptyState } from "@/components/shared/layout";
 
+/** Route to the correct detail page based on role */
+function getDetailRoute(userId: string, role?: string): string {
+    const r = (role || "").toUpperCase();
+    if (r === "PATIENT") return `/admin/users/${userId}`;
+    return `/admin/users/staff/${userId}`;
+}
+
 /** Format ISO date to readable string */
 function formatDate(iso: unknown): string {
     if (!iso || typeof iso !== 'string') return "—";
@@ -453,7 +460,7 @@ export default function UsersPage() {
                                         status={(u as any).status || "ACTIVE"}
                                         lastLoginAt={(u as any).lastAccess || (u as any).last_login_at}
                                         branchName={(u as any).branchName}
-                                        onView={() => router.push(`/admin/users/${u.id}`)}
+                                        onView={() => router.push(getDetailRoute(u.id, u.role))}
                                         onEdit={() => { setEditingUser(u); setIsModalOpen(true); }}
                                     />
                                 ))}
@@ -553,7 +560,7 @@ export default function UsersPage() {
                                                         {
                                                             label: "Xem chi tiết",
                                                             icon: "visibility",
-                                                            onClick: () => router.push(`/admin/users/${user.id}`),
+                                                            onClick: () => router.push(getDetailRoute(user.id, user.role)),
                                                         },
                                                         {
                                                             label: "Chỉnh sửa",
