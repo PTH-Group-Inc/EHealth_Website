@@ -363,7 +363,7 @@ export default function DoctorsPage() {
                                         reviewCount={doctor.reviewCount}
                                         experience={doctor.experience}
                                         status={doctor.status}
-                                        onView={() => router.push(`/admin/doctors/${doctor.id}`)}
+                                        onView={() => router.push(`/admin/users/staff/${doctor.id}`)}
                                         onEdit={() => handleEditDoctor(doctor)}
                                         onSchedule={() => setIsTimeSlotOpen(true)}
                                     />
@@ -475,7 +475,7 @@ export default function DoctorsPage() {
                                                         {
                                                             label: "Xem chi tiết",
                                                             icon: "visibility",
-                                                            onClick: () => router.push(`/admin/doctors/${doctor.id}`),
+                                                            onClick: () => router.push(`/admin/users/staff/${doctor.id}`),
                                                         },
                                                         {
                                                             label: "Chỉnh sửa",
