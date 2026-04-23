@@ -1,0 +1,740 @@
+{
+    "dashboard": {
+        "title": "Dashboard",
+        "welcome": "Welcome back",
+        "overview": "Overview",
+        "todayReport": "Today's report"
+    },
+    "users": {
+        "title": "Staff Management",
+        "subtitle": "List of user accounts in the system",
+        "addButton": "Add staff",
+        "stats": {
+            "total": "Total staff",
+            "active": "Active",
+            "inactive": "Inactive",
+            "banned": "Banned",
+            "rolesCount": "Role count"
+        }
+    },
+    "doctors": {
+        "title": "Doctor List",
+        "subtitle": "Manage doctor profiles, licenses and on-call schedules",
+        "addButton": "Add doctor",
+        "stats": {
+            "totalDoctors": "Total doctors",
+            "onDuty": "On duty",
+            "pendingAssignment": "Pending assignment",
+            "avgPerformance": "Avg performance"
+        }
+    },
+    "hospitals": {
+        "title": "Facilities / Hospitals",
+        "subtitle": "Manage medical facilities in the system",
+        "addButton": "Add facility",
+        "stats": {
+            "total": "Total facilities",
+            "doctors": "Total doctors",
+            "active": "Active"
+        },
+        "filter": {
+            "searchPlaceholder": "Search facilities..."
+        },
+        "statusLabel": {
+            "active": "Active",
+            "inactive": "Inactive"
+        },
+        "units": {
+            "doctors": "doctors",
+            "departments": "departments"
+        }
+    },
+    "branches": {
+        "title": "Branches",
+        "subtitle": "Manage branches of medical facilities",
+        "addButton": "Add branch",
+        "stats": {
+            "total": "Total branches",
+            "active": "Active",
+            "inactive": "Paused",
+            "facilities": "Facilities"
+        },
+        "filter": {
+            "searchPlaceholder": "Search by code, name, address, phone..."
+        },
+        "statusLabel": {
+            "active": "Active",
+            "inactive": "Paused"
+        }
+    },
+    "departments": {
+        "title": "Departments",
+        "subtitle": "Manage departments within the hospital",
+        "addButton": "Add department",
+        "stats": {
+            "total": "Total departments",
+            "active": "Active departments",
+            "totalDoctors": "Total doctors",
+            "totalPatients": "Total patients"
+        },
+        "filter": {
+            "searchPlaceholder": "Search by name, department code..."
+        },
+        "statusLabel": {
+            "active": "Active",
+            "inactive": "Inactive",
+            "maintenance": "Maintenance"
+        }
+    },
+    "specialties": {
+        "title": "Specialties",
+        "subtitle": "Medical specialty catalog",
+        "addButton": "Add specialty",
+        "stats": {
+            "total": "Total specialties",
+            "active": "Active",
+            "doctors": "Total doctors",
+            "services": "Total services"
+        },
+        "filter": {
+            "searchPlaceholder": "Search by code or name..."
+        },
+        "statusLabel": {
+            "active": "Active",
+            "inactive": "Inactive"
+        },
+        "units": {
+            "doctors": "doctors",
+            "services": "services"
+        },
+        "empty": {
+            "none": "No specialties yet",
+            "noneDesc": "Add the first specialty.",
+            "noMatch": "No search matches",
+            "noMatchDesc": "Try changing the keywords."
+        },
+        "modal": {
+            "titleCreate": "Add specialty",
+            "titleEdit": "Edit specialty",
+            "code": "Code",
+            "icon": "Icon",
+            "name": "Name",
+            "description": "Description",
+            "iconPreview": "Preview icon:"
+        },
+        "toast": {
+            "requiredCodeName": "Please enter the specialty code and name.",
+            "loadError": "Could not load specialties."
+        }
+    },
+    "services": {
+        "title": "Medical Services",
+        "subtitle": "Manage healthcare services",
+        "tabMaster": "Master Services",
+        "tabFacility": "Facility Services"
+    },
+    "clinicRooms": {
+        "title": "Clinic Rooms",
+        "subtitle": "Manage clinic rooms and service assignments",
+        "addButton": "Add room"
+    },
+    "equipment": {
+        "title": "Medical Equipment",
+        "subtitle": "Manage equipment and maintenance schedules",
+        "addButton": "Add equipment"
+    },
+    "beds": {
+        "title": "Hospital Beds",
+        "subtitle": "Manage bed resources by room and occupancy status",
+        "addButton": "Add bed",
+        "stats": {
+            "total": "Total beds",
+            "available": "Available",
+            "occupied": "Occupied",
+            "maintenance": "Maintenance"
+        },
+        "filter": {
+            "searchPlaceholder": "Search by code, name, room, patient..."
+        },
+        "statusLabel": {
+            "available": "Available",
+            "occupied": "Occupied",
+            "maintenance": "Maintenance",
+            "reserved": "Reserved"
+        }
+    },
+    "shifts": {
+        "title": "Work Shifts",
+        "subtitle": "Manage morning/afternoon/evening shifts"
+    },
+    "staffSchedule": {
+        "title": "Shift Roster",
+        "subtitle": "Assign shift schedules for staff"
+    },
+    "schedules": {
+        "title": "On-call Schedules",
+        "subtitle": "Doctor on-call schedule by date"
+    },
+    "leaves": {
+        "title": "Staff Leave Requests",
+        "subtitle": "Approve/reject leave requests from doctors, nurses, and medical staff"
+    },
+    "shiftSwaps": {
+        "title": "Shift Swaps",
+        "subtitle": "Approve shift swap requests between staff"
+    },
+    "slotsConfig": {
+        "title": "Appointment Slot Configuration",
+        "subtitle": "Create & manage examination slots by doctor, date, and duration"
+    },
+    "slotsLocked": {
+        "title": "Locked Slots",
+        "subtitle": "Temporarily lock slots when doctor is unavailable, room under maintenance, or booking closed"
+    },
+    "shiftServices": {
+        "title": "Assign Services to Shifts",
+        "subtitle": "Configure which services are available in each shift"
+    },
+    "serviceDurations": {
+        "title": "Service Durations by Facility",
+        "subtitle": "Configure examination/processing duration for each service at each facility"
+    },
+    "bookingConfigs": {
+        "title": "Booking Configuration by Branch",
+        "subtitle": "Set up branch-specific booking rules"
+    },
+    "operatingHours": {
+        "title": "Operating Hours & Holidays",
+        "subtitle": "Manage opening hours, special closed days, and holidays"
+    },
+    "facilityStatus": {
+        "title": "Facility Status",
+        "subtitle": "Quick view of today's facility status and 14-day operational schedule"
+    },
+    "doctorLoad": {
+        "title": "Doctor Load Balance",
+        "subtitle": "Load analysis and doctor coordination suggestions"
+    },
+    "doctorAvailability": {
+        "title": "Doctor Availability & Absences",
+        "subtitle": "Track daily doctor availability and manage unexpected absences"
+    },
+    "appointmentChanges": {
+        "title": "Appointment Change History",
+        "subtitle": "Statistics & tracking of all reschedule/cancel/doctor-swap/room-change requests"
+    },
+    "suppliers": {
+        "title": "Suppliers",
+        "subtitle": "Manage drug and medical supply suppliers",
+        "addButton": "Add supplier",
+        "stats": {
+            "total": "Total suppliers",
+            "active": "Active",
+            "inactive": "Inactive",
+            "withContact": "With contact info"
+        },
+        "filter": {
+            "searchPlaceholder": "Search by code, name, tax, phone...",
+            "active": "Active",
+            "inactive": "Inactive"
+        },
+        "table": {
+            "codeName": "Code / Name",
+            "taxCode": "Tax code",
+            "contact": "Contact",
+            "address": "Address"
+        },
+        "statusLabel": {
+            "active": "Active",
+            "inactive": "Inactive"
+        },
+        "empty": {
+            "none": "No suppliers yet",
+            "noneDesc": "Add the first supplier to start stocking.",
+            "noMatch": "No matches for filters",
+            "noMatchDesc": "Try changing the keywords."
+        },
+        "modal": {
+            "titleCreate": "Add supplier",
+            "titleEdit": "Edit supplier",
+            "code": "Supplier code",
+            "codePlaceholder": "e.g., SUP001",
+            "taxCode": "Tax code",
+            "name": "Supplier name",
+            "contactPerson": "Contact person",
+            "phone": "Phone",
+            "email": "Email",
+            "address": "Address",
+            "note": "Note"
+        },
+        "toast": {
+            "requiredCodeName": "Please enter supplier code and name.",
+            "loadError": "Could not load the supplier list."
+        }
+    },
+    "warehouses": {
+        "title": "Warehouse Management",
+        "subtitle": "Supply, drug, and equipment warehouses",
+        "addButton": "Add warehouse",
+        "stats": {
+            "total": "Total warehouses",
+            "active": "Active",
+            "pharmacy": "Pharmacy",
+            "equipment": "Equipment"
+        },
+        "filter": {
+            "searchPlaceholder": "Search by code, name, manager...",
+            "typeLabel": "Warehouse type",
+            "allTypes": "All types"
+        },
+        "type": {
+            "main": "Main",
+            "pharmacy": "Pharmacy",
+            "equipment": "Equipment",
+            "consumable": "Consumables",
+            "other": "Other"
+        },
+        "statusLabel": {
+            "active": "Active",
+            "inactive": "Inactive"
+        },
+        "empty": {
+            "none": "No warehouses yet",
+            "noneDesc": "Add the first warehouse.",
+            "noMatch": "No matching warehouses",
+            "noMatchDesc": "Try changing the filters."
+        },
+        "modal": {
+            "titleCreate": "Add warehouse",
+            "titleEdit": "Edit warehouse",
+            "code": "Warehouse code",
+            "type": "Warehouse type",
+            "name": "Warehouse name",
+            "manager": "Warehouse manager",
+            "phone": "Phone",
+            "address": "Address",
+            "note": "Note"
+        },
+        "actions": {
+            "activate": "Activate",
+            "deactivate": "Deactivate"
+        },
+        "toast": {
+            "requiredCodeName": "Please enter the warehouse code and name.",
+            "loadError": "Could not load the warehouse list.",
+            "activated": "Activated.",
+            "deactivated": "Deactivated.",
+            "toggleFailed": "Could not change status."
+        }
+    },
+    "pharmacyCategories": {
+        "title": "Drug Categories",
+        "subtitle": "Classify drugs by category (antibiotics, painkillers, cardiovascular, ...)"
+    },
+    "billingInvoices": {
+        "title": "Invoices",
+        "subtitle": "Manage all patient billing invoices"
+    },
+    "pricingPolicies": {
+        "title": "Service Pricing Policy",
+        "subtitle": "Configure medical service pricing by facility and effective period"
+    },
+    "eInvoices": {
+        "title": "E-Invoices",
+        "subtitle": "Issue and send electronic invoices to patients"
+    },
+    "promotions": {
+        "title": "Promotions",
+        "subtitle": "Discounts, vouchers, and service bundles"
+    },
+    "paymentGateway": {
+        "title": "Payment Gateway",
+        "subtitle": "SePay configuration + cashier permissions"
+    },
+    "reconciliation": {
+        "title": "Payment Reconciliation",
+        "subtitle": "Cashier shift reconciliation and online payment sessions"
+    },
+    "refunds": {
+        "title": "Refunds",
+        "subtitle": "Refund requests and invoice adjustments"
+    },
+    "tele": {
+        "types": {
+            "title": "Telemedicine Types",
+            "subtitle": "Configure types and pricing for remote consultations"
+        },
+        "bookings": {
+            "title": "Remote Consultation Bookings",
+            "subtitle": "List of online consultation appointments"
+        },
+        "rooms": {
+            "title": "Active Rooms",
+            "subtitle": "Realtime — currently running consultation rooms"
+        },
+        "results": {
+            "title": "Online Consultation Results",
+            "subtitle": "Diagnosis, conclusions, and prescriptions after consultation"
+        },
+        "prescriptions": {
+            "title": "Online Prescriptions",
+            "subtitle": "Prescriptions signed by doctors during consultations"
+        },
+        "followups": {
+            "title": "Follow-ups",
+            "subtitle": "Post-consultation follow-up schedules"
+        },
+        "quality": {
+            "title": "Consultation Quality",
+            "subtitle": "Reviews, complaints, and quality alerts"
+        }
+    },
+    "permissions": {
+        "title": "System Permissions",
+        "subtitle": "Permissions, menus, API permissions, and modules"
+    },
+    "masterData": {
+        "title": "Master Data",
+        "subtitle": "System-wide reference catalogs (categories + items)"
+    },
+    "notifications": {
+        "roleConfigs": {
+            "title": "Notification Config by Role",
+            "subtitle": "Enable/disable notification channels by role and event type"
+        },
+        "broadcast": {
+            "title": "Broadcast Notification",
+            "subtitle": "Send notifications to multiple roles at once"
+        }
+    },
+    "role": {
+        "detail": {
+            "title": "Role Permissions",
+            "subtitle": "Assign permissions, menus, and API permissions to a role"
+        }
+    },
+    "cashier": {
+        "offline": {
+            "title": "Offline POS Cashier",
+            "subtitle": "Cash payment at the counter"
+        }
+    },
+    "queue": {
+        "batch": {
+            "title": "Batch Operations & QR Check-in",
+            "subtitle": "Batch appointment confirmations, SMS/email reminders, quick QR check-in"
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Sign in",
+            "subtitle": "Welcome back to the EHealth system",
+            "redirecting": "Redirecting...",
+            "platformTagline": "Digital Health Platform",
+            "heroLine1": "Smart",
+            "heroLine2": "Digital Health",
+            "heroLine3": "Platform",
+            "heroDescription": "Comprehensive healthcare management with AI-assisted diagnosis, appointment scheduling, e-prescriptions and patient monitoring.",
+            "feature": {
+                "ai": "AI Assistant",
+                "aiDesc": "Smart diagnosis",
+                "appointment": "Appointments",
+                "appointmentDesc": "Online booking",
+                "prescription": "Prescriptions",
+                "prescriptionDesc": "Electronic Rx",
+                "monitoring": "Monitoring",
+                "monitoringDesc": "Online health tracking"
+            },
+            "statPatients": "Patients",
+            "statDoctors": "Doctors",
+            "statSpecialties": "Specialties",
+            "emailLabel": "Email address",
+            "passwordLabel": "Password",
+            "rememberMe": "Remember me",
+            "forgotPassword": "Forgot password?",
+            "loggingIn": "Signing in...",
+            "submit": "Sign in",
+            "noAccount": "No account yet?",
+            "registerNow": "Register now",
+            "copyright": "© 2025 EHealth. Digital Health System — PTH Group",
+            "errorDefault": "Sign in failed. Please check your credentials."
+        },
+        "register": {
+            "title": "Create account",
+            "subtitle": "Create a new account to use the EHealth system",
+            "fullNameLabel": "Full name",
+            "emailLabel": "Email address",
+            "phoneLabel": "Phone number",
+            "passwordLabel": "Password",
+            "confirmPasswordLabel": "Confirm password",
+            "submit": "Register",
+            "registering": "Registering...",
+            "hasAccount": "Already have an account?",
+            "loginLink": "Sign in"
+        },
+        "forgotPassword": {
+            "title": "Forgot password",
+            "subtitle": "Enter your email to receive password recovery instructions",
+            "emailLabel": "Email address",
+            "submit": "Send request",
+            "sending": "Sending...",
+            "backToLogin": "Back to sign in"
+        },
+        "otp": {
+            "title": "OTP verification",
+            "subtitle": "Enter the OTP code sent to your email",
+            "codeLabel": "Verification code",
+            "submit": "Verify",
+            "verifying": "Verifying...",
+            "resend": "Resend code",
+            "resendIn": "Resend in {seconds}s"
+        },
+        "verifyEmail": {
+            "title": "Verify email",
+            "subtitle": "Please check your email to verify the account",
+            "verifying": "Verifying email...",
+            "success": "Verification successful!",
+            "goToLogin": "Go to sign in"
+        }
+    },
+    "public": {
+        "landing": {
+            "title": "EHealth — Digital Health Platform",
+            "subtitle": "Smart healthcare connecting doctors and patients"
+        },
+        "specialties": {
+            "title": "Specialties",
+            "subtitle": "Catalog of medical specialties"
+        },
+        "booking": {
+            "title": "Book appointment",
+            "subtitle": "Book an online appointment with the right doctor"
+        },
+        "doctors": {
+            "title": "Find doctors",
+            "subtitle": "Doctor directory by specialty and facility"
+        },
+        "doctorDetail": {
+            "title": "Doctor profile",
+            "subtitle": "Professional profile and work schedule"
+        }
+    },
+    "portal": {
+        "doctor": {
+            "dashboard": {
+                "title": "Overview",
+                "subtitle": "Welcome back — here is your activity report for today."
+            },
+            "appointments": {
+                "title": "Appointments",
+                "subtitle": "View and manage medical appointments."
+            },
+            "appointmentsNew": {
+                "title": "New appointment",
+                "subtitle": "Create a new appointment for a patient."
+            },
+            "manageSlots": {
+                "title": "Manage available slots",
+                "subtitle": "Configure open slots for appointment booking."
+            },
+            "queue": {
+                "title": "Patient queue",
+                "subtitle": "Manage patients waiting to be examined."
+            },
+            "examination": {
+                "title": "Examination",
+                "subtitle": "Examine patients and record findings."
+            },
+            "medicalRecords": {
+                "title": "Medical records",
+                "subtitle": "Manage and review patient medical records."
+            },
+            "ehr": {
+                "title": "Electronic Health Record (EHR)",
+                "subtitle": "View the patient's full health data."
+            },
+            "encounters": {
+                "title": "Encounters",
+                "subtitle": "Patient encounter history."
+            },
+            "diagnosis": {
+                "title": "Diagnosis",
+                "subtitle": "Enter diagnosis and examination conclusions."
+            },
+            "clinicalExam": {
+                "title": "Clinical examination",
+                "subtitle": "Record clinical findings and vital signs."
+            },
+            "prescriptions": {
+                "title": "Prescription list",
+                "subtitle": "Manage and track prescription history."
+            },
+            "prescriptionsNew": {
+                "title": "New prescription",
+                "subtitle": "Create a prescription for a patient."
+            },
+            "aiAssistant": {
+                "title": "AI Assistant",
+                "subtitle": "AI-powered diagnostic and prescribing support."
+            },
+            "telemedicine": {
+                "title": "Telemedicine",
+                "subtitle": "Online consultations and remote examinations."
+            },
+            "settings": {
+                "title": "Settings",
+                "subtitle": "Manage your profile and system preferences."
+            }
+        },
+        "pharmacist": {
+            "dashboard": {
+                "title": "Pharmacist overview",
+                "subtitle": "Today's dispensing and inventory statistics."
+            },
+            "prescriptions": {
+                "title": "Pending prescriptions",
+                "subtitle": "Prescriptions awaiting dispensing."
+            },
+            "dispensing": {
+                "title": "Medication dispensing",
+                "subtitle": "Dispense medicines to patients by prescription."
+            },
+            "inventory": {
+                "title": "Medicine inventory",
+                "subtitle": "Manage medicine and supply stock."
+            },
+            "inventoryImport": {
+                "title": "Stock import",
+                "subtitle": "Receive medicines from suppliers."
+            },
+            "stockOut": {
+                "title": "Stock-out",
+                "subtitle": "Stock-out slip for medicines."
+            },
+            "settings": {
+                "title": "Settings",
+                "subtitle": "Manage your personal profile."
+            }
+        },
+        "staff": {
+            "dashboard": {
+                "title": "Reception overview",
+                "subtitle": "Today's reception and booking activity."
+            },
+            "reception": {
+                "title": "Patient reception",
+                "subtitle": "Register and check in arriving patients."
+            },
+            "appointments": {
+                "title": "Appointments",
+                "subtitle": "Medical appointments of the facility."
+            },
+            "appointmentsNew": {
+                "title": "New appointment",
+                "subtitle": "Create a new appointment for a patient."
+            },
+            "queue": {
+                "title": "Patient queue",
+                "subtitle": "Manage the patient waiting queue."
+            },
+            "queueBatch": {
+                "title": "Batch operations & QR check-in",
+                "subtitle": "Confirm appointments in bulk, send SMS/email reminders, quick QR check-in."
+            },
+            "patients": {
+                "title": "Patients",
+                "subtitle": "List of registered patients."
+            },
+            "patientsNew": {
+                "title": "New patient",
+                "subtitle": "Register a new patient profile."
+            },
+            "patientDetail": {
+                "title": "Patient details",
+                "subtitle": "Detailed information and visit history."
+            },
+            "billing": {
+                "title": "Billing",
+                "subtitle": "Manage invoices and collect hospital fees."
+            },
+            "billingNew": {
+                "title": "New invoice",
+                "subtitle": "Create a new invoice for a patient."
+            },
+            "settings": {
+                "title": "Settings",
+                "subtitle": "Manage your personal profile."
+            }
+        },
+        "cashier": {
+            "offline": {
+                "title": "Offline cashier POS",
+                "subtitle": "Cash payment at the counter."
+            }
+        },
+        "patient": {
+            "dashboard": {
+                "title": "Patient home",
+                "subtitle": "Health overview and your upcoming appointments."
+            },
+            "appointments": {
+                "title": "My appointments",
+                "subtitle": "List of booked medical appointments."
+            },
+            "appointmentDetail": {
+                "title": "Appointment details",
+                "subtitle": "Detailed information about your appointment."
+            },
+            "patientProfiles": {
+                "title": "Patient profiles",
+                "subtitle": "Manage patient profiles (yourself and relatives)."
+            },
+            "patientProfileDetail": {
+                "title": "Patient profile details",
+                "subtitle": "Full information of the profile."
+            },
+            "medicalRecords": {
+                "title": "Examination results",
+                "subtitle": "Review visit history and diagnosis results."
+            },
+            "medicalRecordDetail": {
+                "title": "Visit details",
+                "subtitle": "Full information of the visit."
+            },
+            "healthRecords": {
+                "title": "Health records",
+                "subtitle": "Track personal health metrics."
+            },
+            "medicationReminders": {
+                "title": "Medication reminders",
+                "subtitle": "Daily medication schedule and reminders."
+            },
+            "billing": {
+                "title": "Billing",
+                "subtitle": "Hospital invoices and payment history."
+            },
+            "telemedicine": {
+                "title": "Telemedicine",
+                "subtitle": "Book and join online consultation sessions."
+            },
+            "telemedicineRoom": {
+                "title": "Online consultation room",
+                "subtitle": "Remote examination session with the doctor."
+            },
+            "aiConsult": {
+                "title": "AI health consultation",
+                "subtitle": "Initial consultation with the AI assistant."
+            },
+            "profile": {
+                "title": "My account",
+                "subtitle": "Personal information and security."
+            }
+        },
+        "notifications": {
+            "inbox": {
+                "title": "Notification inbox",
+                "subtitle": "Notifications from the hospital and system."
+            }
+        }
+    }
+}

@@ -54,7 +54,28 @@ body {
 
 /* ============================================
    Material Symbols (Google Icons)
+   - font-family explicit để không phụ thuộc vào Google stylesheet
+     (tránh lỗi font chưa load → hiển thị text ligature như "DISCOUNT")
+   - font-display: block đã set ở <link>, kết hợp các thuộc tính sau
+     để ẩn text ligature tới khi font load xong
    ============================================ */
+.material-symbols-outlined,
+.material-symbols-filled {
+  font-family: "Material Symbols Outlined", "Material Symbols";
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
@@ -90,6 +111,61 @@ body {
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
+}
+
+/* ============================================
+   Native <select> polish
+   — Ẩn arrow mặc định, thay bằng caret SVG
+   — Focus ring xanh primary, transition mượt
+   — Hover border đậm hơn
+   — Disabled faded
+   ============================================ */
+select:not([multiple]):not([size]) {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none' stroke='%23687582' stroke-width='2'%3e%3cpath d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px 12px;
+  padding-right: 2.25rem;
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+select:not([multiple]):not([size]):hover:not(:disabled) {
+  border-color: #94a3b8;
+}
+
+select:not([multiple]):not([size]):focus {
+  outline: none;
+  border-color: #3C81C6;
+  box-shadow: 0 0 0 3px rgba(60, 129, 198, 0.15);
+}
+
+select:not([multiple]):not([size]):disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dark select:not([multiple]):not([size]) {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none' stroke='%23a0aec0' stroke-width='2'%3e%3cpath d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+.dark select:not([multiple]):not([size]):hover:not(:disabled) {
+  border-color: #475569;
+}
+
+/* Option vẫn dùng native nhưng set bg rõ ràng để không bị suốt trong dark mode */
+select option {
+  background-color: #ffffff;
+  color: #121417;
+  padding: 6px 10px;
+}
+
+.dark select option {
+  background-color: #1e242b;
+  color: #f3f4f6;
 }
 
 /* ============================================

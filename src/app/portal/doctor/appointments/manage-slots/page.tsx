@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { scheduleService } from "@/services/scheduleService";
 import { doctorAvailabilityService } from "@/services/appointmentService";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +27,7 @@ const DEFAULT_SLOTS: DaySlot[] = [
 ];
 
 export default function ManageSlotsPage() {
+    const t = useTranslations("pages.portal.doctor.manageSlots");
     const router = useRouter();
     const { user } = useAuth();
     const [slots, setSlots] = useState<DaySlot[]>(DEFAULT_SLOTS);
@@ -135,10 +137,10 @@ export default function ManageSlotsPage() {
                 <div className="flex items-end justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-[#121417] dark:text-white">
-                            Quản lý khung giờ làm việc
+                            {t("title")}
                         </h1>
                         <p className="text-sm text-[#687582] dark:text-gray-400 mt-1">
-                            Thiết lập lịch làm việc và khung giờ khám bệnh
+                            {t("subtitle")}
                         </p>
                     </div>
                 </div>

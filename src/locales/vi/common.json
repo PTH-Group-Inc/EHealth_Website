@@ -166,11 +166,119 @@
             "notifBroadcast": "Gửi broadcast",
             "statisticsOverview": "Tổng quan",
             "statisticsRevenue": "Báo cáo doanh thu"
+        },
+        "portal": {
+            "doctorTagline": "Cổng thông tin Bác sĩ",
+            "pharmacistTagline": "Dược sĩ",
+            "staffTagline": "Lễ tân",
+            "patientTagline": "Bệnh nhân",
+            "quickBook": "Đặt lịch khám nhanh",
+            "expandSidebar": "Mở rộng sidebar",
+            "collapseSidebar": "Thu nhỏ sidebar",
+            "doctor": {
+                "dashboard": "Trang chủ",
+                "tasks": "Việc cần làm",
+                "alerts": "Cảnh báo",
+                "appointments": "Lịch hẹn",
+                "queue": "Hàng đợi",
+                "schedule": "Lịch làm việc",
+                "leaves": "Nghỉ phép",
+                "shiftSwaps": "Đổi ca",
+                "patients": "Bệnh nhân",
+                "examination": "Khám bệnh",
+                "medicalOrders": "Chỉ định",
+                "medicalRecords": "Hồ sơ bệnh án",
+                "signOff": "Ký hồ sơ",
+                "ehr": "EHR",
+                "prescriptions": "Kê đơn",
+                "treatmentPlans": "Treatment plans",
+                "aiAssistant": "Trợ lý AI",
+                "telemedicine": "Khám từ xa",
+                "settings": "Cài đặt"
+            },
+            "pharmacist": {
+                "dashboard": "Trang chủ",
+                "prescriptions": "Đơn thuốc",
+                "dispensing": "Cấp phát",
+                "myHistory": "Lịch sử của tôi",
+                "inventory": "Tồn kho",
+                "stockIn": "Nhập kho",
+                "stockOut": "Xuất kho",
+                "alerts": "Cảnh báo",
+                "masterData": "Master Data",
+                "patients": "Bệnh nhân",
+                "medicationProfile": "Hồ sơ thuốc",
+                "settings": "Cài đặt"
+            },
+            "staff": {
+                "dashboard": "Trang chủ",
+                "queue": "Hàng đợi",
+                "roomStatus": "Tình trạng phòng",
+                "patients": "Bệnh nhân",
+                "appointments": "Lịch khám",
+                "checkIn": "Check-in",
+                "changeHistory": "Lịch sử thay đổi",
+                "supportData": "Hỗ trợ đặt lịch",
+                "billing": "Hoá đơn",
+                "payments": "Thanh toán QR",
+                "refunds": "Hoàn tiền",
+                "staffInfo": "Vận hành nhân sự",
+                "reception": "Tiếp nhận BN",
+                "settings": "Cài đặt"
+            },
+            "patient": {
+                "dashboard": "Trang chủ",
+                "appointments": "Lịch hẹn của tôi",
+                "patientProfiles": "Hồ sơ bệnh nhân",
+                "medicalRecords": "Kết quả khám",
+                "healthRecords": "Hồ sơ sức khỏe",
+                "medicationReminders": "Nhắc thuốc",
+                "billing": "Thanh toán",
+                "telemedicine": "Khám từ xa",
+                "aiConsult": "AI tư vấn",
+                "profile": "Tài khoản"
+            }
         }
     },
     "language": {
         "label": "Ngôn ngữ",
         "switch": "Đổi ngôn ngữ",
         "current": "Ngôn ngữ hiện tại"
+    },
+    "toast": {
+        "saved": "Đã lưu.",
+        "created": "Đã tạo.",
+        "updated": "Đã cập nhật.",
+        "deleted": "Đã xoá.",
+        "saveFailed": "Lưu thất bại.",
+        "deleteFailed": "Xoá thất bại.",
+        "loadFailed": "Không tải được dữ liệu.",
+        "requiredFields": "Vui lòng nhập đầy đủ thông tin bắt buộc.",
+        "operationSuccess": "Thao tác thành công.",
+        "operationFailed": "Thao tác thất bại."
+    },
+    "form": {
+        "required": "*",
+        "optional": "(tuỳ chọn)",
+        "saving": "Đang lưu...",
+        "placeholder": "Nhập nội dung..."
+    },
+    "filter": {
+        "all": "Tất cả",
+        "searchPlaceholder": "Tìm kiếm...",
+        "status": "Trạng thái",
+        "reset": "Đặt lại bộ lọc"
+    },
+    "table": {
+        "actions": "Thao tác",
+        "empty": "Không có dữ liệu",
+        "editTitle": "Sửa",
+        "deleteTitle": "Xoá",
+        "viewTitle": "Xem chi tiết",
+        "loading": "Đang tải..."
+    },
+    "confirm": {
+        "deleteGeneric": "Bạn có chắc chắn muốn xoá?",
+        "deleteNamed": "Xoá \"{name}\"?"
     }
 }

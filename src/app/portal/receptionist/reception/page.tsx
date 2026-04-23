@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { getPatients, createPatient } from "@/services/patientService";
 import { createAppointment, doctorAvailabilityService } from "@/services/appointmentService";
 import { getDepartments } from "@/services/departmentService";
@@ -19,6 +20,7 @@ const WIZARD_STEPS = [
 type DeptItem = { id: string; name: string; doctors: string[] };
 
 export default function ReceptionPage() {
+    const t = useTranslations("pages.portal.staff.reception");
     usePageAIContext({ pageKey: 'reception' });
     const router = useRouter();
     const [step, setStep] = useState(0);
@@ -179,9 +181,9 @@ export default function ReceptionPage() {
         <div className="p-6 md:p-8"><div className="max-w-3xl mx-auto space-y-6">
             <div>
                 <h1 className="text-xl font-bold text-[#121417] dark:text-white flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#3C81C6]">how_to_reg</span>Tiếp nhận bệnh nhân
+                    <span className="material-symbols-outlined text-[#3C81C6]">how_to_reg</span>{t("title")}
                 </h1>
-                <p className="text-sm text-[#687582] mt-1">Quy trình 4 bước tiếp nhận bệnh nhân mới</p>
+                <p className="text-sm text-[#687582] mt-1">{t("subtitle")}</p>
             </div>
 
             {/* Step Progress */}

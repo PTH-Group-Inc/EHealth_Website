@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { UI_TEXT } from "@/constants/ui-text";
 import { DOCTOR_STATUS } from "@/constants/status";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
@@ -19,6 +20,7 @@ type SortOrder = "asc" | "desc";
 export default function DoctorsPage() {
     // State
     const router = useRouter();
+    const t = useTranslations("pages.doctors");
     const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -195,10 +197,10 @@ export default function DoctorsPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div className="space-y-1">
                     <h1 className="text-3xl font-black tracking-tight text-[#121417] dark:text-white">
-                        {UI_TEXT.ADMIN.DOCTORS.TITLE}
+                        {t("title")}
                     </h1>
                     <p className="text-[#687582] dark:text-gray-400">
-                        {UI_TEXT.ADMIN.DOCTORS.SUBTITLE}
+                        {t("subtitle")}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -214,7 +216,7 @@ export default function DoctorsPage() {
                         className="flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform hover:-translate-y-0.5"
                     >
                         <span className="material-symbols-outlined text-[20px]">person_add</span>
-                        {UI_TEXT.ADMIN.DOCTORS.ADD_DOCTOR}
+                        {t("addButton")}
                     </button>
                 </div>
             </div>
@@ -226,7 +228,7 @@ export default function DoctorsPage() {
                         <span className="material-symbols-outlined">stethoscope</span>
                     </div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">{UI_TEXT.ADMIN.DOCTORS.TOTAL_DOCTORS}</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">{t("stats.totalDoctors")}</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{doctors.length}</p>
                     </div>
                 </div>
@@ -236,7 +238,7 @@ export default function DoctorsPage() {
                         <span className="material-symbols-outlined">how_to_reg</span>
                     </div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">{UI_TEXT.ADMIN.DOCTORS.ON_DUTY}</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">{t("stats.onDuty")}</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">
                             {doctors.filter((d) => d.status === DOCTOR_STATUS.ACTIVE || d.status === DOCTOR_STATUS.EXAMINING).length}
                         </p>
@@ -248,7 +250,7 @@ export default function DoctorsPage() {
                         <span className="material-symbols-outlined">pending_actions</span>
                     </div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">{UI_TEXT.ADMIN.DOCTORS.PENDING_ASSIGNMENT}</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">{t("stats.pendingAssignment")}</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{stats.pendingAssignment}</p>
                     </div>
                 </div>
@@ -258,7 +260,7 @@ export default function DoctorsPage() {
                         <span className="material-symbols-outlined">speed</span>
                     </div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">{UI_TEXT.ADMIN.DOCTORS.AVG_PERFORMANCE}</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">{t("stats.avgPerformance")}</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{stats.avgPerformance}%</p>
                     </div>
                 </div>

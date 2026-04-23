@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { BILLING_INVOICE_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -69,6 +70,8 @@ function formatVND(n: number): string {
 
 export default function BillingInvoicesPage() {
     const toast = useToast();
+    const t = useTranslations("pages.billingInvoices");
+    const tc = useTranslations("common");
     const [items, setItems] = useState<Invoice[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -118,10 +121,10 @@ export default function BillingInvoicesPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Hoá đơn"
-                subtitle="Quản lý toàn bộ hoá đơn thanh toán viện phí"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="receipt"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Hoá đơn" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

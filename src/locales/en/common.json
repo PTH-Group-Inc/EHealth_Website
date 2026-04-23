@@ -166,11 +166,121 @@
             "notifBroadcast": "Broadcast",
             "statisticsOverview": "Overview",
             "statisticsRevenue": "Revenue Report"
+        },
+        "portal": {
+            "doctorTagline": "Doctor Portal",
+            "pharmacistTagline": "Pharmacist",
+            "staffTagline": "Receptionist",
+            "patientTagline": "Patient",
+            "quickBook": "Quick booking",
+            "expandSidebar": "Expand sidebar",
+            "collapseSidebar": "Collapse sidebar",
+            "doctor": {
+                "dashboard": "Home",
+                "tasks": "Today tasks",
+                "alerts": "Alerts",
+                "appointments": "Appointments",
+                "queue": "Queue",
+                "schedule": "Work schedule",
+                "leaves": "Leaves",
+                "shiftSwaps": "Shift swaps",
+                "patients": "Patients",
+                "examination": "Examination",
+                "medicalOrders": "Medical orders",
+                "medicalRecords": "Medical records",
+                "signOff": "Sign-off",
+                "ehr": "EHR",
+                "prescriptions": "Prescriptions",
+                "treatmentPlans": "Treatment plans",
+                "aiAssistant": "AI Assistant",
+                "telemedicine": "Telemedicine",
+                "settings": "Settings"
+            },
+            "pharmacist": {
+                "dashboard": "Home",
+                "prescriptions": "Prescriptions",
+                "dispensing": "Dispensing",
+                "myHistory": "My history",
+                "inventory": "Inventory",
+                "stockIn": "Stock-in",
+                "stockOut": "Stock-out",
+                "alerts": "Alerts",
+                "masterData": "Master data",
+                "patients": "Patients",
+                "medicationProfile": "Medication profile",
+                "settings": "Settings"
+            },
+            "staff_extra": {
+                "roomStatus": "Room status",
+                "checkIn": "Check-in",
+                "changeHistory": "Change history",
+                "supportData": "Support data",
+                "payments": "QR Payments",
+                "refunds": "Refunds",
+                "staffInfo": "Staff operations"
+            },
+            "staff": {
+                "dashboard": "Home",
+                "reception": "Reception",
+                "appointments": "Appointments",
+                "queue": "Queue",
+                "patients": "Patients",
+                "billing": "Billing",
+                "settings": "Settings"
+            },
+            "patient": {
+                "dashboard": "Home",
+                "appointments": "My appointments",
+                "patientProfiles": "Patient profiles",
+                "medicalRecords": "Results",
+                "healthRecords": "Health records",
+                "medicationReminders": "Reminders",
+                "billing": "Billing",
+                "telemedicine": "Telemedicine",
+                "aiConsult": "AI Consult",
+                "profile": "Account"
+            }
         }
     },
     "language": {
         "label": "Language",
         "switch": "Switch language",
         "current": "Current language"
+    },
+    "toast": {
+        "saved": "Saved.",
+        "created": "Created.",
+        "updated": "Updated.",
+        "deleted": "Deleted.",
+        "saveFailed": "Save failed.",
+        "deleteFailed": "Delete failed.",
+        "loadFailed": "Failed to load data.",
+        "requiredFields": "Please fill in all required fields.",
+        "operationSuccess": "Operation succeeded.",
+        "operationFailed": "Operation failed."
+    },
+    "form": {
+        "required": "*",
+        "optional": "(optional)",
+        "saving": "Saving...",
+        "placeholder": "Enter content..."
+    },
+    "filter": {
+        "all": "All",
+        "searchPlaceholder": "Search...",
+        "status": "Status",
+        "reset": "Reset filters"
+    },
+    "table": {
+        "actions": "Actions",
+        "empty": "No data",
+        "editTitle": "Edit",
+        "deleteTitle": "Delete",
+        "viewTitle": "View details",
+        "loading": "Loading..."
+    },
+    "confirm": {
+        "deleteGeneric": "Are you sure you want to delete?",
+        "deleteNamed": "Delete \"{name}\"?"
     }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import staffScheduleService from "@/services/staffScheduleService";
 import workShiftService from "@/services/workShiftService";
@@ -221,6 +222,7 @@ function getMonthDates(date: Date): Date[] {
 
 export default function SchedulesPage() {
     const router = useRouter();
+    const t = useTranslations("pages.schedules");
     const [schedules, setSchedules] = useState<Schedule[]>([]);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [viewMode, setViewMode] = useState<"week" | "month">("week");
@@ -343,10 +345,10 @@ export default function SchedulesPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div className="space-y-1">
                     <h1 className="text-3xl font-black tracking-tight text-[#121417] dark:text-white">
-                        Quản lý Lịch trực
+                        {t("title")}
                     </h1>
                     <p className="text-[#687582] dark:text-gray-400">
-                        Phân công và theo dõi lịch trực của bác sĩ
+                        {t("subtitle")}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">

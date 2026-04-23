@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { aiService, type HealthChatSession, type RAGDocument, type RAGSearchResult } from "@/services/aiService";
 import { AIContextSidebar, AILogViewer } from "@/components/portal/ai";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,6 +44,7 @@ function getTime() {
 const DOCTOR_SESSION_KEY = "ehealth_doctor_ai_session_id";
 
 export default function AIAssistantPage() {
+    const t = useTranslations("pages.portal.doctor.aiAssistant");
     const { user } = useAuth();
     const [messages, setMessages] = useState<Message[]>([
         { id: 0, role: "ai", text: "Xin chào BS! Tôi là **EHealth AI Assistant**\n\nTôi có thể hỗ trợ bạn:\n- Gợi ý chẩn đoán dựa trên triệu chứng\n- Tra cứu tương tác thuốc\n- Tìm phác đồ điều trị\n- Phân tích kết quả xét nghiệm\n- Tra mã ICD-10\n- Tìm kiếm tài liệu y khoa (RAG)\n\nHãy nhập câu hỏi hoặc chọn gợi ý bên dưới.", time: getTime() },
@@ -250,7 +252,7 @@ export default function AIAssistantPage() {
                             <span className="material-symbols-outlined text-white text-[20px]">smart_toy</span>
                         </div>
                         <div>
-                            <h1 className="text-base font-bold text-[#121417] dark:text-white">EHealth AI Assistant</h1>
+                            <h1 className="text-base font-bold text-[#121417] dark:text-white">{t("title")}</h1>
                             <p className="text-xs text-green-500 flex items-center gap-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                                 Đang hoạt động • Health Chat API

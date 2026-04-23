@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { workShiftService, type WorkShift } from "@/services/workShiftService";
 import { useToast } from "@/contexts/ToastContext";
 import { PageHeader, FilterBar, EmptyState } from "@/components/shared/layout";
@@ -49,6 +50,8 @@ function mapShift(s: any): WorkShift {
 
 export default function ShiftsAdminPage() {
     const toast = useToast();
+    const t = useTranslations("pages.shifts");
+    const tc = useTranslations("common");
     const [shifts, setShifts] = useState<WorkShift[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -135,10 +138,10 @@ export default function ShiftsAdminPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Ca làm việc"
-                subtitle="Định nghĩa các ca chuẩn của hệ thống (sáng / chiều / tối / cả ngày)"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="schedule"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Ca làm việc" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <button
                         onClick={handleOpenCreate}

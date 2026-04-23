@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { FACILITY_STATUS_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -61,6 +62,8 @@ function formatShortDate(d: Date): string {
 type ViewMode = "today" | "calendar";
 
 export default function FacilityStatusPage() {
+    const t = useTranslations("pages.facilityStatus");
+    const tc = useTranslations("common");
     const [view, setView] = useState<ViewMode>("today");
     const [today, setToday] = useState<FacilityStatus[]>([]);
     const [calendar, setCalendar] = useState<FacilityStatus[]>([]);
@@ -117,10 +120,10 @@ export default function FacilityStatusPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Trạng thái cơ sở"
-                subtitle="Nhìn nhanh hôm nay cơ sở nào mở/đóng và lịch vận hành 14 ngày tới"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="store"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Trạng thái cơ sở" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm p-1.5 inline-flex gap-1">

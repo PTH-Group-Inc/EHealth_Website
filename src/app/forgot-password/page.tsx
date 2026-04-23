@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ROUTES } from "@/constants/routes";
 import { forgotPassword, resetPassword } from "@/services/authService";
 
 type Step = "email" | "reset";
 
 export default function ForgotPasswordPage() {
+    const t = useTranslations("pages.auth.forgotPassword");
+    const tLogin = useTranslations("pages.auth.login");
     const router = useRouter();
     const [step, setStep] = useState<Step>("email");
     const [email, setEmail] = useState("");
@@ -83,7 +86,7 @@ export default function ForgotPasswordPage() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white">EHealth</h1>
-                            <p className="text-[#60a5fa]/80 text-sm font-medium">Nền tảng Y tế Số</p>
+                            <p className="text-[#60a5fa]/80 text-sm font-medium">{tLogin("platformTagline")}</p>
                         </div>
                     </div>
 
@@ -99,9 +102,9 @@ export default function ForgotPasswordPage() {
                                             lock_reset
                                         </span>
                                     </div>
-                                    <h2 className="text-2xl font-bold text-white mb-1">Quên mật khẩu</h2>
+                                    <h2 className="text-2xl font-bold text-white mb-1">{t("title")}</h2>
                                     <p className="text-[#94a3b8] text-sm">
-                                        Nhập email đã đăng ký để nhận mã xác thực OTP
+                                        {t("subtitle")}
                                     </p>
                                 </div>
 
@@ -115,7 +118,7 @@ export default function ForgotPasswordPage() {
                                 <form onSubmit={handleSendEmail} className="space-y-4">
                                     <div>
                                         <label className="block text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-1.5">
-                                            Địa chỉ email
+                                            {t("emailLabel")}
                                         </label>
                                         <div className="relative">
                                             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#64748b]" style={{ fontSize: "20px" }}>
@@ -143,11 +146,11 @@ export default function ForgotPasswordPage() {
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                                 </svg>
-                                                <span>Đang gửi...</span>
+                                                <span>{t("sending")}</span>
                                             </>
                                         ) : (
                                             <>
-                                                <span>Gửi mã xác thực</span>
+                                                <span>{t("submit")}</span>
                                                 <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>send</span>
                                             </>
                                         )}
@@ -282,7 +285,7 @@ export default function ForgotPasswordPage() {
                                 className="text-[#94a3b8] text-sm hover:text-white transition-colors inline-flex items-center gap-1.5"
                             >
                                 <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_back</span>
-                                Quay lại đăng nhập
+                                {t("backToLogin")}
                             </button>
                         </div>
                     </div>
@@ -290,7 +293,7 @@ export default function ForgotPasswordPage() {
                     {/* Footer */}
                     <div className="text-center mt-4">
                         <p className="text-[#475569] text-xs">
-                            © 2025 EHealth. Hệ thống Y tế Số — PTH Group
+                            {tLogin("copyright")}
                         </p>
                     </div>
                 </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { TELE_PRESCRIPTION_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -55,6 +56,8 @@ const STATUS_META: Record<Prescription["status"], { label: string; color: string
 
 export default function TelePrescriptionsPage() {
     const toast = useToast();
+    const t = useTranslations("pages.tele.prescriptions");
+    const tc = useTranslations("common");
     const [items, setItems] = useState<Prescription[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -102,10 +105,10 @@ export default function TelePrescriptionsPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Đơn thuốc online"
-                subtitle="Đơn thuốc kê cho phiên khám từ xa, gửi và theo dõi cấp phát"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="medication"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Telemedicine" }, { label: "Đơn thuốc" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: "Telemedicine" }, { label: t("title") }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

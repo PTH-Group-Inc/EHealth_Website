@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { getDepartments } from "@/services/departmentService";
 import { staffService } from "@/services/staffService";
 import { getPatients } from "@/services/patientService";
@@ -10,6 +11,7 @@ import { createAppointment } from "@/services/appointmentService";
 
 
 export default function NewAppointmentPage() {
+    const t = useTranslations("pages.portal.staff.appointmentsNew");
     const router = useRouter();
     const [saving, setSaving] = useState(false);
     const [patientSearch, setPatientSearch] = useState("");
@@ -142,7 +144,7 @@ export default function NewAppointmentPage() {
             <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm">
                 <div className="p-6 border-b border-[#dde0e4] dark:border-[#2d353e]">
                     <h1 className="text-xl font-bold text-[#121417] dark:text-white flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#3C81C6]">event_available</span> Đặt lịch hẹn mới
+                        <span className="material-symbols-outlined text-[#3C81C6]">event_available</span> {t("title")}
                     </h1>
                 </div>
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">

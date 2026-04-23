@@ -166,11 +166,121 @@
             "notifBroadcast": "广播",
             "statisticsOverview": "概览",
             "statisticsRevenue": "收入报表"
+        },
+        "portal": {
+            "doctorTagline": "医生门户",
+            "pharmacistTagline": "药剂师",
+            "staffTagline": "前台",
+            "patientTagline": "患者",
+            "quickBook": "快速预约",
+            "expandSidebar": "展开侧边栏",
+            "collapseSidebar": "收起侧边栏",
+            "doctor": {
+                "dashboard": "首页",
+                "tasks": "今日任务",
+                "alerts": "警报",
+                "appointments": "预约",
+                "queue": "队列",
+                "schedule": "工作排班",
+                "leaves": "请假",
+                "shiftSwaps": "换班",
+                "patients": "患者",
+                "examination": "诊疗",
+                "medicalOrders": "医嘱",
+                "medicalRecords": "病历",
+                "signOff": "签署",
+                "ehr": "EHR",
+                "prescriptions": "处方",
+                "treatmentPlans": "治疗计划",
+                "aiAssistant": "AI 助手",
+                "telemedicine": "远程医疗",
+                "settings": "设置"
+            },
+            "pharmacist": {
+                "dashboard": "首页",
+                "prescriptions": "处方",
+                "dispensing": "发药",
+                "myHistory": "我的历史",
+                "inventory": "库存",
+                "stockIn": "入库",
+                "stockOut": "出库",
+                "alerts": "警报",
+                "masterData": "主数据",
+                "patients": "患者",
+                "medicationProfile": "用药档案",
+                "settings": "设置"
+            },
+            "staff_extra": {
+                "roomStatus": "诊室状态",
+                "checkIn": "签到",
+                "changeHistory": "变更历史",
+                "supportData": "辅助数据",
+                "payments": "二维码支付",
+                "refunds": "退款",
+                "staffInfo": "员工运营"
+            },
+            "staff": {
+                "dashboard": "首页",
+                "reception": "接诊",
+                "appointments": "预约",
+                "queue": "队列",
+                "patients": "患者",
+                "billing": "结算",
+                "settings": "设置"
+            },
+            "patient": {
+                "dashboard": "首页",
+                "appointments": "我的预约",
+                "patientProfiles": "患者档案",
+                "medicalRecords": "就诊结果",
+                "healthRecords": "健康档案",
+                "medicationReminders": "用药提醒",
+                "billing": "结算",
+                "telemedicine": "远程医疗",
+                "aiConsult": "AI 咨询",
+                "profile": "账号"
+            }
         }
     },
     "language": {
         "label": "语言",
         "switch": "切换语言",
         "current": "当前语言"
+    },
+    "toast": {
+        "saved": "已保存。",
+        "created": "已创建。",
+        "updated": "已更新。",
+        "deleted": "已删除。",
+        "saveFailed": "保存失败。",
+        "deleteFailed": "删除失败。",
+        "loadFailed": "无法加载数据。",
+        "requiredFields": "请填写所有必填字段。",
+        "operationSuccess": "操作成功。",
+        "operationFailed": "操作失败。"
+    },
+    "form": {
+        "required": "*",
+        "optional": "(可选)",
+        "saving": "保存中...",
+        "placeholder": "请输入..."
+    },
+    "filter": {
+        "all": "全部",
+        "searchPlaceholder": "搜索...",
+        "status": "状态",
+        "reset": "重置筛选"
+    },
+    "table": {
+        "actions": "操作",
+        "empty": "暂无数据",
+        "editTitle": "编辑",
+        "deleteTitle": "删除",
+        "viewTitle": "查看详情",
+        "loading": "加载中..."
+    },
+    "confirm": {
+        "deleteGeneric": "确定要删除吗?",
+        "deleteNamed": "删除 \"{name}\"?"
     }
 }

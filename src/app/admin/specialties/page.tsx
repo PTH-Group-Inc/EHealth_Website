@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { SPECIALTY_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
 import { useToast } from "@/contexts/ToastContext";
 import { PageHeader, FilterBar, EmptyState, StatCard } from "@/components/shared/layout";
+import { translateError } from "@/utils/translateError";
 
 interface Specialty {
     id: string;
@@ -48,6 +50,9 @@ function mapSpecialty(r: any): Specialty {
 
 export default function SpecialtiesPage() {
     const toast = useToast();
+    const t = useTranslations("pages.specialties");
+    const tc = useTranslations("common");
+    const tErr = useTranslations("errors");
     const [items, setItems] = useState<Specialty[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -63,10 +68,10 @@ export default function SpecialtiesPage() {
             const { data } = unwrapList<any>(res);
             setItems(data.map(mapSpecialty));
         } catch {
-            setError("Không tải được chuyên khoa.");
+            setError(t("toast.loadError"));
             setItems([]);
         } finally { setLoading(false); }
-    }, []);
+    }, [t]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -90,7 +95,7 @@ export default function SpecialtiesPage() {
     };
 
     const handleSave = async () => {
-        if (!form.code.trim() || !form.name.trim()) { toast.warning("Nhập mã và tên chuyên khoa."); return; }
+        if (!form.code.trim() || !form.name.trim()) { toast.warning(t("toast.requiredCodeName")); return; }
         setSaving(true);
         try {
             const payload = {
@@ -101,56 +106,56 @@ export default function SpecialtiesPage() {
             };
             if (form.id) {
                 await axiosClient.put(SPECIALTY_ENDPOINTS.UPDATE(form.id), payload);
-                toast.success("Đã cập nhật.");
+                toast.success(tc("toast.updated"));
             } else {
                 await axiosClient.post(SPECIALTY_ENDPOINTS.CREATE, payload);
-                toast.success("Đã tạo.");
+                toast.success(tc("toast.created"));
             }
             setShowModal(false);
             await load();
         } catch (err: any) {
-            toast.error(err?.response?.data?.message ?? "Không lưu được.");
+            toast.error(translateError(err, tErr));
         } finally { setSaving(false); }
     };
 
     const handleDelete = async (s: Specialty) => {
-        if (!confirm(`Xoá chuyên khoa "${s.name}"?`)) return;
+        if (!confirm(tc("confirm.deleteNamed", { name: s.name }))) return;
         try {
             await axiosClient.delete(SPECIALTY_ENDPOINTS.DELETE(s.id));
-            toast.success("Đã xoá."); await load();
-        } catch { toast.error("Không xoá được."); }
+            toast.success(tc("toast.deleted")); await load();
+        } catch (err: any) { toast.error(translateError(err, tErr)); }
     };
 
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Chuyên khoa"
-                subtitle="Danh mục chuyên khoa y tế (dùng chung cho bác sĩ, dịch vụ, phòng khám)"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="local_hospital"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Chuyên khoa" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <button onClick={openCreate} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md inline-flex items-center gap-1">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
-                        Thêm chuyên khoa
+                        {t("addButton")}
                     </button>
                 }
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Tổng chuyên khoa" value={stats.total} icon="local_hospital" color="blue" loading={loading} />
-                <StatCard label="Đang hoạt động" value={stats.active} icon="check_circle" color="emerald" loading={loading} />
-                <StatCard label="Tổng bác sĩ" value={stats.doctors} icon="stethoscope" color="violet" loading={loading} />
-                <StatCard label="Tổng dịch vụ" value={stats.services} icon="medical_services" color="amber" loading={loading} />
+                <StatCard label={t("stats.total")} value={stats.total} icon="local_hospital" color="blue" loading={loading} />
+                <StatCard label={t("stats.active")} value={stats.active} icon="check_circle" color="emerald" loading={loading} />
+                <StatCard label={t("stats.doctors")} value={stats.doctors} icon="stethoscope" color="violet" loading={loading} />
+                <StatCard label={t("stats.services")} value={stats.services} icon="medical_services" color="amber" loading={loading} />
             </div>
 
-            <FilterBar searchPlaceholder="Tìm theo mã hoặc tên..." searchValue={search} onSearchChange={setSearch} onReset={() => setSearch("")} />
+            <FilterBar searchPlaceholder={t("filter.searchPlaceholder")} searchValue={search} onSearchChange={setSearch} onReset={() => setSearch("")} />
 
             {error && <div className="px-4 py-3 rounded-xl bg-amber-50 text-sm text-amber-800">{error}</div>}
 
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse" />)}</div>
             ) : filtered.length === 0 ? (
-                <EmptyState icon="local_hospital" title={items.length === 0 ? "Chưa có chuyên khoa" : "Không khớp tìm kiếm"} description={items.length === 0 ? "Thêm chuyên khoa đầu tiên." : "Thử đổi từ khoá."} />
+                <EmptyState icon="local_hospital" title={items.length === 0 ? t("empty.none") : t("empty.noMatch")} description={items.length === 0 ? t("empty.noneDesc") : t("empty.noMatchDesc")} />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filtered.map((s) => (
@@ -168,25 +173,25 @@ export default function SpecialtiesPage() {
                                         </div>
                                     </div>
                                     <div className={`inline-flex text-[10px] font-bold px-2 py-1 rounded-md ${s.isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-gray-100 text-gray-700"}`}>
-                                        {s.isActive ? "Active" : "Inactive"}
+                                        {s.isActive ? t("statusLabel.active") : t("statusLabel.inactive")}
                                     </div>
                                 </div>
                                 {s.description && <p className="text-xs text-[#687582] dark:text-gray-400 mb-3 line-clamp-2">{s.description}</p>}
                                 <div className="grid grid-cols-2 gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
                                     <div className="text-center">
                                         <div className="font-bold text-[#3C81C6] text-lg">{s.doctorCount ?? 0}</div>
-                                        <div className="text-[10px] text-[#687582]">bác sĩ</div>
+                                        <div className="text-[10px] text-[#687582]">{t("units.doctors")}</div>
                                     </div>
                                     <div className="text-center">
                                         <div className="font-bold text-violet-600 text-lg">{s.serviceCount ?? 0}</div>
-                                        <div className="text-[10px] text-[#687582]">dịch vụ</div>
+                                        <div className="text-[10px] text-[#687582]">{t("units.services")}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-end gap-1 pt-3 border-t border-gray-50 dark:border-gray-800 mt-3">
-                                    <button onClick={() => openEdit(s)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/[0.1] rounded-md" title="Sửa">
+                                    <button onClick={() => openEdit(s)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/[0.1] rounded-md" title={tc("table.editTitle")}>
                                         <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
                                     </button>
-                                    <button onClick={() => handleDelete(s)} className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md" title="Xoá">
+                                    <button onClick={() => handleDelete(s)} className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md" title={tc("table.deleteTitle")}>
                                         <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>delete</span>
                                     </button>
                                 </div>
@@ -201,17 +206,17 @@ export default function SpecialtiesPage() {
                     <div className="bg-white dark:bg-[#1e242b] rounded-2xl shadow-xl max-w-md w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-lg font-bold text-[#121417] dark:text-white mb-4 flex items-center gap-2">
                             <span className="material-symbols-outlined text-[#3C81C6]">{form.id ? "edit" : "add"}</span>
-                            {form.id ? "Sửa chuyên khoa" : "Thêm chuyên khoa"}
+                            {form.id ? t("modal.titleEdit") : t("modal.titleCreate")}
                         </h3>
                         <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Mã *</label>
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.code")} *</label>
                                     <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })}
                                         className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm font-mono dark:text-white" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Icon</label>
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.icon")}</label>
                                     <select value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })}
                                         className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white">
                                         {SPECIALTY_ICONS.map((i) => <option key={i} value={i}>{i}</option>)}
@@ -219,12 +224,12 @@ export default function SpecialtiesPage() {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên *</label>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.name")} *</label>
                                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
                                     className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Mô tả</label>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.description")}</label>
                                 <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
                                     className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
                             </div>
@@ -232,13 +237,13 @@ export default function SpecialtiesPage() {
                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3C81C6] to-[#1d4ed8] flex items-center justify-center text-white">
                                     <span className="material-symbols-outlined">{form.icon}</span>
                                 </div>
-                                <div className="text-xs text-[#687582]">Preview icon: <b className="font-mono text-[#121417] dark:text-white">{form.icon}</b></div>
+                                <div className="text-xs text-[#687582]">{t("modal.iconPreview")} <b className="font-mono text-[#121417] dark:text-white">{form.icon}</b></div>
                             </div>
                         </div>
                         <div className="flex items-center justify-end gap-2 mt-5 pt-4 border-t border-[#dde0e4] dark:border-[#2d353e]">
-                            <button onClick={() => setShowModal(false)} disabled={saving} className="px-4 py-2 text-sm text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl">Huỷ</button>
+                            <button onClick={() => setShowModal(false)} disabled={saving} className="px-4 py-2 text-sm text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl">{tc("actions.cancel")}</button>
                             <button onClick={handleSave} disabled={saving} className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md disabled:opacity-50">
-                                {saving ? "Đang lưu..." : "Lưu"}
+                                {saving ? tc("form.saving") : tc("actions.save")}
                             </button>
                         </div>
                     </div>

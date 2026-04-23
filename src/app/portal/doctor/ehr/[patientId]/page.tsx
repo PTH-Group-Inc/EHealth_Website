@@ -358,7 +358,7 @@ function MedicationsTab({ medications }: { medications: any[] }) {
                             </p>
                         )}
                         {m.instructions && (
-                            <p className="text-xs text-[#687582] dark:text-gray-500 mt-1 italic">&quot;{m.instructions}&quot;</p>
+                            <p className="text-xs text-[#687582] dark:text-gray-500 mt-1 italic">&ldquo;{m.instructions}&rdquo;</p>
                         )}
                     </div>
                 </div>

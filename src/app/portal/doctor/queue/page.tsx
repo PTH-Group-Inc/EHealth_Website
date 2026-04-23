@@ -1,582 +1,280 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+/**
+ * Queue hôm nay — Phase I.2 Nhóm 2 #3.
+ * Spec: dòng 5155-5243 `/Users/minhquan/EH/Sửa giao diện tổng.md`.
+ */
+
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { UI_TEXT } from "@/constants/ui-text";
-import { ROUTES } from "@/constants/routes";
-import { getAppointments } from "@/services/appointmentService";
-import { appointmentStatusService } from "@/services/appointmentStatusService";
 import { useAuth } from "@/contexts/AuthContext";
-import { AIQueuePriority, AIPreExamHint } from "@/components/portal/ai";
-import { usePageAIContext } from "@/hooks/usePageAIContext";
+import { PageHeader, EmptyState, StatCard } from "@/components/shared/layout";
+import { appointmentStatusService } from "@/services/appointmentStatusService";
 
-type QueueStatus = "all" | "waiting" | "examining" | "completed" | "cancelled";
-type QueueItem = {
-    id: string; fullName: string; phone: string; gender: string;
-    dob: string; reason: string; status: string; priority: string;
-    waitTime: string; appointmentTime: string; queueNumber: number;
-    checkInTime: string; age: number; avatar?: string; allergies?: string[];
+type QueueStatus = "waiting" | "in_progress" | "completed" | "skipped" | "cancelled";
+
+const STATUS_META: Record<string, { label: string; cls: string }> = {
+    waiting: { label: "Đang chờ", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" },
+    in_progress: { label: "Đang khám", cls: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300" },
+    completed: { label: "Hoàn tất", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" },
+    skipped: { label: "Đã bỏ qua", cls: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200" },
+    cancelled: { label: "Đã huỷ", cls: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300" },
+    recalled: { label: "Gọi lại", cls: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
 };
-const DEFAULT_QUEUE_STATS = { waiting: 0, examining: 0, completed: 0, cancelled: 0, total: 0, remaining: 0, avgWaitTime: 0 };
 
-export default function QueuePage() {
-    const router = useRouter();
+const normalizeStatus = (raw: any): QueueStatus => {
+    const s = (raw ?? "").toString().toUpperCase();
+    if (s === "WAITING" || s === "PENDING") return "waiting";
+    if (s === "IN_PROGRESS" || s === "EXAMINING" || s === "STARTED") return "in_progress";
+    if (s === "COMPLETED" || s === "DONE") return "completed";
+    if (s === "SKIPPED") return "skipped";
+    if (s === "CANCELLED" || s === "NO_SHOW") return "cancelled";
+    return "waiting";
+};
+
+interface QueueItem {
+    id: string;
+    queueNumber?: number | string;
+    patientName: string;
+    room?: string;
+    doctorName?: string;
+    status: QueueStatus;
+    appointmentTime?: string;
+    checkInTime?: string;
+    waitTime?: string;
+}
+
+function normalizeItem(a: any): QueueItem {
+    return {
+        id: a.id ?? a.appointments_id ?? a.queueId,
+        queueNumber: a.queue_number ?? a.queueNumber ?? a.queue_no,
+        patientName: a.patient_name ?? a.patientName ?? a.patient?.fullName ?? "(chưa có tên)",
+        room: a.room_name ?? a.room ?? a.clinic_room_name,
+        doctorName: a.doctor_name ?? a.doctorName,
+        status: normalizeStatus(a.queue_status ?? a.status),
+        appointmentTime: a.appointment_time ?? a.appointmentTime ?? a.slot_start_time ?? a.time,
+        checkInTime: a.check_in_time ?? a.checkInTime,
+        waitTime: a.wait_time ?? a.waitTime,
+    };
+}
+
+export default function DoctorQueuePage() {
     const { user } = useAuth();
-    const [searchQuery, setSearchQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState<QueueStatus>("all");
-    const DEFAULT_STATS = DEFAULT_QUEUE_STATS;
     const [queue, setQueue] = useState<QueueItem[]>([]);
-    const [stats, setStats] = useState(DEFAULT_STATS);
-    const [currentPage, setCurrentPage] = useState(1);
-    const ITEMS_PER_PAGE = 10;
+    const [rooms, setRooms] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [roomFilter, setRoomFilter] = useState<string>("ALL");
+    const [statusFilter, setStatusFilter] = useState<QueueStatus | "ALL">("ALL");
+    const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+    const [busyId, setBusyId] = useState<string | null>(null);
 
-    // AI state
-    const [preExamPatient, setPreExamPatient] = useState<{ id: string; name: string } | null>(null);
-
-    // AI Copilot context
-    usePageAIContext({ pageKey: "queue" });
-
-    useEffect(() => {
+    const load = useCallback(async () => {
         if (!user?.id) return;
-        // Ưu tiên dùng /api/appointment-status/queue/today (đúng Swagger)
-        appointmentStatusService.getQueueToday({ doctorId: user.id })
-            .then(res => {
-                const items: any[] = res?.data ?? [];
-                if (items.length > 0) {
-                    const mapped = items.map((a: any) => ({
-                        id: a.id,
-                        fullName: a.patientName ?? a.patient?.fullName ?? "",
-                        phone: a.phone ?? a.patient?.phone ?? "",
-                        gender: a.gender ?? a.patient?.gender ?? "",
-                        dob: a.dob ?? a.patient?.dob ?? "",
-                        reason: a.reason ?? a.visitReason ?? "",
-                        status: a.queueStatus === "WAITING" ? "waiting" :
-                                a.queueStatus === "IN_PROGRESS" ? "examining" :
-                                a.queueStatus === "COMPLETED" ? "completed" :
-                                a.queueStatus === "CANCELLED" ? "cancelled" : "waiting",
-                        priority: a.priority ?? "normal",
-                        waitTime: a.waitTime ?? "—",
-                        appointmentTime: a.appointmentTime ?? a.time ?? "",
-                        queueNumber: a.queueNumber,
-                        checkInTime: a.checkInTime,
-                    }));
-                    setQueue(mapped as QueueItem[]);
-                    const w = mapped.filter((q: any) => q.status === "waiting").length;
-                    const e = mapped.filter((q: any) => q.status === "examining").length;
-                    const c = mapped.filter((q: any) => q.status === "completed").length;
-                    const x = mapped.filter((q: any) => q.status === "cancelled").length;
-                    setStats({ ...DEFAULT_STATS, waiting: w, examining: e, completed: c, cancelled: x, total: mapped.length, remaining: w + e });
-                }
-            })
-            .catch(() => {
-                // Fallback: dùng appointments API
-                const today = new Date().toISOString().split("T")[0];
-                getAppointments({ doctorId: user.id, date: today, limit: 100 })
-                    .then(res => {
-                        const items = res?.data ?? [];
-                        if (items.length > 0) {
-                            const mapped = items.map((a: any) => ({
-                                id: a.id,
-                                fullName: a.patientName ?? "",
-                                phone: a.phone ?? "",
-                                gender: a.gender ?? "",
-                                dob: a.dob ?? "",
-                                reason: a.reason ?? "",
-                                status: a.status === "confirmed" ? "waiting" : a.status === "in_progress" ? "examining" : a.status,
-                                priority: a.priority ?? "normal",
-                                waitTime: a.waitTime ?? "—",
-                                appointmentTime: a.time ?? "",
-                            }));
-                            setQueue(mapped as QueueItem[]);
-                            const w = mapped.filter((q: any) => q.status === "waiting").length;
-                            const e = mapped.filter((q: any) => q.status === "examining").length;
-                            const c = mapped.filter((q: any) => q.status === "completed").length;
-                            const x = mapped.filter((q: any) => q.status === "cancelled").length;
-                            setStats({ ...DEFAULT_STATS, waiting: w, examining: e, completed: c, cancelled: x, total: mapped.length, remaining: w + e });
-                        }
-                    })
-                    .catch(() => { setQueue([]); });
-            });
+        setLoading(true);
+        try {
+            const [q, r] = await Promise.allSettled([
+                appointmentStatusService.getQueueToday({ doctorId: user.id }),
+                appointmentStatusService.getRoomStatus(),
+            ]);
+            if (q.status === "fulfilled") {
+                const data = q.value?.data ?? q.value;
+                const arr = Array.isArray(data) ? data : [];
+                setQueue(arr.map(normalizeItem));
+            } else {
+                setQueue([]);
+            }
+            if (r.status === "fulfilled") {
+                const data = r.value?.data ?? r.value;
+                setRooms(Array.isArray(data) ? data : []);
+            }
+            setLastUpdate(new Date());
+        } finally {
+            setLoading(false);
+        }
     }, [user?.id]);
 
-    const filteredQueue = useMemo(() => {
-        return queue.filter((patient) => {
-            const matchesSearch =
-                searchQuery === "" ||
-                patient.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                patient.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                patient.phone.includes(searchQuery);
+    useEffect(() => { load(); }, [load]);
 
-            const matchesStatus =
-                statusFilter === "all" || patient.status === statusFilter;
+    const uniqueRooms = useMemo(() => {
+        const set = new Set<string>();
+        queue.forEach(q => q.room && set.add(q.room));
+        rooms.forEach((r: any) => (r.room_name ?? r.name) && set.add(r.room_name ?? r.name));
+        return Array.from(set);
+    }, [queue, rooms]);
 
-            return matchesSearch && matchesStatus;
+    const filtered = useMemo(() => {
+        return queue.filter(q => {
+            if (roomFilter !== "ALL" && q.room !== roomFilter) return false;
+            if (statusFilter !== "ALL" && q.status !== statusFilter) return false;
+            return true;
         });
-    }, [queue, searchQuery, statusFilter]);
+    }, [queue, roomFilter, statusFilter]);
 
-    // Reset to page 1 when filters change
-    const handleSearchChange = (value: string) => {
-        setSearchQuery(value);
-        setCurrentPage(1);
-    };
-    const handleStatusFilterChange = (status: QueueStatus) => {
-        setStatusFilter(status);
-        setCurrentPage(1);
-    };
+    const stats = useMemo(() => ({
+        total: queue.length,
+        waiting: queue.filter(q => q.status === "waiting").length,
+        inProgress: queue.filter(q => q.status === "in_progress").length,
+        completed: queue.filter(q => q.status === "completed").length,
+    }), [queue]);
 
-    const totalPages = Math.max(1, Math.ceil(filteredQueue.length / ITEMS_PER_PAGE));
-
-    const paginatedQueue = useMemo(() => {
-        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-        return filteredQueue.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-    }, [filteredQueue, currentPage, ITEMS_PER_PAGE]);
-
-    const handleViewCompleted = (patient: QueueItem) => {
-        alert(
-            `Thông tin bệnh nhân đã khám:\n\n` +
-            `Họ tên: ${patient.fullName}\n` +
-            `Mã BN: ${patient.id}\n` +
-            `Giới tính: ${patient.gender}, ${patient.age} tuổi\n` +
-            `SĐT: ${patient.phone}\n` +
-            `Lý do khám: ${patient.reason}\n` +
-            `Giờ tiếp nhận: ${patient.checkInTime}`
-        );
-    };
-
-    const getStatusStyle = (status: string) => {
-        switch (status) {
-            case "examining":
-                return {
-                    bg: "bg-green-100 dark:bg-green-900/30",
-                    text: "text-green-700 dark:text-green-400",
-                    label: "Đang khám",
-                    dot: "bg-green-500",
-                };
-            case "waiting":
-                return {
-                    bg: "bg-orange-100 dark:bg-orange-900/30",
-                    text: "text-orange-700 dark:text-orange-400",
-                    label: "Chờ khám",
-                    dot: "bg-orange-500",
-                };
-            case "completed":
-                return {
-                    bg: "bg-blue-100 dark:bg-blue-900/30",
-                    text: "text-blue-700 dark:text-blue-400",
-                    label: "Hoàn thành",
-                    dot: "bg-blue-500",
-                };
-            case "cancelled":
-                return {
-                    bg: "bg-gray-100 dark:bg-gray-700",
-                    text: "text-gray-600 dark:text-gray-400",
-                    label: "Đã hủy",
-                    dot: "bg-gray-400",
-                };
-            default:
-                return {
-                    bg: "bg-gray-100",
-                    text: "text-gray-600",
-                    label: status,
-                    dot: "bg-gray-400",
-                };
-        }
-    };
-
-    const handleCallPatient = async (patientId: string) => {
+    const doAction = async (id: string, action: "start" | "complete" | "skip" | "recall") => {
+        setBusyId(id);
         try {
-            await appointmentStatusService.recall(patientId);
-        } catch { /* local fallback only */ }
-    };
-
-    const handleStartExam = async (patientId: string) => {
-        const patient = queue.find(p => p.id === patientId);
-        // Call API start-exam
-        try {
-            await appointmentStatusService.startExam(patientId);
-        } catch { /* continue anyway */ }
-
-        if (patient) {
-            setPreExamPatient({ id: patientId, name: patient.fullName });
-            // Delay navigation to show AI hint briefly
-            setTimeout(() => {
-                setQueue((prev) =>
-                    prev.map((p) =>
-                        p.id === patientId ? { ...p, status: "examining" } : p
-                    )
-                );
-                router.push(`${ROUTES.PORTAL.DOCTOR.EXAMINATION}?patient=${patientId}`);
-            }, 2000);
-        } else {
-            router.push(`${ROUTES.PORTAL.DOCTOR.EXAMINATION}?patient=${patientId}`);
+            if (action === "start") await appointmentStatusService.startExam(id);
+            if (action === "complete") await appointmentStatusService.completeExam(id);
+            if (action === "skip") await appointmentStatusService.skip(id);
+            if (action === "recall") await appointmentStatusService.recall(id);
+            await load();
+        } catch (e: any) {
+            alert(e?.response?.data?.message ?? e?.message ?? "Thao tác thất bại");
+        } finally {
+            setBusyId(null);
         }
     };
 
     return (
-        <div className="p-6 md:p-8">
-            <h1 className="sr-only">Hàng đợi bệnh nhân</h1>
-            <div className="max-w-7xl mx-auto space-y-6">
-                {/* Page Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold text-[#121417] dark:text-white">
-                            {UI_TEXT.DOCTOR.QUEUE.TITLE}
-                        </h2>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">
-                            {UI_TEXT.DOCTOR.QUEUE.SUBTITLE}
-                        </p>
-                    </div>
-                </div>
+        <div className="p-6 md:p-8 max-w-7xl mx-auto">
+            <PageHeader
+                title="Queue hôm nay"
+                subtitle="Hàng đợi bệnh nhân đang chờ / đang khám / đã xong trong ngày."
+                icon="groups"
+                breadcrumbs={[
+                    { label: "Portal", href: "/portal/doctor" },
+                    { label: "Queue hôm nay" },
+                ]}
+                actions={
+                    <button
+                        onClick={load}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">refresh</span>
+                        Làm mới
+                    </button>
+                }
+            />
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {/* Remaining */}
-                    <div className="bg-white dark:bg-[#1e242b] p-4 rounded-xl border border-[#e5e7eb] dark:border-[#2d353e] shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="size-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-[#3C81C6]">
-                                    format_list_numbered
-                                </span>
-                            </div>
-                            <div>
-                                <p className="text-xl font-bold text-[#121417] dark:text-white">
-                                    {stats.remaining}
-                                    <span className="text-sm text-[#94a3b8] font-medium">
-                                        /{stats.total}
-                                    </span>
-                                </p>
-                                <p className="text-xs text-[#687582] dark:text-gray-400">
-                                    {UI_TEXT.DOCTOR.QUEUE.REMAINING_PATIENTS}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+            <p className="text-xs text-[#687582] mb-4">
+                Cập nhật lúc {lastUpdate.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </p>
 
-                    {/* Waiting */}
-                    <div className="bg-white dark:bg-[#1e242b] p-4 rounded-xl border border-[#e5e7eb] dark:border-[#2d353e] shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="size-10 rounded-lg bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-orange-500">
-                                    hourglass_empty
-                                </span>
-                            </div>
-                            <div>
-                                <p className="text-xl font-bold text-[#121417] dark:text-white">
-                                    {stats.waiting}
-                                </p>
-                                <p className="text-xs text-[#687582] dark:text-gray-400">
-                                    {UI_TEXT.DOCTOR.QUEUE.WAITING}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+            {/* KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <StatCard label="Tổng ca" value={stats.total} icon="list_alt" color="blue" loading={loading} />
+                <StatCard label="Đang chờ" value={stats.waiting} icon="hourglass_empty" color="amber" loading={loading} />
+                <StatCard label="Đang khám" value={stats.inProgress} icon="stethoscope" color="violet" loading={loading} />
+                <StatCard label="Đã xong" value={stats.completed} icon="task_alt" color="emerald" loading={loading} />
+            </div>
 
-                    {/* Examining */}
-                    <div className="bg-white dark:bg-[#1e242b] p-4 rounded-xl border border-[#e5e7eb] dark:border-[#2d353e] shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="size-10 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-green-600">
-                                    local_hospital
-                                </span>
-                            </div>
-                            <div>
-                                <p className="text-xl font-bold text-[#121417] dark:text-white">
-                                    {stats.examining}
-                                </p>
-                                <p className="text-xs text-[#687582] dark:text-gray-400">
-                                    {UI_TEXT.DOCTOR.QUEUE.EXAMINING}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+            {/* Filter */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-3">
+                <select
+                    value={roomFilter}
+                    onChange={e => setRoomFilter(e.target.value)}
+                    className="px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] text-[#121417] dark:text-white"
+                >
+                    <option value="ALL">Tất cả phòng</option>
+                    {uniqueRooms.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                <select
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value as any)}
+                    className="px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] text-[#121417] dark:text-white"
+                >
+                    <option value="ALL">Tất cả trạng thái</option>
+                    <option value="waiting">Đang chờ</option>
+                    <option value="in_progress">Đang khám</option>
+                    <option value="completed">Hoàn tất</option>
+                    <option value="skipped">Đã bỏ qua</option>
+                </select>
+            </div>
 
-                    {/* Completed */}
-                    <div className="bg-white dark:bg-[#1e242b] p-4 rounded-xl border border-[#e5e7eb] dark:border-[#2d353e] shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="size-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-blue-600">
-                                    task_alt
-                                </span>
-                            </div>
-                            <div>
-                                <p className="text-xl font-bold text-[#121417] dark:text-white">
-                                    {stats.completed}
-                                </p>
-                                <p className="text-xs text-[#687582] dark:text-gray-400">
-                                    {UI_TEXT.DOCTOR.QUEUE.COMPLETED}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Avg Wait Time */}
-                    <div className="bg-white dark:bg-[#1e242b] p-4 rounded-xl border border-[#e5e7eb] dark:border-[#2d353e] shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="size-10 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-purple-600">
-                                    timer
-                                </span>
-                            </div>
-                            <div>
-                                <p className="text-xl font-bold text-[#121417] dark:text-white">
-                                    ~{stats.avgWaitTime}p
-                                </p>
-                                <p className="text-xs text-[#687582] dark:text-gray-400">
-                                    {UI_TEXT.DOCTOR.QUEUE.AVG_WAIT_TIME}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* AI Queue Priority & Anomaly Alerts */}
-                <AIQueuePriority
-                    queue={queue.map(p => ({
-                        id: p.id,
-                        fullName: p.fullName,
-                        age: p.age,
-                        reason: p.reason,
-                        status: p.status,
-                        waitTime: (p as any).waitTime,
-                        checkInTime: p.checkInTime,
-                    }))}
-                />
-
-                {/* AI Pre-Exam Hint */}
-                {preExamPatient && (
-                    <AIPreExamHint
-                        patientId={preExamPatient.id}
-                        patientName={preExamPatient.name}
-                        visible={!!preExamPatient}
-                        onClose={() => setPreExamPatient(null)}
-                    />
-                )}
-
-                {/* Queue Table */}
-                <div className="bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl shadow-sm">
-                    {/* Table Header */}
-                    <div className="p-4 border-b border-[#e5e7eb] dark:border-[#2d353e] flex flex-col md:flex-row justify-between gap-4 items-center">
-                        <div className="flex items-center gap-3 w-full md:w-auto">
-                            <div className="relative flex-1 md:w-72">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#687582]">
-                                    <span className="material-symbols-outlined text-[20px]">
-                                        search
-                                    </span>
-                                </span>
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => handleSearchChange(e.target.value)}
-                                    className="w-full py-2.5 pl-10 pr-4 text-sm bg-[#f8fafc] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 focus:border-[#3C81C6] transition-all dark:text-white placeholder:text-gray-400"
-                                    placeholder={UI_TEXT.DOCTOR.QUEUE.SEARCH_PLACEHOLDER}
-                                />
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {(["all", "waiting", "examining", "completed"] as QueueStatus[]).map(
-                                (status) => (
-                                    <button
-                                        key={status}
-                                        onClick={() => handleStatusFilterChange(status)}
-                                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${statusFilter === status
-                                            ? "bg-[#3C81C6] text-white"
-                                            : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-                                            }`}
-                                    >
-                                        {status === "all"
-                                            ? "Tất cả"
-                                            : status === "waiting"
-                                                ? "Chờ khám"
-                                                : status === "examining"
-                                                    ? "Đang khám"
-                                                    : "Hoàn thành"}
-                                    </button>
-                                )
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-[#e5e7eb] dark:border-[#2d353e]">
-                                <tr>
-                                    <th className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase">STT</th>
-                                    <th className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase">Thông tin bệnh nhân</th>
-                                    <th className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase">Nguồn</th>
-                                    <th className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase">Tiếp nhận</th>
-                                    <th className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase">Lý do khám</th>
-                                    <th className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase">Trạng thái</th>
-                                    <th className="py-4 px-6 text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase text-right">Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
-                                {paginatedQueue.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={7} className="py-12 text-center text-[#687582] dark:text-gray-400">
-                                            <span className="material-symbols-outlined text-4xl mb-2 block">search_off</span>
-                                            Không tìm thấy bệnh nhân
+            {/* Table */}
+            <div className="bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead className="bg-gray-50 dark:bg-gray-800/50 text-[#687582] dark:text-gray-400 text-xs uppercase">
+                            <tr>
+                                <th className="text-left px-4 py-3">STT</th>
+                                <th className="text-left px-4 py-3">Bệnh nhân</th>
+                                <th className="text-left px-4 py-3">Phòng</th>
+                                <th className="text-left px-4 py-3">Giờ hẹn</th>
+                                <th className="text-left px-4 py-3">Trạng thái</th>
+                                <th className="text-right px-4 py-3">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
+                            {loading ? (
+                                <tr><td colSpan={6} className="px-4 py-12 text-center text-[#687582]">Đang tải…</td></tr>
+                            ) : filtered.length === 0 ? (
+                                <tr><td colSpan={6}><EmptyState icon="groups" title="Queue trống" description="Không có ca nào khớp bộ lọc." variant="success" /></td></tr>
+                            ) : filtered.map(q => {
+                                const meta = STATUS_META[q.status] ?? { label: q.status, cls: "bg-gray-100 text-gray-700" };
+                                const highlight = q.status === "waiting"
+                                    ? "border-l-4 border-amber-400"
+                                    : q.status === "in_progress"
+                                        ? "border-l-4 border-violet-500"
+                                        : "";
+                                const disabled = busyId === q.id;
+                                return (
+                                    <tr key={q.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 ${highlight}`}>
+                                        <td className="px-4 py-3 font-bold text-[#3C81C6]">#{q.queueNumber ?? "?"}</td>
+                                        <td className="px-4 py-3 font-medium text-[#121417] dark:text-white">{q.patientName}</td>
+                                        <td className="px-4 py-3">{q.room ?? "—"}</td>
+                                        <td className="px-4 py-3">{q.appointmentTime ? q.appointmentTime.toString().slice(0, 5) : "—"}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${meta.cls}`}>{meta.label}</span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="inline-flex items-center gap-1">
+                                                {q.status === "waiting" && (
+                                                    <button
+                                                        onClick={() => doAction(q.id, "start")}
+                                                        disabled={disabled}
+                                                        className="px-2 py-1 text-xs rounded-md bg-[#3C81C6] text-white hover:bg-[#2a6da8] disabled:opacity-50"
+                                                    >
+                                                        Bắt đầu
+                                                    </button>
+                                                )}
+                                                {q.status === "in_progress" && (
+                                                    <button
+                                                        onClick={() => doAction(q.id, "complete")}
+                                                        disabled={disabled}
+                                                        className="px-2 py-1 text-xs rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                                                    >
+                                                        Hoàn tất
+                                                    </button>
+                                                )}
+                                                {q.status === "waiting" && (
+                                                    <button
+                                                        onClick={() => doAction(q.id, "skip")}
+                                                        disabled={disabled}
+                                                        className="px-2 py-1 text-xs rounded-md bg-gray-100 dark:bg-gray-800 text-[#121417] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
+                                                    >
+                                                        Bỏ qua
+                                                    </button>
+                                                )}
+                                                {q.status === "skipped" && (
+                                                    <button
+                                                        onClick={() => doAction(q.id, "recall")}
+                                                        disabled={disabled}
+                                                        className="px-2 py-1 text-xs rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                                                    >
+                                                        Gọi lại
+                                                    </button>
+                                                )}
+                                                <Link
+                                                    href={`/portal/doctor/examination?appointmentId=${q.id}`}
+                                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                                                >
+                                                    Chi tiết
+                                                </Link>
+                                            </div>
                                         </td>
                                     </tr>
-                                ) : (
-                                    paginatedQueue.map((patient) => {
-                                        const statusStyle = getStatusStyle(patient.status);
-                                        const isPriority = patient.age >= 60 || patient.age <= 6;
-                                        const sources = ["receptionist", "online", "followup"] as const;
-                                        const source = sources[patient.queueNumber % 3];
-                                        const sourceConfig = { receptionist: { icon: "person", label: "Lễ tân", cls: "bg-blue-50 dark:bg-blue-900/20 text-blue-600" }, online: { icon: "language", label: "Online", cls: "bg-purple-50 dark:bg-purple-900/20 text-purple-600" }, followup: { icon: "event_repeat", label: "Tái khám", cls: "bg-teal-50 dark:bg-teal-900/20 text-teal-600" } };
-                                        const src = sourceConfig[source];
-                                        return (
-                                            <tr key={patient.id} className={`group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${isPriority ? "bg-red-50/30 dark:bg-red-900/5" : ""}`}>
-                                                <td className="py-4 px-6">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className={`inline-flex items-center justify-center size-8 rounded-full text-sm font-bold ${patient.status === "examining" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"}`}>{patient.queueNumber}</span>
-                                                        {isPriority && <span className="material-symbols-outlined text-red-500 text-[16px]" title={patient.age <= 6 ? "Trẻ em" : "Người cao tuổi"}>priority_high</span>}
-                                                    </div>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <div className="flex items-center gap-3">
-                                                        <div
-                                                            className="size-10 rounded-full bg-cover bg-center border border-gray-200 bg-gray-100"
-                                                            style={{
-                                                                backgroundImage: patient.avatar
-                                                                    ? `url('${patient.avatar}')`
-                                                                    : undefined,
-                                                            }}
-                                                        >
-                                                            {!patient.avatar && (
-                                                                <div className="size-full flex items-center justify-center text-gray-400">
-                                                                    <span className="material-symbols-outlined">
-                                                                        person
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-bold text-[#121417] dark:text-white">
-                                                                {patient.fullName}
-                                                            </p>
-                                                            <p className="text-xs text-[#687582] dark:text-gray-400">
-                                                                {patient.id} • {patient.gender},{" "}
-                                                                {patient.age} tuổi
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold ${src.cls}`}>
-                                                        <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>{src.icon}</span>{src.label}
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <p className="text-sm text-[#121417] dark:text-gray-200">{patient.checkInTime}</p>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <p className="text-sm text-[#687582] dark:text-gray-400 max-w-xs truncate">
-                                                        {patient.reason}
-                                                    </p>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <span
-                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${statusStyle.bg} ${statusStyle.text}`}
-                                                    >
-                                                        <span
-                                                            className={`size-1.5 rounded-full ${statusStyle.dot}`}
-                                                        ></span>
-                                                        {statusStyle.label}
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 px-6 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        {patient.status === "waiting" && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() =>
-                                                                        handleCallPatient(patient.id)
-                                                                    }
-                                                                    className="p-2 text-[#3C81C6] hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                                                    title="Gọi bệnh nhân"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-[20px]">
-                                                                        campaign
-                                                                    </span>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() =>
-                                                                        handleStartExam(patient.id)
-                                                                    }
-                                                                    className="flex items-center gap-1 px-3 py-1.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white text-xs font-medium rounded-lg transition-colors"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-[16px]">
-                                                                        stethoscope
-                                                                    </span>
-                                                                    Khám
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                        {patient.status === "examining" && (
-                                                            <Link
-                                                                href={`${ROUTES.PORTAL.DOCTOR.EXAMINATION}?patient=${patient.id}`}
-                                                                className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors"
-                                                            >
-                                                                <span className="material-symbols-outlined text-[16px]">
-                                                                    visibility
-                                                                </span>
-                                                                Tiếp tục
-                                                            </Link>
-                                                        )}
-                                                        {patient.status === "completed" && (
-                                                            <button
-                                                                onClick={() => handleViewCompleted(patient)}
-                                                                className="p-2 text-[#687582] hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                                                                title="Xem thông tin"
-                                                            >
-                                                                <span className="material-symbols-outlined text-[20px]">
-                                                                    visibility
-                                                                </span>
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Pagination */}
-                    <div className="p-4 border-t border-[#e5e7eb] dark:border-[#2d353e] flex items-center justify-between">
-                        <p className="text-sm text-[#687582] dark:text-gray-400">
-                            Hiển thị {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, filteredQueue.length)}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredQueue.length)} trong tổng số{" "}
-                            {filteredQueue.length} bệnh nhân
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                                disabled={currentPage === 1}
-                                className="p-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <span className="material-symbols-outlined text-[20px] text-[#687582]">
-                                    chevron_left
-                                </span>
-                            </button>
-                            <span className="px-3 py-1 bg-[#3C81C6] text-white text-sm font-medium rounded-lg">
-                                {currentPage} / {totalPages}
-                            </span>
-                            <button
-                                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                                disabled={currentPage === totalPages}
-                                className="p-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <span className="material-symbols-outlined text-[20px] text-[#687582]">
-                                    chevron_right
-                                </span>
-                            </button>
-                        </div>
-                    </div>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

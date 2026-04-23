@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { TELE_ROOM_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -36,6 +37,8 @@ function mapRoom(r: any): ActiveRoom {
 
 export default function TeleRoomsPage() {
     const toast = useToast();
+    const t = useTranslations("pages.tele.rooms");
+    const tc = useTranslations("common");
     const [rooms, setRooms] = useState<ActiveRoom[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -76,10 +79,10 @@ export default function TeleRoomsPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Room khám online đang hoạt động"
-                subtitle="Giám sát realtime các phiên khám online đang mở (tự refresh 30s)"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="videocam"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Telemedicine" }, { label: "Room" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <button onClick={load} className="px-4 py-2 text-sm font-semibold text-[#3C81C6] border border-[#3C81C6]/40 hover:bg-[#3C81C6]/10 rounded-xl inline-flex items-center gap-1">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>refresh</span>

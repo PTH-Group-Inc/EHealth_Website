@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { unwrapList } from "@/api/response";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageAIContext } from "@/hooks/usePageAIContext";
@@ -178,6 +179,7 @@ export default function MedicalRecordsPage() {
     usePageAIContext({ pageKey: "medical-records" });
     const router = useRouter();
     const { user } = useAuth();
+    const tp = useTranslations("pages.portal.patient.medicalRecords");
 
     const [profiles, setProfiles] = useState<PatientProfile[]>([]);
     const [selectedProfileId, setSelectedProfileId] = useState("");
@@ -285,9 +287,9 @@ export default function MedicalRecordsPage() {
         <div className="space-y-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#121417] dark:text-white">Kết quả khám bệnh</h1>
+                    <h1 className="text-2xl font-bold text-[#121417] dark:text-white">{tp("title")}</h1>
                     <p className="mt-0.5 max-w-3xl text-sm text-[#687582]">
-                        Hồ sơ được sắp theo lần khám gần nhất. Kết quả cận lâm sàng chỉ hiển thị trong trang chi tiết của từng hồ sơ khám.
+                        {tp("subtitle")}
                     </p>
                 </div>
                 <div className="self-start rounded-xl border border-[#e5e7eb] bg-[#f6f7f8] p-1 dark:border-[#2d353e] dark:bg-[#13191f]">

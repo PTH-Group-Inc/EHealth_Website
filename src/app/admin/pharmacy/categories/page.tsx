@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { PHARMACY_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -38,6 +39,8 @@ function mapCategory(r: any): DrugCategory {
 
 export default function PharmacyCategoriesPage() {
     const toast = useToast();
+    const t = useTranslations("pages.pharmacyCategories");
+    const tc = useTranslations("common");
     const [items, setItems] = useState<DrugCategory[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -120,10 +123,10 @@ export default function PharmacyCategoriesPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Nhóm thuốc (Categories)"
-                subtitle="Phân loại thuốc theo nhóm (kháng sinh, giảm đau, tim mạch, ...)"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="category"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Dược & kho" }, { label: "Nhóm thuốc" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <button onClick={openCreate} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md inline-flex items-center gap-1">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>

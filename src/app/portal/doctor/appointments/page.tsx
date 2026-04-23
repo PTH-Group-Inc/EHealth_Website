@@ -1,466 +1,548 @@
 "use client";
 
-import { useState, useEffect } from "react";
+/**
+ * Lịch khám của tôi — Phase I.2 Nhóm 2 #1 & #2 (danh sách + xác nhận lịch).
+ * Spec: dòng 4984-5151 `/Users/minhquan/EH/Sửa giao diện tổng.md`.
+ */
+
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { UI_TEXT } from "@/constants/ui-text";
-import * as appointmentService from "@/services/appointmentService";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { AIAppointmentTriage } from "@/components/portal/ai";
-import { usePageAIContext } from "@/hooks/usePageAIContext";
+import { PageHeader, EmptyState } from "@/components/shared/layout";
+import {
+    getAppointmentsByDoctor,
+    rescheduleAppointment,
+    updateVisitReason,
+    checkAppointmentConflict,
+    appointmentConfirmationService,
+    cancelAppointment,
+} from "@/services/appointmentService";
 
-type ViewMode = "day" | "week" | "month";
+type TabKey = "all" | "today" | "need_confirm" | "upcoming" | "done";
 
-export default function AppointmentsPage() {
-    usePageAIContext({ pageKey: 'appointments' });
+const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
+    PENDING: { text: "Chờ xác nhận", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" },
+    CONFIRMED: { text: "Đã xác nhận", cls: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
+    CHECKED_IN: { text: "Đã check-in", cls: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300" },
+    IN_PROGRESS: { text: "Đang khám", cls: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300" },
+    COMPLETED: { text: "Hoàn tất", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" },
+    CANCELLED: { text: "Đã huỷ", cls: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300" },
+    NO_SHOW: { text: "Không đến", cls: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200" },
+};
+
+const formatDate = (v?: string) => {
+    if (!v) return "—";
+    try { return new Date(v).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }); } catch { return v; }
+};
+const formatTime = (v?: string) => {
+    if (!v) return "—";
+    const s = v.toString().slice(0, 5);
+    return s.match(/^\d{2}:\d{2}$/) ? s : v;
+};
+
+function normalize(a: any) {
+    return {
+        id: a.appointments_id ?? a.id,
+        code: a.appointment_code ?? a.code ?? (a.id ? a.id.toString().slice(0, 8) : "—"),
+        patientName: a.patient_name ?? a.patientName ?? "(chưa có tên)",
+        patientId: a.patient_id ?? a.patientId,
+        phone: a.patient_phone ?? a.phone,
+        date: a.appointment_date ?? a.date,
+        slot: a.slot_start_time ?? a.slot ?? a.time,
+        slotEnd: a.slot_end_time ?? a.endTime,
+        room: a.room_name ?? a.room ?? a.clinic_room_name,
+        serviceName: a.service_name ?? a.facility_service_name ?? a.serviceName,
+        status: (a.status ?? "PENDING").toString().toUpperCase(),
+        reason: a.reason_for_visit ?? a.reason ?? a.visit_reason,
+        encounterId: a.encounter_id ?? a.encounterId,
+        raw: a,
+    };
+}
+
+export default function DoctorAppointmentsPage() {
     const router = useRouter();
     const { user } = useAuth();
-    const [viewMode, setViewMode] = useState<ViewMode>("week");
-    const [appointments, setAppointments] = useState<any[]>([]);
-    const [pendingRequests, setPendingRequests] = useState<any[]>([]);
-    const [selectedAppointment, setSelectedAppointment] = useState<any | null>(null);
-    const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+    const [items, setItems] = useState<ReturnType<typeof normalize>[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [tab, setTab] = useState<TabKey>("today");
+    const [filterDate, setFilterDate] = useState<string>("");
+    const [filterStatus, setFilterStatus] = useState<string>("ALL");
+    const [filterRoom, setFilterRoom] = useState<string>("ALL");
+    const [search, setSearch] = useState("");
+    const [selected, setSelected] = useState<ReturnType<typeof normalize> | null>(null);
+    const [editReason, setEditReason] = useState(false);
+    const [reasonValue, setReasonValue] = useState("");
+    const [rescheduleMode, setRescheduleMode] = useState(false);
+    const [rescheduleDate, setRescheduleDate] = useState("");
+    const [rescheduleSlot, setRescheduleSlot] = useState("");
+    const [conflictMsg, setConflictMsg] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
 
-    const daysOfWeek = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-    const hours = Array.from({ length: 10 }, (_, i) => i + 8); // 8:00 - 17:00
-
-    // Compute the Monday of the current week offset
-    const getWeekDates = (offset: number) => {
-        const now = new Date();
-        const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ...
-        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        const monday = new Date(now);
-        monday.setDate(now.getDate() + mondayOffset + offset * 7);
-        const dates = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date(monday);
-            d.setDate(monday.getDate() + i);
-            return d;
-        });
-        return dates;
-    };
-
-    const weekDates = getWeekDates(currentWeekOffset);
-    const formatWeekLabel = (dates: Date[]) => {
-        const fmt = (d: Date) => `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
-        const monday = dates[0];
-        const sunday = dates[6];
-        return `Tuần ${fmt(monday)} - ${fmt(sunday)}/${sunday.getFullYear()}`;
-    };
-
-    useEffect(() => {
+    const load = async () => {
         if (!user?.id) return;
-        appointmentService.getAppointmentsByDoctor(user.id)
-            .then(res => {
-                const data = (res as any)?.data?.data ?? (res as any)?.data;
-                if (Array.isArray(data) && data.length > 0) {
-                    setAppointments(data);
-                    setPendingRequests(data.filter((a: any) => a.status === 'PENDING'));
-                }
-            })
-            .catch(() => { setAppointments([]); setPendingRequests([]); });
-    }, [user?.id]);
-
-    const handleAcceptRequest = async (requestId: string) => {
+        setLoading(true);
         try {
-            await appointmentService.confirmAppointment(requestId);
-            setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
+            const res = await getAppointmentsByDoctor(user.id);
+            const arr = Array.isArray(res) ? res : [];
+            setItems(arr.map(normalize));
         } catch {
-            // Vẫn cập nhật UI local nếu API lỗi
-            setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
+            setItems([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+    useEffect(() => { load(); }, [user?.id]);
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    const rooms = useMemo(() => {
+        const set = new Set(items.map(i => i.room).filter(Boolean) as string[]);
+        return Array.from(set);
+    }, [items]);
+
+    const filtered = useMemo(() => {
+        return items.filter(i => {
+            if (tab === "today" && i.date?.slice(0, 10) !== today) return false;
+            if (tab === "need_confirm" && i.status !== "PENDING") return false;
+            if (tab === "upcoming" && !["PENDING", "CONFIRMED", "CHECKED_IN"].includes(i.status)) return false;
+            if (tab === "done" && !["COMPLETED", "CANCELLED", "NO_SHOW"].includes(i.status)) return false;
+            if (filterDate && i.date?.slice(0, 10) !== filterDate) return false;
+            if (filterStatus !== "ALL" && i.status !== filterStatus) return false;
+            if (filterRoom !== "ALL" && i.room !== filterRoom) return false;
+            if (search) {
+                const q = search.toLowerCase();
+                const match = i.patientName.toLowerCase().includes(q) || (i.code || "").toLowerCase().includes(q);
+                if (!match) return false;
+            }
+            return true;
+        });
+    }, [items, tab, today, filterDate, filterStatus, filterRoom, search]);
+
+    const counts = useMemo(() => ({
+        today: items.filter(i => i.date?.slice(0, 10) === today).length,
+        need_confirm: items.filter(i => i.status === "PENDING").length,
+        upcoming: items.filter(i => ["PENDING", "CONFIRMED", "CHECKED_IN"].includes(i.status)).length,
+        done: items.filter(i => ["COMPLETED", "CANCELLED", "NO_SHOW"].includes(i.status)).length,
+    }), [items, today]);
+
+    const onOpen = (item: ReturnType<typeof normalize>) => {
+        setSelected(item);
+        setEditReason(false);
+        setReasonValue(item.reason ?? "");
+        setRescheduleMode(false);
+        setRescheduleDate(item.date?.slice(0, 10) ?? "");
+        setRescheduleSlot(item.slot ?? "");
+        setConflictMsg(null);
+    };
+
+    const onConfirm = async (id: string) => {
+        try {
+            await appointmentConfirmationService.confirm(id);
+            await load();
+        } catch (e: any) {
+            alert(e?.message ?? "Xác nhận thất bại");
         }
     };
 
-    const handleRejectRequest = async (requestId: string) => {
-        if (!confirm("Bạn có chắc chắn muốn từ chối yêu cầu lịch hẹn này không?")) return;
+    const onResend = async (id: string) => {
         try {
-            await appointmentService.cancelAppointment(requestId);
-            setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
-        } catch {
-            setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
+            await appointmentConfirmationService.resendNotification(id);
+            alert("Đã gửi lại thông báo cho bệnh nhân.");
+        } catch (e: any) {
+            alert(e?.message ?? "Gửi lại thất bại");
         }
     };
 
-    const handleAppointmentClick = (appointment: any) => {
-        setSelectedAppointment(appointment);
+    const onSaveReason = async () => {
+        if (!selected) return;
+        setSaving(true);
+        try {
+            await updateVisitReason(selected.id, reasonValue);
+            await load();
+            setEditReason(false);
+        } catch (e: any) {
+            alert(e?.message ?? "Lưu thất bại");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const onCheckConflict = async () => {
+        if (!selected) return;
+        setConflictMsg(null);
+        const res = await checkAppointmentConflict({
+            doctorId: user?.id,
+            date: rescheduleDate,
+            excludeAppointmentId: selected.id,
+        });
+        setConflictMsg(res.hasConflict
+            ? `Có ${res.conflicts?.length ?? 1} xung đột vào ngày đã chọn.`
+            : "Không phát hiện xung đột. Có thể dời an toàn.");
+    };
+
+    const onReschedule = async () => {
+        if (!selected) return;
+        setSaving(true);
+        try {
+            await rescheduleAppointment(selected.id, { newDate: rescheduleDate });
+            await load();
+            setRescheduleMode(false);
+        } catch (e: any) {
+            alert(e?.message ?? "Dời lịch thất bại");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const onCancel = async (id: string) => {
+        if (!confirm("Huỷ lịch hẹn này?")) return;
+        try {
+            await cancelAppointment(id);
+            setSelected(null);
+            await load();
+        } catch (e: any) {
+            alert(e?.message ?? "Huỷ lịch thất bại");
+        }
     };
 
     return (
-        <div className="p-6 md:p-8 h-full">
-            <h1 className="sr-only">Lịch hẹn bác sĩ</h1>
-            <div className="max-w-7xl mx-auto flex flex-col h-full gap-6">
-                {/* AI Appointment Triage */}
-                {user?.id && (
-                    <AIAppointmentTriage
-                        pendingRequests={pendingRequests.map((r: any) => ({
-                            id: r.id,
-                            patientName: r.patientName ?? r.patient ?? "",
-                            reason: r.reason ?? r.visitReason ?? "",
-                            patientAge: r.patientAge ?? r.age,
-                        }))}
-                        doctorId={user.id}
-                    />
-                )}
+        <div className="p-6 md:p-8 max-w-7xl mx-auto">
+            <PageHeader
+                title="Lịch khám của tôi"
+                subtitle="Toàn bộ lịch khám bác sĩ phụ trách: xác nhận, dời lịch, cập nhật lý do."
+                icon="calendar_month"
+                breadcrumbs={[
+                    { label: "Portal", href: "/portal/doctor" },
+                    { label: "Lịch khám của tôi" },
+                ]}
+                actions={
+                    <Link
+                        href="/portal/doctor/appointments/manage-slots"
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">schedule</span>
+                        Quản lý slot
+                    </Link>
+                }
+            />
 
-                {/* Page Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold text-[#121417] dark:text-white">
-                            {UI_TEXT.DOCTOR.APPOINTMENTS.TITLE}
-                        </h2>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">
-                            {UI_TEXT.DOCTOR.APPOINTMENTS.SUBTITLE}
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => router.push('/portal/doctor/appointments/manage-slots')}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] text-[#121417] dark:text-white rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                        >
-                            <span className="material-symbols-outlined text-[20px]">
-                                schedule
-                            </span>
-                            {UI_TEXT.DOCTOR.APPOINTMENTS.MANAGE_SLOTS}
-                        </button>
-                        <button
-                            onClick={() => router.push('/portal/doctor/appointments/new')}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform hover:-translate-y-0.5"
-                        >
-                            <span className="material-symbols-outlined text-[20px]">
-                                add
-                            </span>
-                            {UI_TEXT.DOCTOR.APPOINTMENTS.NEW_APPOINTMENT}
-                        </button>
-                    </div>
-                </div>
+            {/* Tabs */}
+            <div className="flex flex-wrap gap-2 mb-4">
+                {([
+                    { key: "today", label: `Hôm nay (${counts.today})` },
+                    { key: "need_confirm", label: `Cần xác nhận (${counts.need_confirm})` },
+                    { key: "upcoming", label: `Sắp tới (${counts.upcoming})` },
+                    { key: "done", label: `Đã xong (${counts.done})` },
+                    { key: "all", label: `Tất cả (${items.length})` },
+                ] as { key: TabKey; label: string }[]).map(t => (
+                    <button
+                        key={t.key}
+                        onClick={() => setTab(t.key)}
+                        className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${tab === t.key
+                            ? "bg-[#3C81C6] text-white border-[#3C81C6]"
+                            : "bg-white dark:bg-[#1e242b] border-[#e5e7eb] dark:border-[#2d353e] text-[#121417] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
+                            }`}
+                    >
+                        {t.label}
+                    </button>
+                ))}
+            </div>
 
-                {/* Main Content */}
-                <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 overflow-hidden">
-                    {/* Calendar */}
-                    <div className="lg:col-span-3 bg-white dark:bg-[#1e242b] rounded-xl border border-[#e5e7eb] dark:border-[#2d353e] shadow-sm flex flex-col overflow-hidden">
-                        {/* Calendar Header */}
-                        <div className="p-4 border-b border-[#e5e7eb] dark:border-[#2d353e] flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setCurrentWeekOffset((prev) => prev - 1)}
-                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                                >
-                                    <span className="material-symbols-outlined text-[20px] text-[#687582]">
-                                        chevron_left
-                                    </span>
-                                </button>
-                                <h3 className="text-lg font-bold text-[#121417] dark:text-white">
-                                    {formatWeekLabel(weekDates)}
-                                </h3>
-                                <button
-                                    onClick={() => setCurrentWeekOffset((prev) => prev + 1)}
-                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                                >
-                                    <span className="material-symbols-outlined text-[20px] text-[#687582]">
-                                        chevron_right
-                                    </span>
-                                </button>
-                            </div>
-                            <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                                {(["day", "week", "month"] as ViewMode[]).map((mode) => (
-                                    <button
-                                        key={mode}
-                                        onClick={() => setViewMode(mode)}
-                                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${viewMode === mode
-                                            ? "bg-white dark:bg-[#1e242b] text-[#121417] dark:text-white shadow-sm"
-                                            : "text-[#687582] dark:text-gray-400 hover:text-[#121417] dark:hover:text-white"
-                                            }`}
-                                    >
-                                        {mode === "day"
-                                            ? "Ngày"
-                                            : mode === "week"
-                                                ? "Tuần"
-                                                : "Tháng"}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+            {/* Filter bar */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4 bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-3">
+                <input
+                    type="date"
+                    value={filterDate}
+                    onChange={e => setFilterDate(e.target.value)}
+                    className="px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] text-[#121417] dark:text-white"
+                    placeholder="Lọc theo ngày"
+                />
+                <select
+                    value={filterStatus}
+                    onChange={e => setFilterStatus(e.target.value)}
+                    className="px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] text-[#121417] dark:text-white"
+                >
+                    <option value="ALL">Tất cả trạng thái</option>
+                    {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v.text}</option>)}
+                </select>
+                <select
+                    value={filterRoom}
+                    onChange={e => setFilterRoom(e.target.value)}
+                    className="px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] text-[#121417] dark:text-white"
+                >
+                    <option value="ALL">Tất cả phòng</option>
+                    {rooms.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Tìm bệnh nhân / mã lịch…"
+                    className="px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] text-[#121417] dark:text-white"
+                />
+            </div>
 
-                        {/* Calendar Grid */}
-                        <div className="flex-1 overflow-auto">
-                            <div className="min-w-[800px]">
-                                {/* Days Header */}
-                                <div className="grid grid-cols-8 border-b border-[#e5e7eb] dark:border-[#2d353e] sticky top-0 bg-gray-50 dark:bg-gray-800/50 z-10">
-                                    <div className="p-3 text-xs font-medium text-[#687582] dark:text-gray-400"></div>
-                                    {daysOfWeek.map((day, index) => {
-                                        const today = new Date();
-                                        const dateForDay = weekDates[index];
-                                        const isToday =
-                                            dateForDay.getFullYear() === today.getFullYear() &&
-                                            dateForDay.getMonth() === today.getMonth() &&
-                                            dateForDay.getDate() === today.getDate();
-                                        return (
-                                            <div
-                                                key={day}
-                                                className={`p-3 text-center ${isToday
-                                                    ? "bg-[#3C81C6]/10"
-                                                    : ""
-                                                    }`}
-                                            >
-                                                <span
-                                                    className={`text-xs font-medium ${isToday
-                                                        ? "text-[#3C81C6]"
-                                                        : "text-[#687582] dark:text-gray-400"
-                                                        }`}
-                                                >
-                                                    {day}
-                                                </span>
-                                                <p
-                                                    className={`text-lg font-bold ${isToday
-                                                        ? "text-[#3C81C6]"
-                                                        : "text-[#121417] dark:text-white"
-                                                        }`}
-                                                >
-                                                    {dateForDay.getDate()}
-                                                </p>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* Time Slots */}
-                                {hours.map((hour) => (
-                                    <div
-                                        key={hour}
-                                        className="grid grid-cols-8 border-b border-[#e5e7eb] dark:border-[#2d353e] min-h-[60px]"
-                                    >
-                                        <div className="p-2 text-xs text-[#687582] dark:text-gray-400 text-right pr-3">
-                                            {String(hour).padStart(2, "0")}:00
-                                        </div>
-                                        {daysOfWeek.map((day, dayIndex) => {
-                                            const isToday = dayIndex === 0;
-                                            const slot = appointments.find(
-                                                (apt) =>
-                                                    apt.dayOfWeek === dayIndex &&
-                                                    apt.startTime.startsWith(String(hour).padStart(2, "0"))
-                                            );
-
-                                            return (
-                                                <div
-                                                    key={`${day}-${hour}`}
-                                                    className={`p-1 border-l border-[#e5e7eb] dark:border-[#2d353e] ${isToday ? "bg-[#3C81C6]/5" : ""
-                                                        }`}
-                                                >
-                                                    {slot && (
-                                                        <div
-                                                            className={`rounded-lg p-2 text-xs h-full cursor-pointer hover:shadow-md transition-shadow ${slot.type === "online"
-                                                                ? "bg-purple-100 border-l-4 border-purple-500"
-                                                                : "bg-blue-100 border-l-4 border-blue-500"
-                                                                }`}
-                                                        >
-                                                            <p className="font-semibold text-[#121417] truncate">
-                                                                {slot.patientName}
-                                                            </p>
-                                                            <p className="text-[#687582] truncate">
-                                                                {slot.startTime} - {slot.endTime}
-                                                            </p>
-                                                            <span
-                                                                className={`inline-flex items-center gap-1 mt-1 text-[10px] font-medium ${slot.type === "online"
-                                                                    ? "text-purple-700"
-                                                                    : "text-blue-700"
-                                                                    }`}
-                                                            >
-                                                                <span className="material-symbols-outlined text-[12px]">
-                                                                    {slot.type === "online"
-                                                                        ? "videocam"
-                                                                        : "meeting_room"}
-                                                                </span>
-                                                                {slot.type === "online"
-                                                                    ? "Online"
-                                                                    : "Trực tiếp"}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Pending Requests Sidebar */}
-                    <div className="lg:col-span-1 bg-white dark:bg-[#1e242b] rounded-xl border border-[#e5e7eb] dark:border-[#2d353e] shadow-sm flex flex-col overflow-hidden">
-                        <div className="p-4 border-b border-[#e5e7eb] dark:border-[#2d353e]">
-                            <h3 className="text-sm font-bold text-[#121417] dark:text-white flex items-center gap-2">
-                                <span className="material-symbols-outlined text-orange-500 text-[20px]">
-                                    pending_actions
-                                </span>
-                                {UI_TEXT.DOCTOR.APPOINTMENTS.PENDING_REQUESTS}
-                                <span className="ml-auto bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-bold px-2 py-0.5 rounded-full">
-                                    {pendingRequests.length}
-                                </span>
-                            </h3>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                            {pendingRequests.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-8 text-center">
-                                    <span className="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 mb-2">
-                                        event_available
-                                    </span>
-                                    <p className="text-sm text-[#687582] dark:text-gray-400">
-                                        Không có yêu cầu chờ
-                                    </p>
-                                </div>
-                            ) : (
-                                pendingRequests.map((request) => (
-                                    <div
-                                        key={request.id}
-                                        className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-[#e5e7eb] dark:border-[#2d353e]"
-                                    >
-                                        <div className="flex items-start gap-2">
-                                            <div
-                                                className="size-9 rounded-full bg-cover bg-center border border-gray-200 bg-gray-100 shrink-0"
-                                                style={{
-                                                    backgroundImage: request.patientAvatar
-                                                        ? `url('${request.patientAvatar}')`
-                                                        : undefined,
-                                                }}
-                                            >
-                                                {!request.patientAvatar && (
-                                                    <div className="size-full flex items-center justify-center text-gray-400">
-                                                        <span className="material-symbols-outlined text-[18px]">
-                                                            person
-                                                        </span>
-                                                    </div>
+            {/* Table */}
+            <div className="bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead className="bg-gray-50 dark:bg-gray-800/50 text-[#687582] dark:text-gray-400 text-xs uppercase">
+                            <tr>
+                                <th className="text-left px-4 py-3">Mã lịch</th>
+                                <th className="text-left px-4 py-3">Bệnh nhân</th>
+                                <th className="text-left px-4 py-3">Ngày</th>
+                                <th className="text-left px-4 py-3">Giờ</th>
+                                <th className="text-left px-4 py-3">Phòng</th>
+                                <th className="text-left px-4 py-3">Dịch vụ</th>
+                                <th className="text-left px-4 py-3">Trạng thái</th>
+                                <th className="text-right px-4 py-3">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
+                            {loading ? (
+                                <tr><td colSpan={8} className="px-4 py-12 text-center text-[#687582]">Đang tải…</td></tr>
+                            ) : filtered.length === 0 ? (
+                                <tr><td colSpan={8}><EmptyState icon="event_busy" title="Không có lịch khám" description="Không có lịch nào khớp bộ lọc hiện tại." variant="default" /></td></tr>
+                            ) : filtered.map(item => {
+                                const st = STATUS_LABEL[item.status] ?? { text: item.status, cls: "bg-gray-100 text-gray-700" };
+                                return (
+                                    <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                        <td className="px-4 py-3 font-mono text-xs">{item.code}</td>
+                                        <td className="px-4 py-3 font-medium text-[#121417] dark:text-white">{item.patientName}</td>
+                                        <td className="px-4 py-3">{formatDate(item.date)}</td>
+                                        <td className="px-4 py-3">{formatTime(item.slot)}{item.slotEnd ? ` – ${formatTime(item.slotEnd)}` : ""}</td>
+                                        <td className="px-4 py-3">{item.room ?? "—"}</td>
+                                        <td className="px-4 py-3">{item.serviceName ?? "—"}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${st.cls}`}>{st.text}</span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="inline-flex items-center gap-1">
+                                                {item.status === "PENDING" && (
+                                                    <button
+                                                        onClick={() => onConfirm(item.id)}
+                                                        className="px-2 py-1 text-xs rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300"
+                                                        title="Xác nhận"
+                                                    >
+                                                        Xác nhận
+                                                    </button>
                                                 )}
+                                                <button
+                                                    onClick={() => onOpen(item)}
+                                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 dark:bg-gray-800 text-[#121417] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+                                                >
+                                                    Chi tiết
+                                                </button>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-1">
-                                                    <p className="text-sm font-bold text-[#121417] dark:text-white truncate">
-                                                        {request.patientName}
-                                                    </p>
-                                                    {request.isReturning && (
-                                                        <span className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-1.5 py-0.5 rounded font-medium whitespace-nowrap">
-                                                            Tái khám
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-xs text-[#687582] dark:text-gray-400">
-                                                    {request.gender}, {request.age} tuổi
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-2 flex items-center gap-2 text-xs text-[#687582] dark:text-gray-400">
-                                            <span className="material-symbols-outlined text-[14px]">
-                                                calendar_today
-                                            </span>
-                                            {request.date} • {request.startTime} - {request.endTime}
-                                        </div>
-
-                                        <div className="mt-1 flex items-center gap-1 text-xs">
-                                            <span
-                                                className={`material-symbols-outlined text-[14px] ${request.type === "online"
-                                                    ? "text-purple-600"
-                                                    : "text-blue-600"
-                                                    }`}
-                                            >
-                                                {request.type === "online"
-                                                    ? "videocam"
-                                                    : "meeting_room"}
-                                            </span>
-                                            <span
-                                                className={
-                                                    request.type === "online"
-                                                        ? "text-purple-600"
-                                                        : "text-blue-600"
-                                                }
-                                            >
-                                                {request.type === "online"
-                                                    ? "Tư vấn Online"
-                                                    : "Khám trực tiếp"}
-                                            </span>
-                                        </div>
-
-                                        {request.reason && (
-                                            <p className="mt-2 text-xs text-[#687582] dark:text-gray-400 line-clamp-2 italic">
-                                                &quot;{request.reason}&quot;
-                                            </p>
-                                        )}
-
-                                        <div className="mt-3 flex items-center gap-2">
-                                            <button
-                                                onClick={() => handleAcceptRequest(request.id)}
-                                                className="flex-1 py-1.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white text-xs font-medium rounded-lg transition-colors"
-                                            >
-                                                {UI_TEXT.DOCTOR.APPOINTMENTS.ACCEPT}
-                                            </button>
-                                            <button
-                                                onClick={() => handleRejectRequest(request.id)}
-                                                className="flex-1 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-lg transition-colors"
-                                            >
-                                                {UI_TEXT.DOCTOR.APPOINTMENTS.REJECT}
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            {/* Appointment Detail Modal */}
-            {selectedAppointment && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedAppointment(null)}>
-                    <div className="bg-white dark:bg-[#1e242b] rounded-xl shadow-xl max-w-md w-full" onClick={e => e.stopPropagation()}>
-                        <div className="p-6 border-b border-[#e5e7eb] dark:border-[#2d353e] flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-[#121417] dark:text-white">
-                                Chi tiết lịch hẹn
-                            </h3>
-                            <button
-                                onClick={() => setSelectedAppointment(null)}
-                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                            >
+            {/* Detail drawer / modal */}
+            {selected && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+                    onClick={() => setSelected(null)}
+                >
+                    <div
+                        className="bg-white dark:bg-[#1e242b] rounded-xl shadow-xl max-w-xl w-full max-h-[90vh] overflow-auto"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="p-6 border-b border-[#e5e7eb] dark:border-[#2d353e] flex items-start justify-between gap-3">
+                            <div>
+                                <h3 className="text-lg font-bold text-[#121417] dark:text-white">Chi tiết lịch khám</h3>
+                                <p className="text-xs text-[#687582] mt-0.5">Mã: <span className="font-mono">{selected.code}</span></p>
+                            </div>
+                            <button onClick={() => setSelected(null)} className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
                                 <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <p className="text-xs text-[#687582] mb-1">Bệnh nhân</p>
-                                <p className="font-medium text-[#121417] dark:text-white">{selectedAppointment.patientName}</p>
-                            </div>
+
+                        <div className="p-6 space-y-4 text-sm">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-xs text-[#687582] mb-1">Thời gian</p>
-                                    <p className="font-medium text-[#121417] dark:text-white">{selectedAppointment.startTime} - {selectedAppointment.endTime}</p>
+                                    <p className="text-xs text-[#687582] mb-1">Bệnh nhân</p>
+                                    <p className="font-medium text-[#121417] dark:text-white">{selected.patientName}</p>
+                                    {selected.phone && <p className="text-xs text-[#687582]">{selected.phone}</p>}
                                 </div>
                                 <div>
-                                    <p className="text-xs text-[#687582] mb-1">Hình thức</p>
-                                    <span className={`inline-flex items-center gap-1 text-sm font-medium ${selectedAppointment.type === 'online' ? 'text-purple-600' : 'text-blue-600'}`}>
-                                        <span className="material-symbols-outlined text-[16px]">
-                                            {selectedAppointment.type === 'online' ? 'videocam' : 'meeting_room'}
-                                        </span>
-                                        {selectedAppointment.type === 'online' ? 'Online' : 'Trực tiếp'}
+                                    <p className="text-xs text-[#687582] mb-1">Thời gian</p>
+                                    <p className="font-medium text-[#121417] dark:text-white">
+                                        {formatDate(selected.date)} • {formatTime(selected.slot)}
+                                        {selected.slotEnd ? ` – ${formatTime(selected.slotEnd)}` : ""}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-[#687582] mb-1">Phòng khám</p>
+                                    <p className="font-medium">{selected.room ?? "—"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-[#687582] mb-1">Dịch vụ</p>
+                                    <p className="font-medium">{selected.serviceName ?? "—"}</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-xs text-[#687582] mb-1">Trạng thái</p>
+                                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_LABEL[selected.status]?.cls ?? "bg-gray-100 text-gray-700"}`}>
+                                        {STATUS_LABEL[selected.status]?.text ?? selected.status}
                                     </span>
                                 </div>
                             </div>
-                            <div>
-                                <p className="text-xs text-[#687582] mb-1">Lý do khám</p>
-                                <p className="font-medium text-[#121417] dark:text-white">{selectedAppointment.reason}</p>
+
+                            {/* Visit reason */}
+                            <div className="border-t border-[#e5e7eb] dark:border-[#2d353e] pt-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-xs text-[#687582]">Lý do khám</p>
+                                    {!editReason && (
+                                        <button onClick={() => setEditReason(true)} className="text-xs text-[#3C81C6] hover:underline">
+                                            Cập nhật
+                                        </button>
+                                    )}
+                                </div>
+                                {editReason ? (
+                                    <div className="flex flex-col gap-2">
+                                        <textarea
+                                            value={reasonValue}
+                                            onChange={e => setReasonValue(e.target.value)}
+                                            rows={3}
+                                            className="px-3 py-2 rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] text-sm"
+                                            placeholder="Lý do khám…"
+                                        />
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={onSaveReason}
+                                                disabled={saving}
+                                                className="px-3 py-1.5 text-xs rounded-md bg-[#3C81C6] text-white disabled:opacity-50"
+                                            >
+                                                Lưu
+                                            </button>
+                                            <button
+                                                onClick={() => { setEditReason(false); setReasonValue(selected.reason ?? ""); }}
+                                                className="px-3 py-1.5 text-xs rounded-md bg-gray-100 dark:bg-gray-800"
+                                            >
+                                                Huỷ
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm">{selected.reason ?? <span className="text-[#687582] italic">Chưa có</span>}</p>
+                                )}
+                            </div>
+
+                            {/* Reschedule */}
+                            <div className="border-t border-[#e5e7eb] dark:border-[#2d353e] pt-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-xs text-[#687582]">Dời lịch</p>
+                                    {!rescheduleMode && (
+                                        <button onClick={() => setRescheduleMode(true)} className="text-xs text-[#3C81C6] hover:underline">
+                                            Dời lịch
+                                        </button>
+                                    )}
+                                </div>
+                                {rescheduleMode && (
+                                    <div className="flex flex-col gap-2">
+                                        <input
+                                            type="date"
+                                            value={rescheduleDate}
+                                            onChange={e => setRescheduleDate(e.target.value)}
+                                            className="px-3 py-2 rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] text-sm"
+                                        />
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={onCheckConflict}
+                                                className="px-3 py-1.5 text-xs rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300"
+                                            >
+                                                Kiểm tra conflict
+                                            </button>
+                                            <button
+                                                onClick={onReschedule}
+                                                disabled={saving || !rescheduleDate}
+                                                className="px-3 py-1.5 text-xs rounded-md bg-[#3C81C6] text-white disabled:opacity-50"
+                                            >
+                                                Xác nhận dời
+                                            </button>
+                                            <button
+                                                onClick={() => { setRescheduleMode(false); setConflictMsg(null); }}
+                                                className="px-3 py-1.5 text-xs rounded-md bg-gray-100 dark:bg-gray-800"
+                                            >
+                                                Huỷ
+                                            </button>
+                                        </div>
+                                        {conflictMsg && (
+                                            <p className={`text-xs ${conflictMsg.includes("Không") ? "text-emerald-600" : "text-amber-600"}`}>
+                                                {conflictMsg}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Quick links */}
+                            <div className="border-t border-[#e5e7eb] dark:border-[#2d353e] pt-4 flex flex-wrap gap-2">
+                                {selected.patientId && (
+                                    <Link
+                                        href={`/portal/doctor/medical-records?patientId=${selected.patientId}`}
+                                        className="text-xs px-2 py-1 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300"
+                                    >
+                                        Hồ sơ bệnh nhân
+                                    </Link>
+                                )}
+                                {selected.encounterId && (
+                                    <Link
+                                        href={`/portal/doctor/encounters/${selected.encounterId}`}
+                                        className="text-xs px-2 py-1 rounded-md bg-violet-50 text-violet-700 hover:bg-violet-100 dark:bg-violet-900/30 dark:text-violet-300"
+                                    >
+                                        Xem encounter
+                                    </Link>
+                                )}
+                                <Link
+                                    href="/portal/doctor/queue"
+                                    className="text-xs px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300"
+                                >
+                                    Mở queue hôm nay
+                                </Link>
                             </div>
                         </div>
-                        <div className="p-6 border-t border-[#e5e7eb] dark:border-[#2d353e] flex justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    handleRejectRequest(selectedAppointment.id);
-                                    setSelectedAppointment(null);
-                                }}
-                                className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-sm font-medium transition-colors"
-                            >
-                                Hủy lịch
-                            </button>
-                            <button
-                                onClick={() => setSelectedAppointment(null)}
-                                className="px-4 py-2 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                                Đóng
-                            </button>
+
+                        <div className="p-6 border-t border-[#e5e7eb] dark:border-[#2d353e] flex justify-between gap-3">
+                            <div className="flex gap-2">
+                                {selected.status === "PENDING" && (
+                                    <>
+                                        <button
+                                            onClick={() => onConfirm(selected.id)}
+                                            className="px-3 py-2 text-sm rounded-lg bg-[#3C81C6] text-white"
+                                        >
+                                            Xác nhận
+                                        </button>
+                                        <button
+                                            onClick={() => onResend(selected.id)}
+                                            className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800"
+                                        >
+                                            Gửi lại
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                            <div className="flex gap-2">
+                                {!["COMPLETED", "CANCELLED"].includes(selected.status) && (
+                                    <button
+                                        onClick={() => onCancel(selected.id)}
+                                        className="px-3 py-2 text-sm rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                                    >
+                                        Huỷ lịch
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setSelected(null)}
+                                    className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800"
+                                >
+                                    Đóng
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

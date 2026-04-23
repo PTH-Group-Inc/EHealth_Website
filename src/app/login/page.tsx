@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ROUTES } from "@/constants/routes";
 import { useAuth, getRedirectUrl } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
+    const t = useTranslations("pages.auth.login");
+    const tErr = useTranslations("errors");
     const { login, isLoading, isAuthenticated, user } = useAuth();
     const router = useRouter();
     const [email, setEmail] = useState("");
@@ -27,7 +30,11 @@ export default function LoginPage() {
         setError("");
         const result = await login(email, password);
         if (!result.success) {
-            setError(result.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+            const hasErrorKey = (key: string) => {
+                try { return tErr(key) !== key; } catch { return false; }
+            };
+            const translated = result.code && hasErrorKey(result.code) ? tErr(result.code) : null;
+            setError(translated || result.message || t("errorDefault"));
         }
     };
 
@@ -40,7 +47,7 @@ export default function LoginPage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    <p className="text-[#94a3b8] text-sm">Đang chuyển hướng...</p>
+                    <p className="text-[#94a3b8] text-sm">{t("redirecting")}</p>
                 </div>
             </div>
         );
@@ -100,7 +107,7 @@ export default function LoginPage() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">EHealth</h1>
-                            <p className="text-[#60a5fa]/80 text-sm font-medium">Nền tảng Y tế Số</p>
+                            <p className="text-[#60a5fa]/80 text-sm font-medium">{t("platformTagline")}</p>
                         </div>
                     </div>
                 </div>
@@ -108,26 +115,25 @@ export default function LoginPage() {
                 {/* Main hero content */}
                 <div className="flex-1 flex flex-col justify-center max-w-xl">
                     <h2 className="text-5xl font-bold text-white leading-tight mb-5">
-                        Nền tảng
+                        {t("heroLine1")}
                         <br />
                         <span className="bg-gradient-to-r from-[#60a5fa] to-[#06b6d4] bg-clip-text text-transparent">
-                            Y tế Số
+                            {t("heroLine2")}
                         </span>
                         <br />
-                        Thông minh
+                        {t("heroLine3")}
                     </h2>
                     <p className="text-[#94a3b8] text-base leading-relaxed mb-8">
-                        Hệ thống quản lý y tế toàn diện, tích hợp AI hỗ trợ chẩn đoán,
-                        quản lý lịch hẹn, kê đơn thuốc và theo dõi sức khỏe bệnh nhân.
+                        {t("heroDescription")}
                     </p>
 
                     {/* Feature highlights */}
                     <div className="grid grid-cols-2 gap-3">
                         {[
-                            { icon: "smart_toy", label: "AI Hỗ trợ", desc: "Chẩn đoán thông minh" },
-                            { icon: "calendar_month", label: "Lịch hẹn", desc: "Đặt lịch trực tuyến" },
-                            { icon: "medication", label: "Kê đơn", desc: "Thuốc điện tử" },
-                            { icon: "monitoring", label: "Theo dõi", desc: "Sức khỏe trực tuyến" },
+                            { icon: "smart_toy", label: t("feature.ai"), desc: t("feature.aiDesc") },
+                            { icon: "calendar_month", label: t("feature.appointment"), desc: t("feature.appointmentDesc") },
+                            { icon: "medication", label: t("feature.prescription"), desc: t("feature.prescriptionDesc") },
+                            { icon: "monitoring", label: t("feature.monitoring"), desc: t("feature.monitoringDesc") },
                         ].map((feature) => (
                             <div
                                 key={feature.icon}
@@ -148,9 +154,9 @@ export default function LoginPage() {
                 {/* Bottom stats */}
                 <div className="flex items-center gap-6">
                     {[
-                        { value: "10,000+", label: "Bệnh nhân" },
-                        { value: "200+", label: "Bác sĩ" },
-                        { value: "50+", label: "Chuyên khoa" },
+                        { value: "10,000+", label: t("statPatients") },
+                        { value: "200+", label: t("statDoctors") },
+                        { value: "50+", label: t("statSpecialties") },
                     ].map((stat) => (
                         <div key={stat.label}>
                             <p className="text-2xl font-bold text-white">{stat.value}</p>
@@ -176,15 +182,15 @@ export default function LoginPage() {
                     {/* Login card */}
                     <div className="bg-white/[0.07] backdrop-blur-xl rounded-2xl p-6 sm:p-8 border border-white/[0.1] shadow-2xl shadow-black/20">
                         <div className="text-center mb-5">
-                            <h2 className="text-2xl font-bold text-white mb-1">Đăng nhập</h2>
-                            <p className="text-[#94a3b8] text-sm">Chào mừng bạn trở lại hệ thống EHealth</p>
+                            <h2 className="text-2xl font-bold text-white mb-1">{t("title")}</h2>
+                            <p className="text-[#94a3b8] text-sm">{t("subtitle")}</p>
                         </div>
 
                         <form onSubmit={handleLogin} className="space-y-4">
                             {/* Email */}
                             <div>
                                 <label className="block text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-1.5">
-                                    Địa chỉ email
+                                    {t("emailLabel")}
                                 </label>
                                 <div className="relative">
                                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#64748b]" style={{ fontSize: "20px" }}>
@@ -204,7 +210,7 @@ export default function LoginPage() {
                             {/* Password */}
                             <div>
                                 <label className="block text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-1.5">
-                                    Mật khẩu
+                                    {t("passwordLabel")}
                                 </label>
                                 <div className="relative">
                                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#64748b]" style={{ fontSize: "20px" }}>
@@ -249,14 +255,14 @@ export default function LoginPage() {
                                         </div>
                                     </div>
                                     <span className="text-[#94a3b8] text-sm group-hover:text-white/80 transition-colors">
-                                        Ghi nhớ đăng nhập
+                                        {t("rememberMe")}
                                     </span>
                                 </label>
                                 <a
                                     href={ROUTES.PUBLIC.FORGOT_PASSWORD}
                                     className="text-[#60a5fa] text-sm hover:text-[#93c5fd] transition-colors font-medium"
                                 >
-                                    Quên mật khẩu?
+                                    {t("forgotPassword")}
                                 </a>
                             </div>
 
@@ -284,11 +290,11 @@ export default function LoginPage() {
                                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                                             />
                                         </svg>
-                                        <span>Đang đăng nhập...</span>
+                                        <span>{t("loggingIn")}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <span>Đăng nhập</span>
+                                        <span>{t("submit")}</span>
                                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
                                             arrow_forward
                                         </span>
@@ -300,9 +306,9 @@ export default function LoginPage() {
                         {/* Register link */}
                         <div className="mt-6 pt-5 border-t border-white/[0.06] text-center">
                             <p className="text-[#94a3b8] text-sm">
-                                Chưa có tài khoản?{" "}
+                                {t("noAccount")}{" "}
                                 <a href="/register" className="text-[#60a5fa] hover:text-[#93c5fd] font-semibold transition-colors">
-                                    Đăng ký ngay
+                                    {t("registerNow")}
                                 </a>
                             </p>
                         </div>
@@ -311,7 +317,7 @@ export default function LoginPage() {
                     {/* Footer */}
                     <div className="text-center mt-4">
                         <p className="text-[#475569] text-xs">
-                            © 2025 EHealth. Hệ thống Y tế Số — PTH Group
+                            {t("copyright")}
                         </p>
                     </div>
                 </div>

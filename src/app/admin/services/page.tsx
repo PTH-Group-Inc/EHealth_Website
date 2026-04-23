@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import {
     MEDICAL_SERVICE_MANAGEMENT_ENDPOINTS,
@@ -97,6 +98,8 @@ function mapFacilityService(s: any): FacilityService {
 
 export default function ServicesAdminPage() {
     const toast = useToast();
+    const t = useTranslations("pages.services");
+    const tc = useTranslations("common");
     const [tab, setTab] = useState<"master" | "facility">("master");
 
     // Master state
@@ -351,10 +354,10 @@ export default function ServicesAdminPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Dịch vụ y tế"
-                subtitle="Quản lý danh mục dịch vụ gốc và dịch vụ triển khai tại từng cơ sở"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="medical_information"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Dịch vụ" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] p-1 inline-flex gap-1">
@@ -367,7 +370,7 @@ export default function ServicesAdminPage() {
                     }`}
                 >
                     <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>list_alt</span>
-                    Danh mục gốc
+                    {t("tabMaster")}
                 </button>
                 <button
                     onClick={() => setTab("facility")}
@@ -378,7 +381,7 @@ export default function ServicesAdminPage() {
                     }`}
                 >
                     <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>domain</span>
-                    Theo cơ sở
+                    {t("tabFacility")}
                 </button>
             </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { unwrapList } from "@/api/response";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageAIContext } from "@/hooks/usePageAIContext";
@@ -786,6 +787,7 @@ function EmptyState({ icon, message }: { icon: string; message: string }) {
 export default function HealthRecordsPage() {
     usePageAIContext({ pageKey: 'health-records' });
     const { user } = useAuth();
+    const tp = useTranslations("pages.portal.patient.healthRecords");
     const [activeTab, setActiveTab] = useState("overview");
     const [selectedProfileId, setSelectedProfileId] = useState("");
     const [profiles, setProfiles] = useState<PatientProfile[]>([]);
@@ -1145,8 +1147,8 @@ export default function HealthRecordsPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-[#121417] dark:text-white">Hồ sơ sức khỏe điện tử</h1>
-                <p className="text-sm text-[#687582] mt-0.5">Theo dõi toàn diện sức khỏe của bạn qua thời gian</p>
+                <h1 className="text-2xl font-bold text-[#121417] dark:text-white">{tp("title")}</h1>
+                <p className="text-sm text-[#687582] mt-0.5">{tp("subtitle")}</p>
                 {profiles.length > 0 && (
                     <div className="mt-4 -mx-2 overflow-x-auto px-2 pb-2 hide-scrollbar">
                         <div className="flex min-w-max gap-3 pr-4 snap-x">

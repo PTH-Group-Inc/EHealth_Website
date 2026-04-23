@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import axiosClient from "@/api/axiosClient";
@@ -38,6 +39,7 @@ interface FamilyMember {
 export default function ProfilePage() {
     const { user, updateUser } = useAuth();
     const { showToast } = useToast();
+    const tp = useTranslations("pages.portal.patient.profile");
     const [activeTab, setActiveTab] = useState("personal");
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -239,8 +241,8 @@ export default function ProfilePage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Hồ sơ bệnh nhân</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Quản lý thông tin cá nhân và sức khoẻ</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{tp("title")}</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">{tp("subtitle")}</p>
                 </div>
             </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { BILLING_REFUND_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -71,6 +72,8 @@ function formatVND(n: number): string {
 
 export default function RefundsPage() {
     const toast = useToast();
+    const t = useTranslations("pages.refunds");
+    const tc = useTranslations("common");
     const [items, setItems] = useState<RefundRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -138,10 +141,10 @@ export default function RefundsPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Hoàn tiền"
-                subtitle="Quản lý yêu cầu hoàn tiền và điều chỉnh hoá đơn"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="currency_exchange"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Hoàn tiền" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

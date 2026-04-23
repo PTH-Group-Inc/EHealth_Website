@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { TELE_FOLLOWUP_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -55,6 +56,8 @@ function formatDate(d?: string): string {
 
 export default function TeleFollowUpsPage() {
     const toast = useToast();
+    const t = useTranslations("pages.tele.followups");
+    const tc = useTranslations("common");
     const [items, setItems] = useState<FollowUpPlan[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -109,10 +112,10 @@ export default function TeleFollowUpsPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Theo dõi sau khám online"
-                subtitle="Quản lý kế hoạch follow-up sau phiên tư vấn từ xa"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="event_repeat"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Telemedicine" }, { label: "Follow-up" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: "Telemedicine" }, { label: t("title") }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

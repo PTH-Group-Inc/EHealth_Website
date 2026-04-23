@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { TELE_QUALITY_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -60,15 +61,17 @@ function formatDT(d?: string): string {
 }
 
 export default function TeleQualityPage() {
+    const tr = useTranslations("pages.tele.quality");
+    const tc = useTranslations("common");
     const [tab, setTab] = useState<TabKey>("overview");
 
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Chất lượng telemedicine"
-                subtitle="Metrics kết nối, đánh giá của bệnh nhân, cảnh báo chất lượng cuộc gọi"
+                title={tr("title")}
+                subtitle={tr("subtitle")}
                 icon="star_rate"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Telemedicine" }, { label: "Chất lượng" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: "Telemedicine" }, { label: tr("title") }]}
             />
 
             <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm p-1.5 inline-flex gap-1">
@@ -182,7 +185,7 @@ function ReviewsTab() {
                                     <span className="ml-1 font-bold text-sm text-[#121417] dark:text-white">{r.rating}/5</span>
                                 </div>
                             </div>
-                            {r.comment && <p className="text-sm text-[#687582] dark:text-gray-400 italic">&quot;{r.comment}&quot;</p>}
+                            {r.comment && <p className="text-sm text-[#687582] dark:text-gray-400 italic">&ldquo;{r.comment}&rdquo;</p>}
                             <div className="text-xs text-[#687582] dark:text-gray-500 mt-2">{formatDT(r.createdAt)}</div>
                         </div>
                     ))}

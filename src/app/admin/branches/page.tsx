@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { BRANCH_MANAGEMENT_ENDPOINTS, FACILITY_MANAGEMENT_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -64,6 +65,8 @@ function mapFacility(f: any): FacilityLite {
 
 export default function BranchesAdminPage() {
     const toast = useToast();
+    const t = useTranslations("pages.branches");
+    const tc = useTranslations("common");
     const [branches, setBranches] = useState<Branch[]>([]);
     const [facilities, setFacilities] = useState<FacilityLite[]>([]);
     const [loading, setLoading] = useState(true);
@@ -202,30 +205,30 @@ export default function BranchesAdminPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Chi nhánh"
-                subtitle="Quản lý các chi nhánh thuộc cơ sở y tế — nơi vận hành lịch khám, booking và nhân sự"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="apartment"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Chi nhánh" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <button
                         onClick={openCreate}
                         className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md transition-all inline-flex items-center gap-1"
                     >
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
-                        Tạo chi nhánh
+                        {t("addButton")}
                     </button>
                 }
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Tổng chi nhánh" value={stats.total} icon="apartment" color="blue" loading={loading} />
-                <StatCard label="Đang hoạt động" value={stats.active} icon="check_circle" color="emerald" loading={loading} />
-                <StatCard label="Tạm dừng" value={stats.inactive} icon="pause_circle" color="amber" loading={loading} />
-                <StatCard label="Cơ sở y tế" value={stats.facilities} icon="domain" color="violet" loading={loading} />
+                <StatCard label={t("stats.total")} value={stats.total} icon="apartment" color="blue" loading={loading} />
+                <StatCard label={t("stats.active")} value={stats.active} icon="check_circle" color="emerald" loading={loading} />
+                <StatCard label={t("stats.inactive")} value={stats.inactive} icon="pause_circle" color="amber" loading={loading} />
+                <StatCard label={t("stats.facilities")} value={stats.facilities} icon="domain" color="violet" loading={loading} />
             </div>
 
             <FilterBar
-                searchPlaceholder="Tìm theo mã, tên, địa chỉ, SĐT..."
+                searchPlaceholder={t("filter.searchPlaceholder")}
                 searchValue={search}
                 onSearchChange={setSearch}
                 filters={[
@@ -304,7 +307,7 @@ export default function BranchesAdminPage() {
                                                 : "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
                                         }`}
                                     >
-                                        {b.status === "ACTIVE" ? "Hoạt động" : "Tạm dừng"}
+                                        {b.status === "ACTIVE" ? t("statusLabel.active") : t("statusLabel.inactive")}
                                     </span>
                                 </div>
 

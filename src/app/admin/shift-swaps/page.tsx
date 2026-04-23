@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { SHIFT_SWAP_ENDPOINTS, STAFF_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -72,6 +73,8 @@ function formatDate(d?: string): string {
 
 export default function ShiftSwapsAdminPage() {
     const toast = useToast();
+    const t = useTranslations("pages.shiftSwaps");
+    const tc = useTranslations("common");
     const [swaps, setSwaps] = useState<ShiftSwap[]>([]);
     const [staffList, setStaffList] = useState<StaffLite[]>([]);
     const [loading, setLoading] = useState(true);
@@ -175,10 +178,10 @@ export default function ShiftSwapsAdminPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Đổi ca"
-                subtitle="Duyệt yêu cầu đổi ca giữa các nhân sự y tế"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="swap_horiz"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Đổi ca" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

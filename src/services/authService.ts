@@ -119,6 +119,7 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
     } catch (error: any) {
         return {
             success: false,
+            code: error.response?.data?.code,
             message: error.response?.data?.message || 'Đăng nhập thất bại',
         };
     }

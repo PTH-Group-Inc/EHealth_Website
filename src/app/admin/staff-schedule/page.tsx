@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { staffScheduleService, type StaffSchedule } from "@/services/staffScheduleService";
 import { workShiftService, type WorkShift } from "@/services/workShiftService";
 import { useToast } from "@/contexts/ToastContext";
@@ -9,6 +10,8 @@ import { ScheduleCalendar, type ScheduleEvent } from "@/components/shared/calend
 
 export default function StaffSchedulePage() {
     const toast = useToast();
+    const t = useTranslations("pages.staffSchedule");
+    const tc = useTranslations("common");
     const [month, setMonth] = useState<Date>(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
     const [schedules, setSchedules] = useState<StaffSchedule[]>([]);
     const [shifts, setShifts] = useState<WorkShift[]>([]);
@@ -91,10 +94,10 @@ export default function StaffSchedulePage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Lịch làm việc nhân sự"
-                subtitle="Phân ca + theo dõi calendar tháng cho toàn bộ staff"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="calendar_month"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Lịch nhân sự" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <div className="inline-flex bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl p-1">
                         <button onClick={() => setView("calendar")}

@@ -1,137 +1,189 @@
 "use client";
 
-import { useState, useEffect } from "react";
+/**
+ * Pharmacist Settings — Phase K.5 (5 tab giống doctor/receptionist portal).
+ * Spec: dòng 9715-9997.
+ */
+
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { PageHeader, EmptyState } from "@/components/shared/layout";
+import { profileService, type MyProfile, type ProfileSession } from "@/services/profileService";
 import axiosClient from "@/api/axiosClient";
-import { PROFILE_ENDPOINTS } from "@/api/endpoints";
-import { useAuth } from "@/contexts/AuthContext";
 
-export default function PharmacistSettings() {
-    const { user: authUser, updateUser } = useAuth();
-    const [profile, setProfile] = useState({
-        name: authUser?.fullName ?? "", email: authUser?.email ?? "", phone: authUser?.phone ?? "", role: "Dược sĩ"
-    });
-    const [passwords, setPasswords] = useState({ current: "", newPass: "", confirm: "" });
-    const [notifications, setNotifications] = useState({ newPrescription: true, stockAlert: true, dailyReport: false });
+const TABS = [
+    { key: "profile", label: "Hồ sơ", icon: "person" },
+    { key: "security", label: "Bảo mật", icon: "lock" },
+    { key: "sessions", label: "Phiên đăng nhập", icon: "devices" },
+    { key: "settings", label: "Cài đặt", icon: "tune" },
+    { key: "notifications", label: "Thông báo", icon: "notifications" },
+] as const;
+
+type TabKey = typeof TABS[number]["key"];
+const fmtDateTime = (v?: string) => { if (!v) return "—"; try { return new Date(v).toLocaleString("vi-VN"); } catch { return v; } };
+
+function ProfileTab() {
+    const [me, setMe] = useState<MyProfile | null>(null);
+    const [form, setForm] = useState<Partial<MyProfile>>({});
     const [saving, setSaving] = useState(false);
-    const [saved, setSaved] = useState(false);
-    const [pwError, setPwError] = useState("");
 
-    useEffect(() => {
-        axiosClient.get(PROFILE_ENDPOINTS.ME)
-            .then(res => {
-                const d = res?.data?.data ?? res?.data;
-                if (d) setProfile({ name: d.fullName ?? d.name ?? profile.name, email: d.email ?? profile.email, phone: d.phone ?? profile.phone, role: d.role ?? profile.role });
-            })
-            .catch(() => {/* profile empty state */});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    useEffect(() => { profileService.getMe().then(p => { setMe(p); setForm(p); }).catch(() => {}); }, []);
 
-    const handleSaveProfile = async () => {
+    const onSave = async () => {
         setSaving(true);
-        try {
-            await axiosClient.put(PROFILE_ENDPOINTS.ME, { fullName: profile.name, phone: profile.phone });
-            if (updateUser) updateUser({ fullName: profile.name, phone: profile.phone } as any);
-        } catch {
-            // ignore
-        } finally {
-            setSaving(false);
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-        }
+        try { const u = await profileService.updateMe(form); setMe(u); alert("Đã lưu."); }
+        catch (e: any) { alert(e?.message ?? "Lưu thất bại"); }
+        finally { setSaving(false); }
     };
 
-    const handleChangePassword = () => {
-        setPwError("");
-        if (!passwords.current) { setPwError("Vui lòng nhập mật khẩu hiện tại"); return; }
-        if (passwords.newPass.length < 6) { setPwError("Mật khẩu mới phải có ít nhất 6 ký tự"); return; }
-        if (passwords.newPass !== passwords.confirm) { setPwError("Mật khẩu xác nhận không khớp"); return; }
-        alert("Đổi mật khẩu thành công!");
-        setPasswords({ current: "", newPass: "", confirm: "" });
-    };
+    if (!me) return <p className="text-center py-8 text-[#687582]">Đang tải…</p>;
 
     return (
-        <div className="p-6 md:p-8"><div className="max-w-3xl mx-auto space-y-6">
+        <div className="bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-5 space-y-4">
+            <h3 className="text-sm font-bold">Thông tin cá nhân</h3>
             <div>
-                <h1 className="text-2xl font-bold text-[#121417] dark:text-white">Cài đặt</h1>
-                <p className="text-sm text-[#687582] mt-1">Quản lý thông tin cá nhân và tùy chỉnh</p>
+                <label className="block text-xs text-[#687582] mb-1">Họ tên</label>
+                <input value={form.fullName ?? (form as any).full_name ?? ""} onChange={e => setForm({ ...form, fullName: e.target.value })} className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]" />
             </div>
+            <div>
+                <label className="block text-xs text-[#687582] mb-1">Email</label>
+                <input value={form.email ?? ""} disabled className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-gray-50 dark:bg-gray-900 text-[#687582]" />
+            </div>
+            <div>
+                <label className="block text-xs text-[#687582] mb-1">SĐT</label>
+                <input value={form.phone ?? ""} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]" />
+            </div>
+            <button onClick={onSave} disabled={saving} className="px-4 py-2 text-sm rounded-lg bg-[#3C81C6] text-white disabled:opacity-50">{saving ? "Đang lưu…" : "Lưu"}</button>
+        </div>
+    );
+}
 
-            {/* Profile */}
-            <div className="bg-white dark:bg-[#1e242b] rounded-xl border border-[#dde0e4] dark:border-[#2d353e] p-6">
-                <h2 className="text-lg font-bold text-[#121417] dark:text-white mb-4">Thông tin cá nhân</h2>
-                <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-xl">DS</div>
-                    <div>
-                        <p className="text-lg font-semibold text-[#121417] dark:text-white">{profile.name}</p>
-                        <p className="text-sm text-[#687582]">Dược sĩ • Quầy phát thuốc số 2</p>
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
-                        { l: "Họ tên", k: "name" as const }, { l: "Email", k: "email" as const },
-                        { l: "Số điện thoại", k: "phone" as const }, { l: "Vai trò", k: "role" as const },
-                    ].map((f) => (
-                        <div key={f.l}>
-                            <label className="block text-sm font-medium text-[#687582] mb-1">{f.l}</label>
-                            <input type="text" value={profile[f.k]} onChange={(e) => setProfile({ ...profile, [f.k]: e.target.value })}
-                                disabled={f.k === "role"}
-                                className="w-full px-3 py-2 border border-[#dde0e4] dark:border-[#2d353e] rounded-lg text-sm bg-white dark:bg-[#13191f] outline-none focus:border-[#3C81C6] disabled:opacity-50 disabled:cursor-not-allowed" />
-                        </div>
+function SecurityTab() {
+    const [current, setCurrent] = useState(""); const [next, setNext] = useState(""); const [cfm, setCfm] = useState(""); const [saving, setSaving] = useState(false);
+    const onChange = async () => {
+        if (next !== cfm) return alert("Không khớp.");
+        if (next.length < 8) return alert("≥8 ký tự.");
+        setSaving(true);
+        try { await profileService.changePassword({ currentPassword: current, newPassword: next }); alert("Đã đổi."); setCurrent(""); setNext(""); setCfm(""); }
+        catch (e: any) { alert(e?.response?.data?.message ?? "Đổi thất bại"); }
+        finally { setSaving(false); }
+    };
+    return (
+        <div className="max-w-xl bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-5 space-y-4">
+            <h3 className="text-sm font-bold">Đổi mật khẩu</h3>
+            <input type="password" value={current} onChange={e => setCurrent(e.target.value)} placeholder="Mật khẩu hiện tại" className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]" />
+            <input type="password" value={next} onChange={e => setNext(e.target.value)} placeholder="Mật khẩu mới (≥8)" className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]" />
+            <input type="password" value={cfm} onChange={e => setCfm(e.target.value)} placeholder="Xác nhận" className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]" />
+            <button onClick={onChange} disabled={saving || !current || !next} className="w-full px-4 py-2 text-sm rounded-lg bg-[#3C81C6] text-white disabled:opacity-50">{saving ? "Đang đổi…" : "Đổi mật khẩu"}</button>
+        </div>
+    );
+}
+
+function SessionsTab() {
+    const [items, setItems] = useState<ProfileSession[]>([]); const [loading, setLoading] = useState(true);
+    const load = useCallback(async () => { setLoading(true); try { const r = await profileService.getSessions(); setItems((r as any)?.data ?? []); } finally { setLoading(false); } }, []);
+    useEffect(() => { load(); }, [load]);
+    return (
+        <div className="bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#e5e7eb] dark:border-[#2d353e] flex justify-between items-center">
+                <h3 className="text-sm font-bold">Phiên ({items.length})</h3>
+                {items.length > 1 && <button onClick={async () => { if (!confirm("Đăng xuất tất cả khác?")) return; await profileService.logoutAllOthers(); await load(); }} className="px-3 py-1.5 text-xs rounded bg-rose-50 text-rose-700">Đăng xuất khác</button>}
+            </div>
+            {loading ? <p className="p-4 text-center text-xs text-[#687582]">Đang tải…</p>
+            : items.length === 0 ? <EmptyState icon="devices" title="Không có session" />
+            : (
+                <ul className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
+                    {items.map((s: any) => (
+                        <li key={s.id} className="p-4 flex items-center gap-3">
+                            <span className="material-symbols-outlined text-[24px] text-[#3C81C6]">devices</span>
+                            <div className="flex-1">
+                                <p className="font-medium text-sm">{s.deviceName ?? s.device_name ?? "Thiết bị"}{s.isCurrent && <span className="ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">Hiện tại</span>}</p>
+                                <p className="text-xs text-[#687582]">{s.ip ?? "—"} · {fmtDateTime(s.loginAt ?? s.login_at)}</p>
+                            </div>
+                            {!s.isCurrent && <button onClick={async () => { if (!confirm("Đăng xuất?")) return; await profileService.logoutSession(s.id); await load(); }} className="px-2 py-1 text-xs rounded text-rose-600 hover:bg-rose-50">Đăng xuất</button>}
+                        </li>
                     ))}
-                </div>
-                <div className="flex items-center gap-3 mt-4">
-                    <button onClick={handleSaveProfile} disabled={saving}
-                        className="px-4 py-2 bg-[#3C81C6] hover:bg-[#2a6da8] text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-70 flex items-center gap-2">
-                        {saving ? <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Đang lưu...</> : "Lưu thay đổi"}
+                </ul>
+            )}
+        </div>
+    );
+}
+
+function SettingsTab() {
+    const [theme, setTheme] = useState("light"); const [language, setLanguage] = useState("vi"); const [email, setEmail] = useState(true); const [saving, setSaving] = useState(false);
+    useEffect(() => { profileService.getMe().then((p: any) => { const s = p?.settings ?? {}; setTheme(s.theme ?? "light"); setLanguage(s.language ?? "vi"); setEmail(s.email_notification ?? true); }).catch(() => {}); }, []);
+    const onSave = async () => { setSaving(true); try { await profileService.updateSettings({ theme, language, email_notification: email }); alert("Đã lưu."); } catch (e: any) { alert(e?.message); } finally { setSaving(false); } };
+    return (
+        <div className="max-w-xl bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-5 space-y-4">
+            <h3 className="text-sm font-bold">Tuỳ chọn</h3>
+            <select value={theme} onChange={e => setTheme(e.target.value)} className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]"><option value="light">Sáng</option><option value="dark">Tối</option><option value="system">Hệ thống</option></select>
+            <select value={language} onChange={e => setLanguage(e.target.value)} className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]"><option value="vi">Tiếng Việt</option><option value="en">English</option><option value="zh-CN">中文</option></select>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={email} onChange={e => setEmail(e.target.checked)} /> Email notification</label>
+            <button onClick={onSave} disabled={saving} className="w-full px-4 py-2 text-sm rounded-lg bg-[#3C81C6] text-white disabled:opacity-50">{saving ? "Đang lưu…" : "Lưu"}</button>
+        </div>
+    );
+}
+
+function NotificationsTab() {
+    const [items, setItems] = useState<any[]>([]); const [loading, setLoading] = useState(true);
+    const load = useCallback(async () => { setLoading(true); try { const r = await axiosClient.get("/api/notifications/inbox"); setItems(r?.data?.data ?? r?.data ?? []); } catch { setItems([]); } finally { setLoading(false); } }, []);
+    useEffect(() => { load(); }, [load]);
+    return (
+        <div className="bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#e5e7eb] dark:border-[#2d353e] flex justify-end">
+                <button onClick={async () => { await axiosClient.put("/api/notifications/inbox/read-all").catch(() => {}); await load(); }} className="px-3 py-1.5 text-xs rounded bg-blue-50 text-blue-700">Đã đọc tất cả</button>
+            </div>
+            {loading ? <p className="p-4 text-center text-xs text-[#687582]">Đang tải…</p>
+            : items.length === 0 ? <EmptyState icon="notifications" title="Không có thông báo" />
+            : (
+                <ul className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
+                    {items.map((n: any) => (
+                        <li key={n.id} className={`p-4 flex items-start gap-3 ${!(n.read_at || n.is_read) ? "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}>
+                            <span className="material-symbols-outlined text-[#3C81C6]">notifications</span>
+                            <div className="flex-1">
+                                <p className="font-medium text-sm">{n.title ?? "Thông báo"}</p>
+                                <p className="text-sm text-[#687582]">{n.body ?? n.content}</p>
+                                <p className="text-xs text-[#687582] mt-1">{fmtDateTime(n.created_at)}</p>
+                            </div>
+                            {!(n.read_at || n.is_read) && <button onClick={async () => { await axiosClient.put(`/api/notifications/inbox/${n.id}/read`).catch(() => {}); await load(); }} className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-800">Đã đọc</button>}
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+}
+
+export default function PharmacistSettingsPage() {
+    const sp = useSearchParams();
+    const router = useRouter();
+    const initialTab = (sp.get("tab") as TabKey) ?? "profile";
+    const [tab, setTab] = useState<TabKey>(initialTab);
+    const onTab = (t: TabKey) => { setTab(t); const url = new URL(window.location.href); url.searchParams.set("tab", t); router.replace(url.pathname + url.search); };
+
+    return (
+        <div className="p-6 md:p-8 max-w-7xl mx-auto">
+            <PageHeader
+                title="Tài khoản của tôi"
+                subtitle="Hồ sơ, bảo mật, sessions, cài đặt và thông báo cá nhân."
+                icon="account_circle"
+                breadcrumbs={[
+                    { label: "Portal", href: "/portal/pharmacist" },
+                    { label: "Tài khoản của tôi" },
+                ]}
+            />
+            <div className="flex flex-wrap gap-2 mb-4 border-b border-[#e5e7eb] dark:border-[#2d353e]">
+                {TABS.map(t => (
+                    <button key={t.key} onClick={() => onTab(t.key)} className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${tab === t.key ? "border-[#3C81C6] text-[#3C81C6]" : "border-transparent text-[#687582] hover:text-[#121417] dark:hover:text-white"}`}>
+                        <span className="material-symbols-outlined text-[16px] mr-1 align-middle">{t.icon}</span>{t.label}
                     </button>
-                    {saved && <span className="text-sm text-green-600 flex items-center gap-1"><span className="material-symbols-outlined" style={{ fontSize: "16px" }}>check_circle</span>Đã lưu!</span>}
-                </div>
+                ))}
             </div>
-
-            {/* Password */}
-            <div className="bg-white dark:bg-[#1e242b] rounded-xl border border-[#dde0e4] dark:border-[#2d353e] p-6">
-                <h2 className="text-lg font-bold text-[#121417] dark:text-white mb-4">Đổi mật khẩu</h2>
-                {pwError && (
-                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2">
-                        <span className="material-symbols-outlined text-red-600" style={{ fontSize: "18px" }}>error</span>
-                        <span className="text-sm text-red-700 dark:text-red-400">{pwError}</span>
-                    </div>
-                )}
-                <div className="space-y-4 max-w-md">
-                    {[
-                        { l: "Mật khẩu hiện tại", k: "current" as const },
-                        { l: "Mật khẩu mới", k: "newPass" as const },
-                        { l: "Xác nhận mật khẩu mới", k: "confirm" as const },
-                    ].map((f) => (
-                        <div key={f.l}>
-                            <label className="block text-sm font-medium text-[#687582] mb-1">{f.l}</label>
-                            <input type="password" value={passwords[f.k]} onChange={(e) => setPasswords({ ...passwords, [f.k]: e.target.value })}
-                                placeholder="••••••••" className="w-full px-3 py-2 border border-[#dde0e4] dark:border-[#2d353e] rounded-lg text-sm bg-white dark:bg-[#13191f] outline-none focus:border-[#3C81C6]" />
-                        </div>
-                    ))}
-                </div>
-                <button onClick={handleChangePassword} className="mt-4 px-4 py-2 bg-[#3C81C6] hover:bg-[#2a6da8] text-white text-sm font-medium rounded-lg transition-colors">Đổi mật khẩu</button>
-            </div>
-
-            {/* Notifications */}
-            <div className="bg-white dark:bg-[#1e242b] rounded-xl border border-[#dde0e4] dark:border-[#2d353e] p-6">
-                <h2 className="text-lg font-bold text-[#121417] dark:text-white mb-4">Thông báo</h2>
-                <div className="space-y-3">
-                    {[
-                        { l: "Đơn thuốc mới", d: "Nhận thông báo khi có đơn thuốc cần cấp phát", k: "newPrescription" as const },
-                        { l: "Cảnh báo tồn kho", d: "Thông báo khi thuốc sắp hết hoặc hết hạn", k: "stockAlert" as const },
-                        { l: "Báo cáo hàng ngày", d: "Nhận tóm tắt cuối ngày", k: "dailyReport" as const },
-                    ].map((n) => (
-                        <div key={n.l} className="flex items-center justify-between p-3 rounded-xl bg-[#f6f7f8] dark:bg-[#13191f]">
-                            <div><p className="text-sm font-medium text-[#121417] dark:text-white">{n.l}</p><p className="text-xs text-[#687582]">{n.d}</p></div>
-                            <button onClick={() => setNotifications({ ...notifications, [n.k]: !notifications[n.k] })}
-                                className={`w-10 h-6 rounded-full flex items-center px-0.5 cursor-pointer transition-colors ${notifications[n.k] ? "bg-[#3C81C6] justify-end" : "bg-gray-300 dark:bg-gray-600 justify-start"}`}>
-                                <div className="w-5 h-5 bg-white rounded-full shadow transition-transform" />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div></div>
+            {tab === "profile" && <ProfileTab />}
+            {tab === "security" && <SecurityTab />}
+            {tab === "sessions" && <SessionsTab />}
+            {tab === "settings" && <SettingsTab />}
+            {tab === "notifications" && <NotificationsTab />}
+        </div>
     );
 }

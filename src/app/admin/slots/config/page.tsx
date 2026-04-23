@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { APPOINTMENT_SLOT_ENDPOINTS, STAFF_ENDPOINTS, DEPARTMENT_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -98,6 +99,8 @@ function formatDate(d: string): string {
 
 export default function SlotsConfigPage() {
     const toast = useToast();
+    const t = useTranslations("pages.slotsConfig");
+    const tc = useTranslations("common");
     const [slots, setSlots] = useState<Slot[]>([]);
     const [doctors, setDoctors] = useState<DoctorLite[]>([]);
     const [departments, setDepartments] = useState<DeptLite[]>([]);
@@ -273,10 +276,10 @@ export default function SlotsConfigPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Cấu hình khung giờ khám"
-                subtitle="Tạo & quản lý slot khám theo bác sĩ, ngày và thời lượng"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="schedule"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Cấu hình slot" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <div className="flex items-center gap-2">
                         <button

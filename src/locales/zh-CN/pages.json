@@ -1,0 +1,740 @@
+{
+    "dashboard": {
+        "title": "仪表盘",
+        "welcome": "欢迎回来",
+        "overview": "概览",
+        "todayReport": "今日报告"
+    },
+    "users": {
+        "title": "员工管理",
+        "subtitle": "系统中的用户账户列表",
+        "addButton": "添加员工",
+        "stats": {
+            "total": "员工总数",
+            "active": "活动",
+            "inactive": "停用",
+            "banned": "已封禁",
+            "rolesCount": "角色数量"
+        }
+    },
+    "doctors": {
+        "title": "医生列表",
+        "subtitle": "管理医生档案、执照和值班表",
+        "addButton": "添加医生",
+        "stats": {
+            "totalDoctors": "医生总数",
+            "onDuty": "当班中",
+            "pendingAssignment": "待分配",
+            "avgPerformance": "平均绩效"
+        }
+    },
+    "hospitals": {
+        "title": "机构 / 医院",
+        "subtitle": "管理系统中的医疗机构",
+        "addButton": "添加机构",
+        "stats": {
+            "total": "机构总数",
+            "doctors": "医生总数",
+            "active": "启用中"
+        },
+        "filter": {
+            "searchPlaceholder": "搜索机构..."
+        },
+        "statusLabel": {
+            "active": "启用",
+            "inactive": "停用"
+        },
+        "units": {
+            "doctors": "医生",
+            "departments": "专科"
+        }
+    },
+    "branches": {
+        "title": "分支机构",
+        "subtitle": "管理医疗机构的分支",
+        "addButton": "添加分支",
+        "stats": {
+            "total": "分支总数",
+            "active": "启用中",
+            "inactive": "已暂停",
+            "facilities": "医疗机构"
+        },
+        "filter": {
+            "searchPlaceholder": "按编号、名称、地址、电话搜索..."
+        },
+        "statusLabel": {
+            "active": "启用",
+            "inactive": "已暂停"
+        }
+    },
+    "departments": {
+        "title": "科室",
+        "subtitle": "管理医院内的科室",
+        "addButton": "添加科室",
+        "stats": {
+            "total": "科室总数",
+            "active": "启用科室",
+            "totalDoctors": "医生总数",
+            "totalPatients": "患者总数"
+        },
+        "filter": {
+            "searchPlaceholder": "按名称、科室编号搜索..."
+        },
+        "statusLabel": {
+            "active": "启用",
+            "inactive": "停用",
+            "maintenance": "维护中"
+        }
+    },
+    "specialties": {
+        "title": "专科",
+        "subtitle": "医学专科目录",
+        "addButton": "添加专科",
+        "stats": {
+            "total": "专科总数",
+            "active": "启用中",
+            "doctors": "医生总数",
+            "services": "服务总数"
+        },
+        "filter": {
+            "searchPlaceholder": "按编号或名称搜索..."
+        },
+        "statusLabel": {
+            "active": "启用",
+            "inactive": "停用"
+        },
+        "units": {
+            "doctors": "医生",
+            "services": "服务"
+        },
+        "empty": {
+            "none": "暂无专科",
+            "noneDesc": "添加第一个专科。",
+            "noMatch": "无匹配搜索结果",
+            "noMatchDesc": "请尝试更换关键词。"
+        },
+        "modal": {
+            "titleCreate": "添加专科",
+            "titleEdit": "编辑专科",
+            "code": "编号",
+            "icon": "图标",
+            "name": "名称",
+            "description": "描述",
+            "iconPreview": "图标预览:"
+        },
+        "toast": {
+            "requiredCodeName": "请输入专科编号和名称。",
+            "loadError": "无法加载专科数据。"
+        }
+    },
+    "services": {
+        "title": "医疗服务",
+        "subtitle": "管理医疗服务",
+        "tabMaster": "主服务",
+        "tabFacility": "机构服务"
+    },
+    "clinicRooms": {
+        "title": "诊室",
+        "subtitle": "管理诊室及服务分配",
+        "addButton": "添加诊室"
+    },
+    "equipment": {
+        "title": "医疗设备",
+        "subtitle": "管理设备和维护计划",
+        "addButton": "添加设备"
+    },
+    "beds": {
+        "title": "病床",
+        "subtitle": "按房间和使用状态管理病床资源",
+        "addButton": "添加病床",
+        "stats": {
+            "total": "病床总数",
+            "available": "可用",
+            "occupied": "使用中",
+            "maintenance": "维护中"
+        },
+        "filter": {
+            "searchPlaceholder": "按编号、名称、房间、患者搜索..."
+        },
+        "statusLabel": {
+            "available": "可用",
+            "occupied": "使用中",
+            "maintenance": "维护中",
+            "reserved": "已预留"
+        }
+    },
+    "shifts": {
+        "title": "班次",
+        "subtitle": "管理早/午/晚班"
+    },
+    "staffSchedule": {
+        "title": "排班表",
+        "subtitle": "为员工分配班次"
+    },
+    "schedules": {
+        "title": "值班表",
+        "subtitle": "医生每日值班表"
+    },
+    "leaves": {
+        "title": "员工请假",
+        "subtitle": "审批/拒绝医生、护士和医务人员的请假申请"
+    },
+    "shiftSwaps": {
+        "title": "换班",
+        "subtitle": "审批员工之间的换班请求"
+    },
+    "slotsConfig": {
+        "title": "预约时段配置",
+        "subtitle": "按医生、日期和时长创建和管理预约时段"
+    },
+    "slotsLocked": {
+        "title": "锁定的时段",
+        "subtitle": "当医生不可用、房间维护或暂停预约时临时锁定时段"
+    },
+    "shiftServices": {
+        "title": "分配服务到班次",
+        "subtitle": "配置每个班次可提供的服务"
+    },
+    "serviceDurations": {
+        "title": "按机构的服务时长",
+        "subtitle": "为每个机构的每项服务配置检查/处理时长"
+    },
+    "bookingConfigs": {
+        "title": "按分支的预约配置",
+        "subtitle": "设置分支特定的预约规则"
+    },
+    "operatingHours": {
+        "title": "营业时间与假日",
+        "subtitle": "管理开放时间、特殊休息日和节假日"
+    },
+    "facilityStatus": {
+        "title": "机构状态",
+        "subtitle": "快速查看今日机构状态和未来14天运营计划"
+    },
+    "doctorLoad": {
+        "title": "医生负载均衡",
+        "subtitle": "负载分析和医生协调建议"
+    },
+    "doctorAvailability": {
+        "title": "医生空闲与请假",
+        "subtitle": "跟踪医生每日空闲并管理临时缺席"
+    },
+    "appointmentChanges": {
+        "title": "预约变更历史",
+        "subtitle": "所有改期/取消/换医生/换房间请求的统计与跟踪"
+    },
+    "suppliers": {
+        "title": "供应商",
+        "subtitle": "管理药品和医疗用品供应商",
+        "addButton": "添加供应商",
+        "stats": {
+            "total": "供应商总数",
+            "active": "合作中",
+            "inactive": "已停用",
+            "withContact": "有联系方式"
+        },
+        "filter": {
+            "searchPlaceholder": "按编号、名称、税号、电话搜索...",
+            "active": "合作中",
+            "inactive": "已停用"
+        },
+        "table": {
+            "codeName": "编号 / 名称",
+            "taxCode": "税号",
+            "contact": "联系方式",
+            "address": "地址"
+        },
+        "statusLabel": {
+            "active": "合作中",
+            "inactive": "已停用"
+        },
+        "empty": {
+            "none": "暂无供应商",
+            "noneDesc": "添加第一个供应商以开始入库。",
+            "noMatch": "未匹配筛选条件",
+            "noMatchDesc": "请尝试更换关键词。"
+        },
+        "modal": {
+            "titleCreate": "添加供应商",
+            "titleEdit": "编辑供应商",
+            "code": "供应商编号",
+            "codePlaceholder": "如:NCC001",
+            "taxCode": "税号",
+            "name": "供应商名称",
+            "contactPerson": "联系人",
+            "phone": "电话",
+            "email": "邮箱",
+            "address": "地址",
+            "note": "备注"
+        },
+        "toast": {
+            "requiredCodeName": "请输入供应商编号和名称。",
+            "loadError": "无法加载供应商列表。"
+        }
+    },
+    "warehouses": {
+        "title": "仓库管理",
+        "subtitle": "物资、药品和设备仓库",
+        "addButton": "添加仓库",
+        "stats": {
+            "total": "仓库总数",
+            "active": "使用中",
+            "pharmacy": "药品仓",
+            "equipment": "设备仓"
+        },
+        "filter": {
+            "searchPlaceholder": "按编号、名称、管理员搜索...",
+            "typeLabel": "仓库类型",
+            "allTypes": "全部类型"
+        },
+        "type": {
+            "main": "主仓库",
+            "pharmacy": "药品仓",
+            "equipment": "设备仓",
+            "consumable": "耗材仓",
+            "other": "其他"
+        },
+        "statusLabel": {
+            "active": "使用中",
+            "inactive": "已停用"
+        },
+        "empty": {
+            "none": "暂无仓库",
+            "noneDesc": "添加第一个仓库。",
+            "noMatch": "没有匹配的仓库",
+            "noMatchDesc": "请尝试更改筛选条件。"
+        },
+        "modal": {
+            "titleCreate": "添加仓库",
+            "titleEdit": "编辑仓库",
+            "code": "仓库编号",
+            "type": "仓库类型",
+            "name": "仓库名称",
+            "manager": "仓库管理员",
+            "phone": "电话",
+            "address": "地址",
+            "note": "备注"
+        },
+        "actions": {
+            "activate": "启用",
+            "deactivate": "停用"
+        },
+        "toast": {
+            "requiredCodeName": "请输入仓库编号和名称。",
+            "loadError": "无法加载仓库列表。",
+            "activated": "已启用。",
+            "deactivated": "已停用。",
+            "toggleFailed": "无法更改状态。"
+        }
+    },
+    "pharmacyCategories": {
+        "title": "药品分类",
+        "subtitle": "按类别分类药品(抗生素、止痛药、心血管等)"
+    },
+    "billingInvoices": {
+        "title": "发票",
+        "subtitle": "管理所有患者账单发票"
+    },
+    "pricingPolicies": {
+        "title": "服务定价策略",
+        "subtitle": "按机构和生效期配置医疗服务定价"
+    },
+    "eInvoices": {
+        "title": "电子发票",
+        "subtitle": "向患者签发和发送电子发票"
+    },
+    "promotions": {
+        "title": "促销",
+        "subtitle": "折扣、优惠券和套餐服务"
+    },
+    "paymentGateway": {
+        "title": "支付网关",
+        "subtitle": "SePay 配置 + 收银员权限"
+    },
+    "reconciliation": {
+        "title": "支付对账",
+        "subtitle": "收银员班次对账和在线支付"
+    },
+    "refunds": {
+        "title": "退款",
+        "subtitle": "退款请求和发票调整"
+    },
+    "tele": {
+        "types": {
+            "title": "远程医疗类型",
+            "subtitle": "配置远程会诊类型和定价"
+        },
+        "bookings": {
+            "title": "远程会诊预约",
+            "subtitle": "在线会诊预约列表"
+        },
+        "rooms": {
+            "title": "活动会议室",
+            "subtitle": "实时 — 正在进行的会诊房间"
+        },
+        "results": {
+            "title": "在线会诊结果",
+            "subtitle": "诊断、结论和会诊后处方"
+        },
+        "prescriptions": {
+            "title": "在线处方",
+            "subtitle": "医生在会诊期间签署的处方"
+        },
+        "followups": {
+            "title": "随访",
+            "subtitle": "会诊后随访计划"
+        },
+        "quality": {
+            "title": "会诊质量",
+            "subtitle": "评价、投诉和质量警报"
+        }
+    },
+    "permissions": {
+        "title": "系统权限",
+        "subtitle": "权限、菜单、API 权限和模块"
+    },
+    "masterData": {
+        "title": "主数据",
+        "subtitle": "系统范围的参考目录(分类 + 项目)"
+    },
+    "notifications": {
+        "roleConfigs": {
+            "title": "按角色通知配置",
+            "subtitle": "按角色和事件类型启用/禁用通知渠道"
+        },
+        "broadcast": {
+            "title": "广播通知",
+            "subtitle": "同时向多个角色发送通知"
+        }
+    },
+    "role": {
+        "detail": {
+            "title": "角色权限",
+            "subtitle": "为角色分配权限、菜单和 API 权限"
+        }
+    },
+    "cashier": {
+        "offline": {
+            "title": "离线 POS 收银",
+            "subtitle": "柜台现金支付"
+        }
+    },
+    "queue": {
+        "batch": {
+            "title": "批量操作与二维码签到",
+            "subtitle": "批量预约确认、短信/邮件提醒、快速二维码签到"
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "登录",
+            "subtitle": "欢迎回到 EHealth 系统",
+            "redirecting": "正在跳转...",
+            "platformTagline": "数字医疗平台",
+            "heroLine1": "智能",
+            "heroLine2": "数字医疗",
+            "heroLine3": "平台",
+            "heroDescription": "全面的医疗管理系统,集成 AI 辅助诊断、预约管理、电子处方和患者健康监测。",
+            "feature": {
+                "ai": "AI 助手",
+                "aiDesc": "智能诊断",
+                "appointment": "预约",
+                "appointmentDesc": "在线预约",
+                "prescription": "处方",
+                "prescriptionDesc": "电子处方",
+                "monitoring": "监测",
+                "monitoringDesc": "在线健康追踪"
+            },
+            "statPatients": "患者",
+            "statDoctors": "医生",
+            "statSpecialties": "专科",
+            "emailLabel": "邮箱地址",
+            "passwordLabel": "密码",
+            "rememberMe": "记住登录",
+            "forgotPassword": "忘记密码?",
+            "loggingIn": "登录中...",
+            "submit": "登录",
+            "noAccount": "还没有账号?",
+            "registerNow": "立即注册",
+            "copyright": "© 2025 EHealth. 数字医疗系统 — PTH Group",
+            "errorDefault": "登录失败。请检查您的凭据。"
+        },
+        "register": {
+            "title": "注册账号",
+            "subtitle": "创建新账号以使用 EHealth 系统",
+            "fullNameLabel": "姓名",
+            "emailLabel": "邮箱地址",
+            "phoneLabel": "电话号码",
+            "passwordLabel": "密码",
+            "confirmPasswordLabel": "确认密码",
+            "submit": "注册",
+            "registering": "注册中...",
+            "hasAccount": "已有账号?",
+            "loginLink": "登录"
+        },
+        "forgotPassword": {
+            "title": "忘记密码",
+            "subtitle": "输入邮箱以接收密码恢复说明",
+            "emailLabel": "邮箱地址",
+            "submit": "发送请求",
+            "sending": "发送中...",
+            "backToLogin": "返回登录"
+        },
+        "otp": {
+            "title": "OTP 验证",
+            "subtitle": "输入发送到邮箱的 OTP 验证码",
+            "codeLabel": "验证码",
+            "submit": "验证",
+            "verifying": "验证中...",
+            "resend": "重新发送",
+            "resendIn": "{seconds} 秒后重新发送"
+        },
+        "verifyEmail": {
+            "title": "邮箱验证",
+            "subtitle": "请检查邮箱以验证账号",
+            "verifying": "正在验证邮箱...",
+            "success": "验证成功!",
+            "goToLogin": "前往登录"
+        }
+    },
+    "public": {
+        "landing": {
+            "title": "EHealth — 数字医疗平台",
+            "subtitle": "智能医疗,连接医生与患者"
+        },
+        "specialties": {
+            "title": "专科",
+            "subtitle": "医学专科目录"
+        },
+        "booking": {
+            "title": "预约挂号",
+            "subtitle": "在线预约合适的医生"
+        },
+        "doctors": {
+            "title": "查找医生",
+            "subtitle": "按专科和机构查看医生目录"
+        },
+        "doctorDetail": {
+            "title": "医生资料",
+            "subtitle": "专业资料和工作时间"
+        }
+    },
+    "portal": {
+        "doctor": {
+            "dashboard": {
+                "title": "概览",
+                "subtitle": "您好,这是您今天的活动报告。"
+            },
+            "appointments": {
+                "title": "预约管理",
+                "subtitle": "查看和管理就诊预约。"
+            },
+            "appointmentsNew": {
+                "title": "新建预约",
+                "subtitle": "为患者创建新的就诊预约。"
+            },
+            "manageSlots": {
+                "title": "管理空闲时段",
+                "subtitle": "为预约配置可用时段。"
+            },
+            "queue": {
+                "title": "就诊队列",
+                "subtitle": "管理等待就诊的患者队列。"
+            },
+            "examination": {
+                "title": "诊疗",
+                "subtitle": "对患者进行检查并记录信息。"
+            },
+            "medicalRecords": {
+                "title": "病历管理",
+                "subtitle": "查看和管理患者病历。"
+            },
+            "ehr": {
+                "title": "电子健康档案(EHR)",
+                "subtitle": "查看患者的完整健康数据。"
+            },
+            "encounters": {
+                "title": "就诊记录",
+                "subtitle": "患者就诊历史。"
+            },
+            "diagnosis": {
+                "title": "诊断",
+                "subtitle": "录入诊断和检查结论。"
+            },
+            "clinicalExam": {
+                "title": "临床检查",
+                "subtitle": "记录临床症状和生命体征。"
+            },
+            "prescriptions": {
+                "title": "处方列表",
+                "subtitle": "管理并跟踪开方历史。"
+            },
+            "prescriptionsNew": {
+                "title": "新建处方",
+                "subtitle": "为患者开具处方。"
+            },
+            "aiAssistant": {
+                "title": "AI 助手",
+                "subtitle": "AI 辅助诊断和开方。"
+            },
+            "telemedicine": {
+                "title": "远程医疗",
+                "subtitle": "在线问诊与远程诊疗。"
+            },
+            "settings": {
+                "title": "设置",
+                "subtitle": "管理个人信息和系统设置。"
+            }
+        },
+        "pharmacist": {
+            "dashboard": {
+                "title": "药剂师概览",
+                "subtitle": "今日发药和库存统计。"
+            },
+            "prescriptions": {
+                "title": "待配处方",
+                "subtitle": "来自医生的待配处方。"
+            },
+            "dispensing": {
+                "title": "发药",
+                "subtitle": "按处方为患者发药。"
+            },
+            "inventory": {
+                "title": "药品库存",
+                "subtitle": "管理药品和耗材库存。"
+            },
+            "inventoryImport": {
+                "title": "入库",
+                "subtitle": "接收供应商的药品。"
+            },
+            "stockOut": {
+                "title": "出库",
+                "subtitle": "药品出库单。"
+            },
+            "settings": {
+                "title": "设置",
+                "subtitle": "管理个人信息。"
+            }
+        },
+        "staff": {
+            "dashboard": {
+                "title": "前台概览",
+                "subtitle": "今日接诊和预约活动。"
+            },
+            "reception": {
+                "title": "患者接诊",
+                "subtitle": "登记和接待到院患者。"
+            },
+            "appointments": {
+                "title": "预约管理",
+                "subtitle": "机构的就诊预约。"
+            },
+            "appointmentsNew": {
+                "title": "新建预约",
+                "subtitle": "为患者创建预约。"
+            },
+            "queue": {
+                "title": "就诊队列",
+                "subtitle": "管理患者等待队列。"
+            },
+            "queueBatch": {
+                "title": "批量操作和二维码签到",
+                "subtitle": "批量确认预约、发送短信/邮件提醒、快速二维码签到。"
+            },
+            "patients": {
+                "title": "患者",
+                "subtitle": "已登记的患者列表。"
+            },
+            "patientsNew": {
+                "title": "新增患者",
+                "subtitle": "登记新的患者档案。"
+            },
+            "patientDetail": {
+                "title": "患者详情",
+                "subtitle": "患者详细信息和就诊历史。"
+            },
+            "billing": {
+                "title": "结算",
+                "subtitle": "管理发票和收取医疗费用。"
+            },
+            "billingNew": {
+                "title": "新建发票",
+                "subtitle": "为患者开具新发票。"
+            },
+            "settings": {
+                "title": "设置",
+                "subtitle": "管理个人信息。"
+            }
+        },
+        "cashier": {
+            "offline": {
+                "title": "线下收银台 POS",
+                "subtitle": "柜台现金支付。"
+            }
+        },
+        "patient": {
+            "dashboard": {
+                "title": "患者首页",
+                "subtitle": "您的健康概览和预约信息。"
+            },
+            "appointments": {
+                "title": "我的预约",
+                "subtitle": "已预约的就诊列表。"
+            },
+            "appointmentDetail": {
+                "title": "预约详情",
+                "subtitle": "预约的详细信息。"
+            },
+            "patientProfiles": {
+                "title": "患者档案",
+                "subtitle": "管理患者档案(本人及家属)。"
+            },
+            "patientProfileDetail": {
+                "title": "档案详情",
+                "subtitle": "档案的完整信息。"
+            },
+            "medicalRecords": {
+                "title": "就诊结果",
+                "subtitle": "查看就诊历史和诊断结果。"
+            },
+            "medicalRecordDetail": {
+                "title": "就诊详情",
+                "subtitle": "本次就诊的完整信息。"
+            },
+            "healthRecords": {
+                "title": "健康档案",
+                "subtitle": "追踪个人健康指标。"
+            },
+            "medicationReminders": {
+                "title": "用药提醒",
+                "subtitle": "每日用药计划和提醒。"
+            },
+            "billing": {
+                "title": "结算",
+                "subtitle": "医院发票和付款历史。"
+            },
+            "telemedicine": {
+                "title": "远程医疗",
+                "subtitle": "预约并参加在线问诊。"
+            },
+            "telemedicineRoom": {
+                "title": "在线问诊室",
+                "subtitle": "与医生进行远程就诊。"
+            },
+            "aiConsult": {
+                "title": "AI 健康咨询",
+                "subtitle": "与 AI 助手进行初步咨询。"
+            },
+            "profile": {
+                "title": "我的账号",
+                "subtitle": "个人信息与安全。"
+            }
+        },
+        "notifications": {
+            "inbox": {
+                "title": "消息中心",
+                "subtitle": "来自医院和系统的通知。"
+            }
+        }
+    }
+}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { MEDICAL_EQUIPMENT_ENDPOINTS, MEDICAL_ROOM_MANAGEMENT_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -89,6 +90,8 @@ function mapRoom(r: any): RoomLite {
 
 export default function EquipmentAdminPage() {
     const toast = useToast();
+    const t = useTranslations("pages.equipment");
+    const tc = useTranslations("common");
     const [items, setItems] = useState<Equipment[]>([]);
     const [rooms, setRooms] = useState<RoomLite[]>([]);
     const [loading, setLoading] = useState(true);
@@ -227,14 +230,14 @@ export default function EquipmentAdminPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Thiết bị y tế"
-                subtitle="Quản lý tài sản thiết bị, tình trạng hoạt động và bảo trì"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="medical_services"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Thiết bị" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <button onClick={openCreate} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md transition-all inline-flex items-center gap-1">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
-                        Thêm thiết bị
+                        {t("addButton")}
                     </button>
                 }
             />

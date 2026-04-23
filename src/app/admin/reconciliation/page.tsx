@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { BILLING_RECONCILIATION_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -70,6 +71,8 @@ function formatVND(n: number): string {
 
 export default function ReconciliationPage() {
     const toast = useToast();
+    const t = useTranslations("pages.reconciliation");
+    const tc = useTranslations("common");
     const [items, setItems] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -160,10 +163,10 @@ export default function ReconciliationPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Đối soát thanh toán"
-                subtitle="Đối chiếu giao dịch online/offline, xử lý chênh lệch"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="fact_check"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Đối soát" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <button onClick={handleRunOnline} disabled={runningOnline} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md disabled:opacity-50 inline-flex items-center gap-1">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>play_arrow</span>

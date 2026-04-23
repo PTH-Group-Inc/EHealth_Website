@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { dispensingService } from "@/services/dispensingService";
 import { usePageAIContext } from "@/hooks/usePageAIContext";
@@ -13,6 +14,7 @@ type RxData = {
 };
 
 export default function DispensingPage() {
+    const t = useTranslations("pages.portal.pharmacist.dispensing");
     const router = useRouter();
     const searchParams = useSearchParams();
     const prescriptionId = searchParams.get("id");
@@ -124,9 +126,9 @@ export default function DispensingPage() {
                 <div>
                     <h1 className="text-xl font-bold text-[#121417] dark:text-white flex items-center gap-2">
                         <span className="material-symbols-outlined text-[#3C81C6]">local_pharmacy</span>
-                        Cấp phát thuốc — {rx.id}
+                        {t("title")} — {rx.id}
                     </h1>
-                    <p className="text-sm text-[#687582] mt-1">Kiểm tra và xác nhận cấp phát từng thuốc</p>
+                    <p className="text-sm text-[#687582] mt-1">{t("subtitle")}</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <button onClick={handleCancel} className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors">

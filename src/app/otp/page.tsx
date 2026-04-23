@@ -2,12 +2,16 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ROUTES } from "@/constants/routes";
 import { resetPassword } from "@/services/authService";
 
 const OTP_LENGTH = 6;
 
 function OTPContent() {
+    const t = useTranslations("pages.auth.otp");
+    const tForgot = useTranslations("pages.auth.forgotPassword");
+    const tLogin = useTranslations("pages.auth.login");
     const router = useRouter();
     const searchParams = useSearchParams();
     const email = searchParams.get("email") || "";
@@ -130,7 +134,7 @@ function OTPContent() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white">EHealth</h1>
-                            <p className="text-[#60a5fa]/80 text-sm font-medium">Nền tảng Y tế Số</p>
+                            <p className="text-[#60a5fa]/80 text-sm font-medium">{tLogin("platformTagline")}</p>
                         </div>
                     </div>
 
@@ -145,9 +149,9 @@ function OTPContent() {
                                             verified_user
                                         </span>
                                     </div>
-                                    <h2 className="text-2xl font-bold text-white mb-1">Đặt lại mật khẩu</h2>
+                                    <h2 className="text-2xl font-bold text-white mb-1">{t("title")}</h2>
                                     <p className="text-[#94a3b8] text-sm">
-                                        Nhập mã {OTP_LENGTH} số đã gửi đến
+                                        {t("subtitle")}
                                         {email && (
                                             <span className="block text-[#60a5fa] font-medium mt-1">{email}</span>
                                         )}
@@ -232,11 +236,11 @@ function OTPContent() {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                             </svg>
-                                            <span>Đang xử lý...</span>
+                                            <span>{t("verifying")}</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span>Đặt lại mật khẩu</span>
+                                            <span>{t("submit")}</span>
                                             <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>check_circle</span>
                                         </>
                                     )}
@@ -246,15 +250,14 @@ function OTPContent() {
                                 <div className="text-center mt-4">
                                     {resendTimer > 0 ? (
                                         <p className="text-[#64748b] text-sm">
-                                            Gửi lại mã sau{" "}
-                                            <span className="text-[#60a5fa] font-semibold">{resendTimer}s</span>
+                                            {t("resendIn", { seconds: resendTimer })}
                                         </p>
                                     ) : (
                                         <button
                                             onClick={handleResend}
                                             className="text-[#60a5fa] text-sm hover:text-[#93c5fd] font-medium transition-colors"
                                         >
-                                            Gửi lại mã xác thực
+                                            {t("resend")}
                                         </button>
                                     )}
                                 </div>
@@ -288,7 +291,7 @@ function OTPContent() {
                                 className="text-[#94a3b8] text-sm hover:text-white transition-colors inline-flex items-center gap-1.5"
                             >
                                 <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_back</span>
-                                Quay lại đăng nhập
+                                {tForgot("backToLogin")}
                             </button>
                         </div>
                     </div>
@@ -296,7 +299,7 @@ function OTPContent() {
                     {/* Footer */}
                     <div className="text-center mt-4">
                         <p className="text-[#475569] text-xs">
-                            © 2025 EHealth. Hệ thống Y tế Số — PTH Group
+                            {tLogin("copyright")}
                         </p>
                     </div>
                 </div>

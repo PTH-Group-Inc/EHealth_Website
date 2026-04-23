@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { telemedicineService, TelemedicineSession, ChatMessage, ConsultationType, BookingDoctor, BookingSlot } from "@/services/telemedicineService";
 import { extractErrorMessage } from "@/api/response";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +22,7 @@ const TYPE_LABEL: Record<string, string> = { video: "Video", audio: "Âm thanh",
 export default function TelemedicinePage() {
     const { user } = useAuth();
     const patientId = user?.id ?? "";
+    const tp = useTranslations("pages.portal.patient.telemedicine");
 
     const [activeTab, setActiveTab] = useState("upcoming");
 
@@ -700,8 +702,8 @@ export default function TelemedicinePage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#121417] dark:text-white">Khám từ xa</h1>
-                    <p className="text-sm text-[#687582] mt-0.5">Tư vấn online với bác sĩ qua video call</p>
+                    <h1 className="text-2xl font-bold text-[#121417] dark:text-white">{tp("title")}</h1>
+                    <p className="text-sm text-[#687582] mt-0.5">{tp("subtitle")}</p>
                 </div>
                 <button
                     onClick={() => setActiveTab("book")}

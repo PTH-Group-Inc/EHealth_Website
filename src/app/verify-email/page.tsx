@@ -2,9 +2,11 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { verifyEmail } from "@/services/authService";
 
 function VerifyEmailContent() {
+    const t = useTranslations("pages.auth.verifyEmail");
     const router = useRouter();
     const searchParams = useSearchParams();
     const emailFromQuery = searchParams.get("email") || "";
@@ -61,7 +63,7 @@ function VerifyEmailContent() {
         try {
             const result = await verifyEmail(email, code);
             if (result.success) {
-                setSuccess("Xác thực thành công! Đang chuyển đến trang đăng nhập...");
+                setSuccess(t("success"));
                 setTimeout(() => router.push("/login"), 2000);
             } else {
                 setError(result.message || "Mã OTP không đúng hoặc đã hết hạn");
@@ -96,9 +98,9 @@ function VerifyEmailContent() {
                             <div className="w-16 h-16 rounded-full bg-[#3C81C6]/20 flex items-center justify-center mx-auto mb-4">
                                 <span className="material-symbols-outlined text-[#60a5fa]" style={{ fontSize: "32px" }}>mark_email_read</span>
                             </div>
-                            <h2 className="text-2xl font-bold text-white mb-1">Xác thực email</h2>
+                            <h2 className="text-2xl font-bold text-white mb-1">{t("title")}</h2>
                             <p className="text-[#94a3b8] text-sm">
-                                Nhập mã OTP 6 số đã được gửi đến email của bạn
+                                {t("subtitle")}
                             </p>
                         </div>
 
@@ -151,9 +153,9 @@ function VerifyEmailContent() {
                             <button type="submit" disabled={loading}
                                 className="w-full py-3 bg-gradient-to-r from-[#3C81C6] to-[#2563eb] hover:from-[#2a6da8] hover:to-[#1d4ed8] text-white rounded-xl font-semibold text-sm transition-all shadow-lg shadow-[#3C81C6]/25 disabled:opacity-70 flex items-center justify-center gap-2 active:scale-[0.98]">
                                 {loading ? (
-                                    <><svg className="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Đang xác thực...</>
+                                    <><svg className="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> {t("verifying")}</>
                                 ) : (
-                                    <><span className="material-symbols-outlined" style={{ fontSize: "18px" }}>verified</span> Xác thực</>
+                                    <><span className="material-symbols-outlined" style={{ fontSize: "18px" }}>verified</span> {t("goToLogin")}</>
                                 )}
                             </button>
                         </form>

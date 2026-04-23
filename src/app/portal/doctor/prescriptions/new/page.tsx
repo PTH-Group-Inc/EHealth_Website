@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { prescriptionService } from "@/services/prescriptionService";
 
 interface PatientOption {
@@ -11,6 +12,7 @@ interface PatientOption {
 }
 
 export default function NewPrescriptionPage() {
+    const t = useTranslations("pages.portal.doctor.prescriptionsNew");
     const router = useRouter();
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -140,7 +142,7 @@ export default function NewPrescriptionPage() {
             <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm">
                 <div className="p-6 border-b border-[#dde0e4] dark:border-[#2d353e]">
                     <h1 className="text-xl font-bold text-[#121417] dark:text-white flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#3C81C6]">medication</span> Tạo đơn thuốc mới
+                        <span className="material-symbols-outlined text-[#3C81C6]">medication</span> {t("title")}
                     </h1>
                 </div>
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">

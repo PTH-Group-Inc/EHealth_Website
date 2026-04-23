@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { getDrugs } from "@/services/medicineService";
 import { inventoryService } from "@/services/inventoryService";
 
@@ -24,6 +25,7 @@ type InventoryItem = { id: string; name: string; group: string; unit: string; st
 type RequestItem = { id: string; type: RequestType; medicine: string; qty: number; reason: string; date: string; status: RequestStatus };
 
 export default function PharmacistInventory() {
+    const t = useTranslations("pages.portal.pharmacist.inventory");
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [requests, setRequests] = useState<RequestItem[]>([]);
 
@@ -131,8 +133,8 @@ export default function PharmacistInventory() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#121417] dark:text-white">Kho thuốc</h1>
-                    <p className="text-sm text-[#687582] mt-1">Quản lý tồn kho & yêu cầu nhập/xuất/huỷ</p>
+                    <h1 className="text-2xl font-bold text-[#121417] dark:text-white">{t("title")}</h1>
+                    <p className="text-sm text-[#687582] mt-1">{t("subtitle")}</p>
                 </div>
                 <div className="flex gap-2 flex-wrap">
                     <button onClick={() => openRequestFor("import")} className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors">

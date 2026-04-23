@@ -414,6 +414,14 @@ export const APPOINTMENT_ENDPOINTS = {
     AVAILABLE_SLOTS_BY_DEPARTMENT: '/api/appointments/available-slots-by-department',
     BY_DOCTOR: (doctorId: string) => `/api/appointments/doctor/${doctorId}`,
     BY_PATIENT: (patientId: string) => `/api/appointments/patient/${patientId}`,
+    // Doctor operations theo spec Nhóm 2
+    RESCHEDULE: (id: string) => `/api/appointments/${id}/reschedule`,
+    VISIT_REASON: (id: string) => `/api/appointments/${id}/visit-reason`,
+    CHECK_CONFLICT: '/api/appointments/check-conflict',
+    // Pre-Booking Payment flow (thanh toán cọc đặt lịch + SePay QR)
+    PRE_BOOK: '/api/appointments/pre-book',
+    REGENERATE_QR: (id: string) => `/api/appointments/${id}/regenerate-qr`,
+    PAYMENT_STATUS: (id: string) => `/api/appointments/${id}/payment-status`,
 };
 
 export const DEPARTMENT_ENDPOINTS = {
@@ -798,10 +806,15 @@ export const SUPPLIER_ENDPOINTS = {
 // ============================================
 export const TREATMENT_PLAN_ENDPOINTS = {
     LIST: '/api/treatment-plans', // QC_SKIP: backend does not expose an aggregate GET /api/treatment-plans endpoint
+    CREATE: '/api/treatment-plans',
     BY_PATIENT: (patientId: string) => `/api/treatment-plans/by-patient/${patientId}`,
     DETAIL: (planId: string) => `/api/treatment-plans/${planId}`,
     STATUS: (planId: string) => `/api/treatment-plans/${planId}/status`,
     SUMMARY: (planId: string) => `/api/treatment-plans/${planId}/summary`,
+    FOLLOW_UP_CHAIN: (planId: string) => `/api/treatment-plans/${planId}/follow-up-chain`,
+    NOTES: (planId: string) => `/api/treatment-plans/${planId}/notes`,
+    NOTE_DETAIL: (planId: string, noteId: string) => `/api/treatment-plans/${planId}/notes/${noteId}`,
+    FOLLOW_UPS: (planId: string) => `/api/treatment-plans/${planId}/follow-ups`,
 };
 
 // ============================================

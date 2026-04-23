@@ -1,11 +1,12 @@
 import axiosClient from '@/api/axiosClient';
 import { AI_ENDPOINTS } from '@/api/endpoints';
+import { API_CONFIG } from '@/config';
 import type { AISearchResponsePayload } from '@/utils/aiSearch';
 
 // ============================================
 // Health Chat endpoints (local constants — không có trong endpoints.ts)
 // ============================================
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const BASE_URL = API_CONFIG.BASE_URL;
 
 const HC = {
     SESSIONS: '/api/ai/health-chat/sessions',

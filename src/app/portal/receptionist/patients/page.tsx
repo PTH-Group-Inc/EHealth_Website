@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { getPatients, Patient, PatientGender, PatientStatus } from "@/services/patientService";
 
 // ==================== HELPERS ====================
@@ -43,6 +44,7 @@ interface FilterState {
 
 // ==================== PAGE ====================
 export default function ReceptionistPatients() {
+    const t = useTranslations("pages.portal.staff.patients");
     const router = useRouter();
     const [patients, setPatients] = useState<Patient[]>([]);
     const [loading, setLoading] = useState(true);
@@ -173,7 +175,7 @@ export default function ReceptionistPatients() {
                             <span className="material-symbols-outlined text-[12px]">chevron_right</span>
                             <span className="text-[#121417] dark:text-white font-medium">Bệnh nhân</span>
                         </div>
-                        <h1 className="text-2xl font-bold text-[#121417] dark:text-white">Quản lý Bệnh nhân</h1>
+                        <h1 className="text-2xl font-bold text-[#121417] dark:text-white">{t("title")}</h1>
                         <p className="text-sm text-[#687582] mt-1">Tổng cộng {totalItems.toLocaleString("vi-VN")} hồ sơ</p>
                     </div>
                     <div className="flex items-center gap-3">

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { UI_TEXT } from "@/constants/ui-text";
 import { prescriptionService } from "@/services/prescriptionService";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +17,7 @@ type Prescription = {
 };
 
 export default function PrescriptionsPage() {
+    const t = useTranslations("pages.portal.doctor.prescriptions");
     const router = useRouter();
     const { user } = useAuth();
     const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
@@ -163,10 +165,10 @@ export default function PrescriptionsPage() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
                         <h2 className="text-2xl font-bold text-[#121417] dark:text-white">
-                            {UI_TEXT.DOCTOR.PRESCRIPTIONS.TITLE}
+                            {t("title")}
                         </h2>
                         <p className="text-sm text-[#687582] dark:text-gray-400">
-                            {UI_TEXT.DOCTOR.PRESCRIPTIONS.SUBTITLE}
+                            {t("subtitle")}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">

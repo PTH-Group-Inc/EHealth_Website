@@ -2,14 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { PATIENT_MENU_ITEMS } from "@/constants/routes";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
+
+const PATIENT_MENU_KEY_MAP: Record<string, string> = {
+    "dashboard": "dashboard",
+    "appointments": "appointments",
+    "patient-profiles": "patientProfiles",
+    "medical-records": "medicalRecords",
+    "health-records": "healthRecords",
+    "medication-reminders": "medicationReminders",
+    "billing": "billing",
+    "telemedicine": "telemedicine",
+    "ai-consult": "aiConsult",
+    "profile": "profile",
+};
 
 export function PatientSidebar() {
     const pathname = usePathname();
     const { collapsed, toggleSidebar } = useSidebar();
     const { user } = useAuth();
+    const tNav = useTranslations("common.nav.portal");
+    const tRole = useTranslations("common.role");
 
     return (
         <aside className={`${collapsed ? "w-[72px]" : "w-64"} bg-white dark:bg-[#1e242b] border-r border-[#e5e7eb] dark:border-[#2d353e] flex flex-col h-full shrink-0 z-20 transition-all duration-300`}>
@@ -24,7 +40,7 @@ export function PatientSidebar() {
                         </div>
                         <div className="flex-1">
                             <h1 className="text-lg font-bold text-[#121417] dark:text-white">EHealth</h1>
-                            <p className="text-[10px] font-semibold text-[#3C81C6] uppercase tracking-wider">Bệnh nhân</p>
+                            <p className="text-[10px] font-semibold text-[#3C81C6] uppercase tracking-wider">{tNav("patientTagline")}</p>
                         </div>
                     </>
                 )}
@@ -38,7 +54,7 @@ export function PatientSidebar() {
                 <button
                     onClick={toggleSidebar}
                     className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-[#687582] hover:text-[#3C81C6]"
-                    title={collapsed ? "Mở rộng sidebar" : "Thu nhỏ sidebar"}
+                    title={collapsed ? tNav("expandSidebar") : tNav("collapseSidebar")}
                 >
                     <span className="material-symbols-outlined text-[20px]">
                         {collapsed ? "menu_open" : "menu"}
@@ -52,13 +68,13 @@ export function PatientSidebar() {
                     <Link href="/booking"
                         className="flex items-center justify-center gap-2 w-full px-3 py-2.5 bg-gradient-to-r from-[#3C81C6] to-[#2563eb] text-white rounded-lg text-sm font-bold shadow-lg shadow-[#3C81C6]/20 hover:shadow-xl transition-all active:scale-[0.97]">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
-                        Đặt lịch khám
+                        {tNav("quickBook")}
                     </Link>
                 </div>
             )}
             {collapsed && (
                 <div className="px-2 mb-2">
-                    <Link href="/booking" title="Đặt lịch khám"
+                    <Link href="/booking" title={tNav("quickBook")}
                         className="flex items-center justify-center w-full p-2.5 bg-gradient-to-r from-[#3C81C6] to-[#2563eb] text-white rounded-lg shadow-lg shadow-[#3C81C6]/20 hover:shadow-xl transition-all">
                         <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>add</span>
                     </Link>
@@ -71,12 +87,14 @@ export function PatientSidebar() {
                     const active = item.href === "/patient"
                         ? pathname === item.href
                         : pathname === item.href || pathname.startsWith(item.href + "/");
+                    const translationKey = PATIENT_MENU_KEY_MAP[item.key] ?? item.key;
+                    const label = tNav(`patient.${translationKey}`);
 
                     return (
                         <Link
                             key={item.key}
                             href={item.href}
-                            title={collapsed ? item.label : undefined}
+                            title={collapsed ? label : undefined}
                             className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-lg transition-colors group ${active
                                 ? "bg-[#3C81C6]/10 text-[#3C81C6] dark:bg-[#3C81C6]/20"
                                 : "text-[#687582] dark:text-gray-400 hover:bg-[#f1f2f4] dark:hover:bg-gray-800 hover:text-[#121417] dark:hover:text-white"
@@ -90,7 +108,7 @@ export function PatientSidebar() {
                             </span>
                             {!collapsed && (
                                 <span className={`text-sm ${active ? "font-bold" : "font-medium"}`}>
-                                    {item.label}
+                                    {label}
                                 </span>
                             )}
                         </Link>
@@ -125,9 +143,9 @@ export function PatientSidebar() {
                         <>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-[#121417] dark:text-white truncate">
-                                    {user?.fullName || "Bệnh nhân"}
+                                    {user?.fullName || tRole("patient")}
                                 </p>
-                                <p className="text-xs text-[#687582] dark:text-gray-400">Bệnh nhân</p>
+                                <p className="text-xs text-[#687582] dark:text-gray-400">{tRole("patient")}</p>
                             </div>
                             <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                                 <span className="material-symbols-outlined text-[#687582]" style={{ fontSize: "20px" }}>

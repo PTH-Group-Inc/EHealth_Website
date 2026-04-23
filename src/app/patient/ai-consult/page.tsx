@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { aiService, type HealthChatSession } from "@/services/aiService";
 
 interface AiChatMessage {
@@ -35,6 +36,7 @@ function escapeHtml(text: string) {
 }
 
 export default function AiConsultPage() {
+    const tp = useTranslations("pages.portal.patient.aiConsult");
     const [messages, setMessages] = useState<AiChatMessage[]>([]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
@@ -214,9 +216,9 @@ export default function AiConsultPage() {
                 <div>
                     <h1 className="text-2xl font-bold text-[#121417] dark:text-white flex items-center gap-2">
                         <span className="material-symbols-outlined text-[#3C81C6]" style={{ fontSize: "28px" }}>smart_toy</span>
-                        AI Tư vấn sức khỏe
+                        {tp("title")}
                     </h1>
-                    <p className="text-sm text-[#687582] mt-0.5">Mô tả triệu chứng để nhận gợi ý chuyên khoa phù hợp</p>
+                    <p className="text-sm text-[#687582] mt-0.5">{tp("subtitle")}</p>
                 </div>
                 <div className="flex gap-2">
                     <button onClick={openHistory}

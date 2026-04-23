@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { EHR_ENDPOINTS } from "@/api/endpoints";
 import { extractErrorMessage } from "@/api/response";
@@ -68,6 +69,7 @@ function splitHistoryEntries(value: string) {
 }
 
 export default function NewPatientPage() {
+    const t = useTranslations("pages.portal.staff.patientsNew");
     const router = useRouter();
     const { showToast } = useToast();
     const [saving, setSaving] = useState(false);
@@ -271,9 +273,9 @@ export default function NewPatientPage() {
                             <span className="material-symbols-outlined">person_add</span>
                         </div>
                         <div>
-                            <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Tiếp nhận bệnh nhân mới</h1>
+                            <h1 className="text-xl font-semibold text-slate-900 dark:text-white">{t("title")}</h1>
                             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                Tạo hồ sơ hành chính trước, sau đó nối tiếp bảo hiểm, dị ứng và tiền sử nếu có.
+                                {t("subtitle")}
                             </p>
                         </div>
                     </div>

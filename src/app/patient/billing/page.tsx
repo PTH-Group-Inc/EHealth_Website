@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import type { Invoice, Transaction, ServicePrice } from "@/types/patient-portal";
 import { billingService } from "@/services/billingService";
 import { patientProfileService, type PatientProfileBE } from "@/services/patientProfileService";
@@ -93,6 +94,7 @@ function CountdownTimer({ expiresAt, onExpired }: { expiresAt: string; onExpired
 
 export default function BillingPage() {
     const { user } = useAuth();
+    const tp = useTranslations("pages.portal.patient.billing");
     const [activeTab, setActiveTab]         = useState("pending");
     const [selectedProfileId, setSelectedProfileId] = useState("");
     const [profiles, setProfiles] = useState<PatientProfileBE[]>([]);
@@ -409,8 +411,8 @@ export default function BillingPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#121417]">Thanh toán & Hóa đơn</h1>
-                    <p className="text-sm text-[#687582] mt-0.5">Quản lý hóa đơn, thanh toán và tra cứu bảng giá</p>
+                    <h1 className="text-2xl font-bold text-[#121417]">{tp("title")}</h1>
+                    <p className="text-sm text-[#687582] mt-0.5">{tp("subtitle")}</p>
                 </div>
                 {totalPending > 0 && (
                     <div className="px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl text-right">

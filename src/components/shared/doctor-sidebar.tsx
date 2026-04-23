@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { DOCTOR_MENU_ITEMS, ROUTES } from "@/constants/routes";
 import { useSidebar } from "@/contexts/SidebarContext";
 
 export function DoctorSidebar() {
     const pathname = usePathname();
     const { collapsed, toggleSidebar } = useSidebar();
+    const tNav = useTranslations("common.nav.portal");
 
     const isActive = (href: string) => {
         if (href === ROUTES.PORTAL.DOCTOR.DASHBOARD) {
@@ -32,7 +34,7 @@ export function DoctorSidebar() {
                                 E-Health
                             </h1>
                             <p className="text-[#687582] dark:text-gray-400 text-xs font-medium">
-                                Cổng thông tin Bác sĩ
+                                {tNav("doctorTagline")}
                             </p>
                         </div>
                     </>
@@ -47,7 +49,7 @@ export function DoctorSidebar() {
                 <button
                     onClick={toggleSidebar}
                     className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-[#687582] hover:text-[#3C81C6]"
-                    title={collapsed ? "Mở rộng sidebar" : "Thu nhỏ sidebar"}
+                    title={collapsed ? tNav("expandSidebar") : tNav("collapseSidebar")}
                 >
                     <span className="material-symbols-outlined text-[20px]">
                         {collapsed ? "menu_open" : "menu"}
@@ -59,11 +61,12 @@ export function DoctorSidebar() {
             <nav className={`flex-1 ${collapsed ? "px-2" : "px-4"} flex flex-col gap-1 overflow-y-auto`}>
                 {DOCTOR_MENU_ITEMS.map((item) => {
                     const active = isActive(item.href);
+                    const label = tNav(`doctor.${item.key === "medical-records" ? "medicalRecords" : item.key === "ai-assistant" ? "aiAssistant" : item.key}`);
                     return (
                         <Link
                             key={item.key}
                             href={item.href}
-                            title={collapsed ? item.label : undefined}
+                            title={collapsed ? label : undefined}
                             className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-lg transition-colors group ${active
                                     ? "bg-[#3C81C6]/10 text-[#3C81C6] dark:bg-[#3C81C6]/20"
                                     : "text-[#687582] dark:text-gray-400 hover:bg-[#f1f2f4] dark:hover:bg-gray-800 hover:text-[#121417] dark:hover:text-white"
@@ -77,7 +80,7 @@ export function DoctorSidebar() {
                             </span>
                             {!collapsed && (
                                 <span className={`text-sm ${active ? "font-bold" : "font-medium"}`}>
-                                    {item.label}
+                                    {label}
                                 </span>
                             )}
                         </Link>

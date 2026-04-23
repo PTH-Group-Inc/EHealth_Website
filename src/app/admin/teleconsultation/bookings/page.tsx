@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { TELE_BOOKING_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -67,6 +68,8 @@ function formatVND(n: number): string {
 
 export default function TeleBookingsPage() {
     const toast = useToast();
+    const t = useTranslations("pages.tele.bookings");
+    const tc = useTranslations("common");
     const [items, setItems] = useState<TeleBooking[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -126,10 +129,10 @@ export default function TeleBookingsPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Booking khám từ xa"
-                subtitle="Danh sách tất cả phiên tư vấn/khám online đã đặt"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="videocam"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Telemedicine" }, { label: "Booking" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

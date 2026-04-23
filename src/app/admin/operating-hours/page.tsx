@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import {
     OPERATING_HOUR_ENDPOINTS,
@@ -103,6 +104,8 @@ function formatDate(d?: string): string {
 // ========== Main Page ==========
 export default function OperatingHoursPage() {
     const toast = useToast();
+    const t = useTranslations("pages.operatingHours");
+    const tc = useTranslations("common");
     const [tab, setTab] = useState<TabKey>("hours");
     const [facilities, setFacilities] = useState<FacilityLite[]>([]);
     const [branches, setBranches] = useState<BranchLite[]>([]);
@@ -144,10 +147,10 @@ export default function OperatingHoursPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Giờ hoạt động & Ngày nghỉ"
-                subtitle="Quản lý giờ mở cửa, ngày nghỉ đặc biệt và lịch lễ"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="schedule"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Giờ hoạt động" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             {/* Tabs */}

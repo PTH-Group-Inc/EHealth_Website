@@ -1,0 +1,740 @@
+{
+    "dashboard": {
+        "title": "Trang chủ",
+        "welcome": "Chào mừng trở lại",
+        "overview": "Tổng quan",
+        "todayReport": "Báo cáo hôm nay"
+    },
+    "users": {
+        "title": "Quản lý nhân sự",
+        "subtitle": "Danh sách tài khoản người dùng trong hệ thống",
+        "addButton": "Thêm nhân sự",
+        "stats": {
+            "total": "Tổng nhân sự",
+            "active": "Đang hoạt động",
+            "inactive": "Ngừng",
+            "banned": "Bị khoá",
+            "rolesCount": "Số vai trò"
+        }
+    },
+    "doctors": {
+        "title": "Danh sách bác sĩ",
+        "subtitle": "Quản lý thông tin bác sĩ, chứng chỉ và lịch trực",
+        "addButton": "Thêm bác sĩ",
+        "stats": {
+            "totalDoctors": "Tổng bác sĩ",
+            "onDuty": "Đang trực",
+            "pendingAssignment": "Chờ phân công",
+            "avgPerformance": "Hiệu suất TB"
+        }
+    },
+    "hospitals": {
+        "title": "Cơ sở / Bệnh viện",
+        "subtitle": "Quản lý thông tin các cơ sở y tế trong hệ thống",
+        "addButton": "Thêm cơ sở",
+        "stats": {
+            "total": "Tổng cơ sở",
+            "doctors": "Tổng bác sĩ",
+            "active": "Đang hoạt động"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm kiếm cơ sở..."
+        },
+        "statusLabel": {
+            "active": "Hoạt động",
+            "inactive": "Tạm ngưng"
+        },
+        "units": {
+            "doctors": "bác sĩ",
+            "departments": "chuyên khoa"
+        }
+    },
+    "branches": {
+        "title": "Chi nhánh",
+        "subtitle": "Quản lý các chi nhánh của cơ sở y tế",
+        "addButton": "Thêm chi nhánh",
+        "stats": {
+            "total": "Tổng chi nhánh",
+            "active": "Đang hoạt động",
+            "inactive": "Tạm dừng",
+            "facilities": "Cơ sở y tế"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm theo mã, tên, địa chỉ, SĐT..."
+        },
+        "statusLabel": {
+            "active": "Hoạt động",
+            "inactive": "Tạm dừng"
+        }
+    },
+    "departments": {
+        "title": "Khoa / Phòng ban",
+        "subtitle": "Quản lý các khoa chức năng trong bệnh viện",
+        "addButton": "Thêm khoa",
+        "stats": {
+            "total": "Tổng số khoa",
+            "active": "Khoa hoạt động",
+            "totalDoctors": "Tổng bác sĩ",
+            "totalPatients": "Tổng bệnh nhân"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm kiếm theo tên, mã khoa..."
+        },
+        "statusLabel": {
+            "active": "Hoạt động",
+            "inactive": "Tạm ngưng",
+            "maintenance": "Bảo trì"
+        }
+    },
+    "specialties": {
+        "title": "Chuyên khoa",
+        "subtitle": "Danh mục chuyên khoa y tế",
+        "addButton": "Thêm chuyên khoa",
+        "stats": {
+            "total": "Tổng chuyên khoa",
+            "active": "Đang hoạt động",
+            "doctors": "Tổng bác sĩ",
+            "services": "Tổng dịch vụ"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm theo mã hoặc tên..."
+        },
+        "statusLabel": {
+            "active": "Active",
+            "inactive": "Inactive"
+        },
+        "units": {
+            "doctors": "bác sĩ",
+            "services": "dịch vụ"
+        },
+        "empty": {
+            "none": "Chưa có chuyên khoa",
+            "noneDesc": "Thêm chuyên khoa đầu tiên.",
+            "noMatch": "Không khớp tìm kiếm",
+            "noMatchDesc": "Thử đổi từ khoá."
+        },
+        "modal": {
+            "titleCreate": "Thêm chuyên khoa",
+            "titleEdit": "Sửa chuyên khoa",
+            "code": "Mã",
+            "icon": "Icon",
+            "name": "Tên",
+            "description": "Mô tả",
+            "iconPreview": "Preview icon:"
+        },
+        "toast": {
+            "requiredCodeName": "Nhập mã và tên chuyên khoa.",
+            "loadError": "Không tải được chuyên khoa."
+        }
+    },
+    "services": {
+        "title": "Dịch vụ y tế",
+        "subtitle": "Quản lý dịch vụ khám chữa bệnh",
+        "tabMaster": "Dịch vụ gốc",
+        "tabFacility": "Dịch vụ theo cơ sở"
+    },
+    "clinicRooms": {
+        "title": "Phòng khám",
+        "subtitle": "Quản lý phòng khám và gán dịch vụ",
+        "addButton": "Thêm phòng"
+    },
+    "equipment": {
+        "title": "Thiết bị y tế",
+        "subtitle": "Quản lý thiết bị và lịch bảo trì",
+        "addButton": "Thêm thiết bị"
+    },
+    "beds": {
+        "title": "Giường bệnh",
+        "subtitle": "Quản lý tài nguyên giường bệnh theo phòng và tình trạng",
+        "addButton": "Tạo giường",
+        "stats": {
+            "total": "Tổng giường",
+            "available": "Sẵn sàng",
+            "occupied": "Đang dùng",
+            "maintenance": "Bảo trì"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm theo mã, tên, phòng, bệnh nhân..."
+        },
+        "statusLabel": {
+            "available": "Sẵn sàng",
+            "occupied": "Đang dùng",
+            "maintenance": "Bảo trì",
+            "reserved": "Đã giữ"
+        }
+    },
+    "shifts": {
+        "title": "Ca làm việc",
+        "subtitle": "Quản lý ca sáng/chiều/tối của nhân sự"
+    },
+    "staffSchedule": {
+        "title": "Lịch phân ca",
+        "subtitle": "Sắp xếp lịch làm việc cho nhân sự"
+    },
+    "schedules": {
+        "title": "Lịch trực",
+        "subtitle": "Lịch trực của bác sĩ theo ngày"
+    },
+    "leaves": {
+        "title": "Nghỉ phép nhân sự",
+        "subtitle": "Duyệt/từ chối đơn nghỉ phép của bác sĩ, y tá và nhân viên y tế"
+    },
+    "shiftSwaps": {
+        "title": "Đổi ca",
+        "subtitle": "Duyệt yêu cầu đổi ca giữa các nhân sự y tế"
+    },
+    "slotsConfig": {
+        "title": "Cấu hình khung giờ khám",
+        "subtitle": "Tạo & quản lý slot khám theo bác sĩ, ngày và thời lượng"
+    },
+    "slotsLocked": {
+        "title": "Slot bị khoá",
+        "subtitle": "Khoá tạm slot khám khi bác sĩ bận, phòng bảo trì hoặc ngưng nhận lịch"
+    },
+    "shiftServices": {
+        "title": "Gán dịch vụ vào ca làm việc",
+        "subtitle": "Cấu hình dịch vụ nào được phục vụ trong ca nào của cơ sở"
+    },
+    "serviceDurations": {
+        "title": "Thời lượng dịch vụ theo cơ sở",
+        "subtitle": "Cấu hình thời lượng khám/xử lý cho từng dịch vụ tại mỗi cơ sở"
+    },
+    "bookingConfigs": {
+        "title": "Cấu hình booking theo chi nhánh",
+        "subtitle": "Thiết lập quy tắc đặt lịch riêng cho từng chi nhánh"
+    },
+    "operatingHours": {
+        "title": "Giờ hoạt động & Ngày nghỉ",
+        "subtitle": "Quản lý giờ mở cửa, ngày nghỉ đặc biệt và lịch lễ"
+    },
+    "facilityStatus": {
+        "title": "Trạng thái cơ sở",
+        "subtitle": "Nhìn nhanh hôm nay cơ sở nào mở/đóng và lịch vận hành 14 ngày tới"
+    },
+    "doctorLoad": {
+        "title": "Cân bằng tải bác sĩ",
+        "subtitle": "Phân tích tải và đề xuất điều phối bác sĩ"
+    },
+    "doctorAvailability": {
+        "title": "Độ rảnh & vắng mặt bác sĩ",
+        "subtitle": "Theo dõi độ rảnh của bác sĩ theo ngày và quản lý vắng mặt đột xuất"
+    },
+    "appointmentChanges": {
+        "title": "Lịch sử thay đổi lịch hẹn",
+        "subtitle": "Thống kê & theo dõi tất cả yêu cầu dời/huỷ/đổi bác sĩ/đổi phòng"
+    },
+    "suppliers": {
+        "title": "Nhà cung cấp",
+        "subtitle": "Quản lý thông tin các nhà cung cấp thuốc và vật tư y tế",
+        "addButton": "Thêm NCC",
+        "stats": {
+            "total": "Tổng NCC",
+            "active": "Đang hợp tác",
+            "inactive": "Ngưng hợp tác",
+            "withContact": "Có thông tin liên hệ"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm theo mã, tên, MST, SĐT...",
+            "active": "Đang hợp tác",
+            "inactive": "Ngưng"
+        },
+        "table": {
+            "codeName": "Mã / Tên",
+            "taxCode": "MST",
+            "contact": "Liên hệ",
+            "address": "Địa chỉ"
+        },
+        "statusLabel": {
+            "active": "Đang hợp tác",
+            "inactive": "Ngưng"
+        },
+        "empty": {
+            "none": "Chưa có NCC",
+            "noneDesc": "Thêm NCC đầu tiên để bắt đầu nhập kho.",
+            "noMatch": "Không khớp bộ lọc",
+            "noMatchDesc": "Thử đổi từ khoá."
+        },
+        "modal": {
+            "titleCreate": "Thêm nhà cung cấp",
+            "titleEdit": "Sửa nhà cung cấp",
+            "code": "Mã NCC",
+            "codePlaceholder": "VD: NCC001",
+            "taxCode": "Mã số thuế",
+            "name": "Tên NCC",
+            "contactPerson": "Người liên hệ",
+            "phone": "SĐT",
+            "email": "Email",
+            "address": "Địa chỉ",
+            "note": "Ghi chú"
+        },
+        "toast": {
+            "requiredCodeName": "Nhập mã và tên NCC.",
+            "loadError": "Không tải được danh sách nhà cung cấp."
+        }
+    },
+    "warehouses": {
+        "title": "Quản lý kho",
+        "subtitle": "Các kho vật tư, dược phẩm và thiết bị y tế trong cơ sở",
+        "addButton": "Thêm kho",
+        "stats": {
+            "total": "Tổng kho",
+            "active": "Đang hoạt động",
+            "pharmacy": "Kho dược",
+            "equipment": "Kho thiết bị"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm theo mã, tên, quản lý...",
+            "typeLabel": "Loại kho",
+            "allTypes": "Mọi loại"
+        },
+        "type": {
+            "main": "Kho chính",
+            "pharmacy": "Kho dược",
+            "equipment": "Kho thiết bị",
+            "consumable": "Kho vật tư tiêu hao",
+            "other": "Khác"
+        },
+        "statusLabel": {
+            "active": "Hoạt động",
+            "inactive": "Ngưng"
+        },
+        "empty": {
+            "none": "Chưa có kho",
+            "noneDesc": "Thêm kho đầu tiên.",
+            "noMatch": "Không có kho phù hợp",
+            "noMatchDesc": "Thử đổi bộ lọc."
+        },
+        "modal": {
+            "titleCreate": "Thêm kho",
+            "titleEdit": "Sửa kho",
+            "code": "Mã kho",
+            "type": "Loại kho",
+            "name": "Tên kho",
+            "manager": "Quản lý kho",
+            "phone": "SĐT",
+            "address": "Địa chỉ",
+            "note": "Ghi chú"
+        },
+        "actions": {
+            "activate": "Kích hoạt",
+            "deactivate": "Ngưng"
+        },
+        "toast": {
+            "requiredCodeName": "Nhập mã và tên kho.",
+            "loadError": "Không tải được danh sách kho.",
+            "activated": "Đã kích hoạt.",
+            "deactivated": "Đã vô hiệu hoá.",
+            "toggleFailed": "Không đổi được trạng thái."
+        }
+    },
+    "pharmacyCategories": {
+        "title": "Nhóm thuốc (Categories)",
+        "subtitle": "Phân loại thuốc theo nhóm (kháng sinh, giảm đau, tim mạch, ...)"
+    },
+    "billingInvoices": {
+        "title": "Hoá đơn",
+        "subtitle": "Quản lý toàn bộ hoá đơn thanh toán viện phí"
+    },
+    "pricingPolicies": {
+        "title": "Chính sách giá dịch vụ",
+        "subtitle": "Cấu hình bảng giá dịch vụ y tế theo cơ sở và thời gian hiệu lực"
+    },
+    "eInvoices": {
+        "title": "Hoá đơn điện tử",
+        "subtitle": "Phát hành và gửi hoá đơn điện tử tới bệnh nhân"
+    },
+    "promotions": {
+        "title": "Khuyến mãi",
+        "subtitle": "Giảm giá, voucher và combo dịch vụ"
+    },
+    "paymentGateway": {
+        "title": "Cổng thanh toán",
+        "subtitle": "Cấu hình SePay + quản lý phân quyền thu ngân"
+    },
+    "reconciliation": {
+        "title": "Đối soát thanh toán",
+        "subtitle": "Phiên đối soát ca thu ngân và thanh toán online"
+    },
+    "refunds": {
+        "title": "Hoàn tiền",
+        "subtitle": "Yêu cầu hoàn tiền và điều chỉnh hóa đơn"
+    },
+    "tele": {
+        "types": {
+            "title": "Loại khám từ xa",
+            "subtitle": "Cấu hình các loại và định giá tư vấn từ xa"
+        },
+        "bookings": {
+            "title": "Booking tư vấn từ xa",
+            "subtitle": "Danh sách lịch tư vấn online"
+        },
+        "rooms": {
+            "title": "Phòng đang hoạt động",
+            "subtitle": "Realtime — các phòng tư vấn đang chạy"
+        },
+        "results": {
+            "title": "Kết quả khám online",
+            "subtitle": "Chẩn đoán, kết luận và đơn kê sau tư vấn"
+        },
+        "prescriptions": {
+            "title": "Đơn thuốc online",
+            "subtitle": "Đơn thuốc được bác sĩ ký trong phiên tư vấn"
+        },
+        "followups": {
+            "title": "Follow-up",
+            "subtitle": "Lịch tái khám/theo dõi sau tư vấn"
+        },
+        "quality": {
+            "title": "Chất lượng tư vấn",
+            "subtitle": "Đánh giá, khiếu nại và cảnh báo chất lượng"
+        }
+    },
+    "permissions": {
+        "title": "Quản lý quyền hệ thống",
+        "subtitle": "Permissions, menus, API permissions và modules"
+    },
+    "masterData": {
+        "title": "Master Data",
+        "subtitle": "Danh mục tham chiếu toàn hệ thống (categories + items)"
+    },
+    "notifications": {
+        "roleConfigs": {
+            "title": "Cấu hình thông báo theo vai trò",
+            "subtitle": "Bật/tắt kênh thông báo theo từng vai trò và loại sự kiện"
+        },
+        "broadcast": {
+            "title": "Gửi thông báo Broadcast",
+            "subtitle": "Gửi thông báo hàng loạt tới nhiều vai trò cùng lúc"
+        }
+    },
+    "role": {
+        "detail": {
+            "title": "Phân quyền vai trò",
+            "subtitle": "Gán permissions, menus, API permissions cho vai trò"
+        }
+    },
+    "cashier": {
+        "offline": {
+            "title": "POS thu ngân offline",
+            "subtitle": "Thanh toán tiền mặt tại quầy"
+        }
+    },
+    "queue": {
+        "batch": {
+            "title": "Thao tác hàng loạt & QR check-in",
+            "subtitle": "Xác nhận lịch hàng loạt, gửi nhắc SMS/email, QR check-in nhanh"
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Đăng nhập",
+            "subtitle": "Chào mừng bạn trở lại hệ thống EHealth",
+            "redirecting": "Đang chuyển hướng...",
+            "platformTagline": "Nền tảng Y tế Số",
+            "heroLine1": "Nền tảng",
+            "heroLine2": "Y tế Số",
+            "heroLine3": "Thông minh",
+            "heroDescription": "Hệ thống quản lý y tế toàn diện, tích hợp AI hỗ trợ chẩn đoán, quản lý lịch hẹn, kê đơn thuốc và theo dõi sức khỏe bệnh nhân.",
+            "feature": {
+                "ai": "AI Hỗ trợ",
+                "aiDesc": "Chẩn đoán thông minh",
+                "appointment": "Lịch hẹn",
+                "appointmentDesc": "Đặt lịch trực tuyến",
+                "prescription": "Kê đơn",
+                "prescriptionDesc": "Thuốc điện tử",
+                "monitoring": "Theo dõi",
+                "monitoringDesc": "Sức khỏe trực tuyến"
+            },
+            "statPatients": "Bệnh nhân",
+            "statDoctors": "Bác sĩ",
+            "statSpecialties": "Chuyên khoa",
+            "emailLabel": "Địa chỉ email",
+            "passwordLabel": "Mật khẩu",
+            "rememberMe": "Ghi nhớ đăng nhập",
+            "forgotPassword": "Quên mật khẩu?",
+            "loggingIn": "Đang đăng nhập...",
+            "submit": "Đăng nhập",
+            "noAccount": "Chưa có tài khoản?",
+            "registerNow": "Đăng ký ngay",
+            "copyright": "© 2025 EHealth. Hệ thống Y tế Số — PTH Group",
+            "errorDefault": "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
+        },
+        "register": {
+            "title": "Đăng ký tài khoản",
+            "subtitle": "Tạo tài khoản mới để sử dụng hệ thống EHealth",
+            "fullNameLabel": "Họ và tên",
+            "emailLabel": "Địa chỉ email",
+            "phoneLabel": "Số điện thoại",
+            "passwordLabel": "Mật khẩu",
+            "confirmPasswordLabel": "Xác nhận mật khẩu",
+            "submit": "Đăng ký",
+            "registering": "Đang đăng ký...",
+            "hasAccount": "Đã có tài khoản?",
+            "loginLink": "Đăng nhập"
+        },
+        "forgotPassword": {
+            "title": "Quên mật khẩu",
+            "subtitle": "Nhập email để nhận hướng dẫn khôi phục mật khẩu",
+            "emailLabel": "Địa chỉ email",
+            "submit": "Gửi yêu cầu",
+            "sending": "Đang gửi...",
+            "backToLogin": "Quay lại đăng nhập"
+        },
+        "otp": {
+            "title": "Xác thực OTP",
+            "subtitle": "Nhập mã OTP đã gửi đến email của bạn",
+            "codeLabel": "Mã xác thực",
+            "submit": "Xác thực",
+            "verifying": "Đang xác thực...",
+            "resend": "Gửi lại mã",
+            "resendIn": "Gửi lại sau {seconds}s"
+        },
+        "verifyEmail": {
+            "title": "Xác thực email",
+            "subtitle": "Vui lòng kiểm tra email để xác thực tài khoản",
+            "verifying": "Đang xác thực email...",
+            "success": "Xác thực thành công!",
+            "goToLogin": "Đi đến đăng nhập"
+        }
+    },
+    "public": {
+        "landing": {
+            "title": "EHealth — Nền tảng Y tế Số",
+            "subtitle": "Chăm sóc sức khỏe thông minh, kết nối bác sĩ và bệnh nhân"
+        },
+        "specialties": {
+            "title": "Chuyên khoa",
+            "subtitle": "Danh mục các chuyên khoa y tế"
+        },
+        "booking": {
+            "title": "Đặt lịch khám",
+            "subtitle": "Đặt lịch khám trực tuyến với bác sĩ phù hợp"
+        },
+        "doctors": {
+            "title": "Tìm bác sĩ",
+            "subtitle": "Danh bạ bác sĩ theo chuyên khoa và cơ sở"
+        },
+        "doctorDetail": {
+            "title": "Thông tin bác sĩ",
+            "subtitle": "Hồ sơ chuyên môn và lịch làm việc"
+        }
+    },
+    "portal": {
+        "doctor": {
+            "dashboard": {
+                "title": "Tổng quan",
+                "subtitle": "Xin chào, đây là báo cáo hoạt động của bạn hôm nay."
+            },
+            "appointments": {
+                "title": "Quản lý Lịch hẹn",
+                "subtitle": "Xem và quản lý lịch hẹn khám bệnh."
+            },
+            "appointmentsNew": {
+                "title": "Đặt lịch mới",
+                "subtitle": "Tạo lịch hẹn khám mới cho bệnh nhân."
+            },
+            "manageSlots": {
+                "title": "Quản lý khung giờ trống",
+                "subtitle": "Cấu hình slot khám trống cho lịch hẹn."
+            },
+            "queue": {
+                "title": "Hàng đợi thăm khám",
+                "subtitle": "Quản lý hàng đợi bệnh nhân chờ khám."
+            },
+            "examination": {
+                "title": "Khám bệnh",
+                "subtitle": "Thực hiện khám và ghi nhận thông tin bệnh nhân."
+            },
+            "medicalRecords": {
+                "title": "Hồ sơ bệnh án",
+                "subtitle": "Quản lý và xem hồ sơ bệnh án của các bệnh nhân."
+            },
+            "ehr": {
+                "title": "Hồ sơ sức khỏe điện tử (EHR)",
+                "subtitle": "Xem toàn bộ dữ liệu sức khỏe của bệnh nhân."
+            },
+            "encounters": {
+                "title": "Lượt khám",
+                "subtitle": "Lịch sử lượt khám của bệnh nhân."
+            },
+            "diagnosis": {
+                "title": "Chẩn đoán",
+                "subtitle": "Nhập chẩn đoán và kết luận khám."
+            },
+            "clinicalExam": {
+                "title": "Khám lâm sàng",
+                "subtitle": "Ghi nhận triệu chứng lâm sàng và sinh hiệu."
+            },
+            "prescriptions": {
+                "title": "Danh sách đơn thuốc",
+                "subtitle": "Quản lý và theo dõi lịch sử kê đơn."
+            },
+            "prescriptionsNew": {
+                "title": "Tạo đơn thuốc mới",
+                "subtitle": "Kê đơn thuốc cho bệnh nhân."
+            },
+            "aiAssistant": {
+                "title": "Trợ lý AI",
+                "subtitle": "AI hỗ trợ chẩn đoán và kê đơn."
+            },
+            "telemedicine": {
+                "title": "Khám từ xa",
+                "subtitle": "Tư vấn và khám bệnh online."
+            },
+            "settings": {
+                "title": "Cài đặt",
+                "subtitle": "Quản lý thông tin cá nhân và cài đặt hệ thống."
+            }
+        },
+        "pharmacist": {
+            "dashboard": {
+                "title": "Tổng quan dược sĩ",
+                "subtitle": "Thống kê cấp phát thuốc và tồn kho hôm nay."
+            },
+            "prescriptions": {
+                "title": "Đơn thuốc chờ cấp phát",
+                "subtitle": "Danh sách đơn thuốc từ bác sĩ."
+            },
+            "dispensing": {
+                "title": "Cấp phát thuốc",
+                "subtitle": "Xuất thuốc cho bệnh nhân theo đơn."
+            },
+            "inventory": {
+                "title": "Kho thuốc",
+                "subtitle": "Quản lý tồn kho thuốc và vật tư."
+            },
+            "inventoryImport": {
+                "title": "Nhập kho",
+                "subtitle": "Tiếp nhận thuốc từ nhà cung cấp."
+            },
+            "stockOut": {
+                "title": "Xuất kho",
+                "subtitle": "Phiếu xuất kho thuốc."
+            },
+            "settings": {
+                "title": "Cài đặt",
+                "subtitle": "Quản lý thông tin cá nhân."
+            }
+        },
+        "staff": {
+            "dashboard": {
+                "title": "Tổng quan lễ tân",
+                "subtitle": "Hoạt động tiếp nhận và đặt lịch hôm nay."
+            },
+            "reception": {
+                "title": "Tiếp nhận bệnh nhân",
+                "subtitle": "Đăng ký và tiếp nhận bệnh nhân đến khám."
+            },
+            "appointments": {
+                "title": "Quản lý lịch hẹn",
+                "subtitle": "Lịch hẹn khám bệnh của cơ sở."
+            },
+            "appointmentsNew": {
+                "title": "Đặt lịch hẹn mới",
+                "subtitle": "Tạo lịch hẹn cho bệnh nhân."
+            },
+            "queue": {
+                "title": "Hàng đợi",
+                "subtitle": "Quản lý hàng đợi bệnh nhân."
+            },
+            "queueBatch": {
+                "title": "Thao tác hàng loạt & QR check-in",
+                "subtitle": "Xác nhận lịch hàng loạt, gửi nhắc SMS/email, QR check-in nhanh."
+            },
+            "patients": {
+                "title": "Bệnh nhân",
+                "subtitle": "Danh sách bệnh nhân đã đăng ký."
+            },
+            "patientsNew": {
+                "title": "Thêm bệnh nhân mới",
+                "subtitle": "Đăng ký hồ sơ bệnh nhân mới."
+            },
+            "patientDetail": {
+                "title": "Chi tiết bệnh nhân",
+                "subtitle": "Thông tin chi tiết và lịch sử khám."
+            },
+            "billing": {
+                "title": "Thanh toán",
+                "subtitle": "Quản lý hóa đơn và thu viện phí."
+            },
+            "billingNew": {
+                "title": "Tạo hóa đơn mới",
+                "subtitle": "Lập hóa đơn cho bệnh nhân."
+            },
+            "settings": {
+                "title": "Cài đặt",
+                "subtitle": "Quản lý thông tin cá nhân."
+            }
+        },
+        "cashier": {
+            "offline": {
+                "title": "POS thu ngân offline",
+                "subtitle": "Thanh toán tiền mặt tại quầy."
+            }
+        },
+        "patient": {
+            "dashboard": {
+                "title": "Trang chủ bệnh nhân",
+                "subtitle": "Tổng quan sức khỏe và lịch hẹn của bạn."
+            },
+            "appointments": {
+                "title": "Lịch hẹn của tôi",
+                "subtitle": "Danh sách lịch hẹn khám đã đặt."
+            },
+            "appointmentDetail": {
+                "title": "Chi tiết lịch hẹn",
+                "subtitle": "Thông tin chi tiết về lịch hẹn khám."
+            },
+            "patientProfiles": {
+                "title": "Hồ sơ bệnh nhân",
+                "subtitle": "Quản lý hồ sơ bệnh nhân (bản thân + người thân)."
+            },
+            "patientProfileDetail": {
+                "title": "Chi tiết hồ sơ bệnh nhân",
+                "subtitle": "Thông tin đầy đủ của hồ sơ."
+            },
+            "medicalRecords": {
+                "title": "Kết quả khám",
+                "subtitle": "Xem lịch sử khám và kết quả chẩn đoán."
+            },
+            "medicalRecordDetail": {
+                "title": "Chi tiết kết quả khám",
+                "subtitle": "Thông tin đầy đủ của lượt khám."
+            },
+            "healthRecords": {
+                "title": "Hồ sơ sức khỏe",
+                "subtitle": "Theo dõi chỉ số sức khỏe cá nhân."
+            },
+            "medicationReminders": {
+                "title": "Nhắc thuốc",
+                "subtitle": "Lịch uống thuốc và nhắc nhở hàng ngày."
+            },
+            "billing": {
+                "title": "Thanh toán",
+                "subtitle": "Hóa đơn viện phí và lịch sử thanh toán."
+            },
+            "telemedicine": {
+                "title": "Khám từ xa",
+                "subtitle": "Đặt lịch và tham gia phiên tư vấn online."
+            },
+            "telemedicineRoom": {
+                "title": "Phòng tư vấn online",
+                "subtitle": "Phiên khám trực tuyến với bác sĩ."
+            },
+            "aiConsult": {
+                "title": "AI tư vấn sức khỏe",
+                "subtitle": "Tư vấn ban đầu với trợ lý AI."
+            },
+            "profile": {
+                "title": "Tài khoản của tôi",
+                "subtitle": "Thông tin cá nhân và bảo mật."
+            }
+        },
+        "notifications": {
+            "inbox": {
+                "title": "Hộp thư thông báo",
+                "subtitle": "Thông báo từ bệnh viện và hệ thống."
+            }
+        }
+    }
+}

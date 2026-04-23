@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -66,6 +67,7 @@ export default function PatientProfilesPage() {
     const { showToast } = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const tp = useTranslations("pages.portal.patient.patientProfiles");
 
     const [profiles, setProfiles] = useState<PatientProfile[]>([]);
     const [loading, setLoading] = useState(true);
@@ -387,10 +389,10 @@ export default function PatientProfilesPage() {
                                 <span className="material-symbols-outlined text-[#3C81C6]" style={{ fontSize: "28px" }}>
                                     family_restroom
                                 </span>
-                                Hồ sơ bệnh nhân
+                                {tp("title")}
                             </h1>
                             <p className="mt-1 max-w-3xl text-sm text-slate-500 dark:text-slate-400">
-                                Quản lý hồ sơ của bản thân và người thân. Bảo hiểm, tiền sử và tài liệu được cập nhật bên trong từng hồ sơ.
+                                {tp("subtitle")}
                             </p>
                         </div>
 

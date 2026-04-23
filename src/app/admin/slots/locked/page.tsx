@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { LOCKED_SLOT_ENDPOINTS, SHIFT_ENDPOINTS, STAFF_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -47,6 +48,8 @@ function formatDate(d?: string): string {
 
 export default function LockedSlotsPage() {
     const toast = useToast();
+    const t = useTranslations("pages.slotsLocked");
+    const tc = useTranslations("common");
     const [locks, setLocks] = useState<LockedSlot[]>([]);
     const [doctors, setDoctors] = useState<DoctorLite[]>([]);
     const [shifts, setShifts] = useState<ShiftLite[]>([]);
@@ -166,10 +169,10 @@ export default function LockedSlotsPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Slot bị khoá"
-                subtitle="Khoá tạm slot khám khi bác sĩ bận, phòng bảo trì hoặc ngưng nhận lịch"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="lock"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Cấu hình slot" }, { label: "Slot bị khoá" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: "Cấu hình slot" }, { label: t("title") }]}
                 actions={
                     <div className="flex items-center gap-2">
                         <button onClick={() => setShowLockByShift(true)} className="px-4 py-2 text-sm font-semibold text-[#3C81C6] border border-[#3C81C6]/40 hover:bg-[#3C81C6]/10 rounded-xl inline-flex items-center gap-1">

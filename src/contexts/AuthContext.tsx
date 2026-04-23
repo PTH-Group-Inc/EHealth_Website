@@ -63,7 +63,7 @@ interface AuthContextType {
     permissions: string[];
 
     // Actions
-    login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+    login: (email: string, password: string) => Promise<{ success: boolean; message: string; code?: string }>;
     logout: () => Promise<void>;
     updateUser: (userData: Partial<User>) => void;
 
@@ -215,11 +215,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 return { success: true, message: 'Đăng nhập thành công!' };
             }
 
-            return { success: false, message: response.message || 'Đăng nhập thất bại' };
+            return { success: false, message: response.message || 'Đăng nhập thất bại', code: response.code };
         } catch (error: any) {
             return {
                 success: false,
-                message: error.message || 'Đăng nhập thất bại'
+                code: error.response?.data?.code,
+                message: error.response?.data?.message || error.message || 'Đăng nhập thất bại',
             };
         } finally {
             setIsLoading(false);

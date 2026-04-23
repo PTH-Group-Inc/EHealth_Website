@@ -102,6 +102,24 @@ export const teleQualityService = {
         const res = await axiosClient.get(TELE_QUALITY_ENDPOINTS.SYSTEM_REPORT);
         return unwrap<QualityDashboard>(res);
     },
+
+    /** Metric chất lượng theo bác sĩ */
+    getDoctorMetrics: async (doctorId: string) => {
+        const res = await axiosClient.get(TELE_QUALITY_ENDPOINTS.DOCTOR_METRICS(doctorId));
+        return unwrap<Record<string, any>>(res);
+    },
+
+    /** Danh sách đánh giá theo bác sĩ */
+    getDoctorReviews: async (doctorId: string, params?: Record<string, any>) => {
+        const res = await axiosClient.get(TELE_QUALITY_ENDPOINTS.DOCTOR_REVIEWS(doctorId), { params });
+        return unwrapList<QualityReview>(res);
+    },
+
+    /** Thống kê cảnh báo chất lượng */
+    getAlertStats: async () => {
+        const res = await axiosClient.get(TELE_QUALITY_ENDPOINTS.ALERT_STATS);
+        return unwrap<Record<string, any>>(res);
+    },
 };
 
 export default teleQualityService;

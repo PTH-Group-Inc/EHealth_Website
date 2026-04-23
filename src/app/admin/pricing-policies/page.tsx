@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { BILLING_PRICING_ENDPOINTS, FACILITY_MANAGEMENT_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -48,6 +49,8 @@ function formatVND(n: number): string {
 
 export default function PricingPoliciesPage() {
     const toast = useToast();
+    const t = useTranslations("pages.pricingPolicies");
+    const tc = useTranslations("common");
     const [facilities, setFacilities] = useState<FacilityLite[]>([]);
     const [facilityId, setFacilityId] = useState("");
     const [policies, setPolicies] = useState<Policy[]>([]);
@@ -123,10 +126,10 @@ export default function PricingPoliciesPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Chính sách giá dịch vụ"
-                subtitle="Cấu hình bảng giá dịch vụ y tế theo cơ sở và thời gian hiệu lực"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="price_change"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Chính sách giá" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm p-4 flex flex-wrap items-center gap-3">

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import { encounterService } from "@/services/encounterService";
 import { PageHeader, StatCard, FilterBar, EmptyState } from "@/components/shared/layout";
@@ -79,6 +80,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function DoctorEncountersPage() {
+    const t = useTranslations("pages.portal.doctor.encounters");
     const router = useRouter();
     const { user } = useAuth();
     const [rows, setRows] = useState<EncounterRow[]>([]);
@@ -138,8 +140,8 @@ export default function DoctorEncountersPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Phiên khám (Encounter)"
-                subtitle="Quản lý toàn bộ lượt tiếp nhận khám chữa bệnh"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="medical_services"
                 breadcrumbs={[
                     { label: "Cổng bác sĩ", href: "/portal/doctor" },

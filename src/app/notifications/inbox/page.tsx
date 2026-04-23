@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
     getNotifications as getNotificationInbox,
     markNotificationAsRead as markNotificationRead,
@@ -34,6 +35,7 @@ type FilterType = "all" | "unread" | "read";
 export default function NotificationInboxPage() {
     const router = useRouter();
     const toast = useToast();
+    const tp = useTranslations("pages.portal.notifications.inbox");
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [filter, setFilter] = useState<FilterType>("all");
     const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -132,7 +134,7 @@ export default function NotificationInboxPage() {
                         </button>
                         <div>
                             <h1 className="text-xl font-bold text-[#121417] dark:text-white flex items-center gap-2">
-                                Hộp thư thông báo
+                                {tp("title")}
                                 {unreadCount > 0 && (
                                     <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white">{unreadCount}</span>
                                 )}

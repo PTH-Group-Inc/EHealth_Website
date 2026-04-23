@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { APPOINTMENT_CHANGE_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -72,6 +73,8 @@ function formatDT(d?: string): string {
 
 export default function AppointmentChangesPage() {
     const toast = useToast();
+    const t = useTranslations("pages.appointmentChanges");
+    const tc = useTranslations("common");
     const [changes, setChanges] = useState<AppointmentChange[]>([]);
     const [stats, setStats] = useState<Stats>({ total: 0, reschedule: 0, cancel: 0, doctorSwap: 0 });
     const [loading, setLoading] = useState(true);
@@ -140,10 +143,10 @@ export default function AppointmentChangesPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Lịch sử thay đổi lịch hẹn"
-                subtitle="Thống kê & theo dõi tất cả yêu cầu dời/huỷ/đổi bác sĩ/đổi phòng"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="history"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Thay đổi lịch" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { BILLING_OFFLINE_PAYMENT_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -60,6 +61,7 @@ function formatVND(n: number): string {
 }
 
 export default function CashierOfflinePage() {
+    const t = useTranslations("pages.portal.cashier.offline");
     const toast = useToast();
     const [txns, setTxns] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
@@ -154,8 +156,8 @@ export default function CashierOfflinePage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="POS Thu ngân offline"
-                subtitle="Thu tiền trực tiếp, in biên lai, quản lý giao dịch POS"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="point_of_sale"
                 breadcrumbs={[{ label: "Thu ngân", href: "/portal/cashier" }, { label: "POS offline" }]}
                 actions={

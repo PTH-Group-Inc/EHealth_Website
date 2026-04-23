@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { SUPPLIER_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
 import { useToast } from "@/contexts/ToastContext";
 import { PageHeader, FilterBar, EmptyState, StatCard } from "@/components/shared/layout";
+import { translateError } from "@/utils/translateError";
 
 interface Supplier {
     id: string;
@@ -51,6 +53,9 @@ function mapSupplier(r: any): Supplier {
 
 export default function SuppliersPage() {
     const toast = useToast();
+    const t = useTranslations("pages.suppliers");
+    const tc = useTranslations("common");
+    const tErr = useTranslations("errors");
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -68,12 +73,12 @@ export default function SuppliersPage() {
             const { data } = unwrapList<any>(res);
             setSuppliers(data.map(mapSupplier));
         } catch {
-            setError("Không tải được danh sách nhà cung cấp.");
+            setError(t("toast.loadError"));
             setSuppliers([]);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -104,7 +109,7 @@ export default function SuppliersPage() {
     };
 
     const handleSave = async () => {
-        if (!form.code.trim() || !form.name.trim()) { toast.warning("Nhập mã và tên NCC."); return; }
+        if (!form.code.trim() || !form.name.trim()) { toast.warning(t("toast.requiredCodeName")); return; }
         setSaving(true);
         try {
             const payload = {
@@ -119,60 +124,60 @@ export default function SuppliersPage() {
             };
             if (form.id) {
                 await axiosClient.put(SUPPLIER_ENDPOINTS.DETAIL(form.id), payload);
-                toast.success("Đã cập nhật NCC.");
+                toast.success(tc("toast.updated"));
             } else {
                 await axiosClient.post(SUPPLIER_ENDPOINTS.LIST, payload);
-                toast.success("Đã tạo NCC.");
+                toast.success(tc("toast.created"));
             }
             setShowModal(false);
             await load();
         } catch (err: any) {
-            toast.error(err?.response?.data?.message ?? "Không lưu được.");
+            toast.error(translateError(err, tErr));
         } finally {
             setSaving(false);
         }
     };
 
     const handleDelete = async (s: Supplier) => {
-        if (!confirm(`Xoá NCC "${s.name}"?`)) return;
+        if (!confirm(tc("confirm.deleteNamed", { name: s.name }))) return;
         try {
             await axiosClient.delete(SUPPLIER_ENDPOINTS.DETAIL(s.id));
-            toast.success("Đã xoá.");
+            toast.success(tc("toast.deleted"));
             await load();
-        } catch {
-            toast.error("Không xoá được.");
+        } catch (err: any) {
+            toast.error(translateError(err, tErr));
         }
     };
 
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Nhà cung cấp"
-                subtitle="Quản lý thông tin các nhà cung cấp thuốc và vật tư y tế"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="local_shipping"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Nhà cung cấp" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <button onClick={openCreate} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md inline-flex items-center gap-1">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
-                        Thêm NCC
+                        {t("addButton")}
                     </button>
                 }
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Tổng NCC" value={stats.total} icon="local_shipping" color="blue" loading={loading} />
-                <StatCard label="Đang hợp tác" value={stats.active} icon="check_circle" color="emerald" loading={loading} />
-                <StatCard label="Ngưng" value={stats.inactive} icon="cancel" color="red" loading={loading} />
-                <StatCard label="Có liên hệ" value={stats.withContact} icon="contact_phone" color="violet" loading={loading} />
+                <StatCard label={t("stats.total")} value={stats.total} icon="local_shipping" color="blue" loading={loading} />
+                <StatCard label={t("stats.active")} value={stats.active} icon="check_circle" color="emerald" loading={loading} />
+                <StatCard label={t("stats.inactive")} value={stats.inactive} icon="cancel" color="red" loading={loading} />
+                <StatCard label={t("stats.withContact")} value={stats.withContact} icon="contact_phone" color="violet" loading={loading} />
             </div>
 
             <FilterBar
-                searchPlaceholder="Tìm theo mã, tên, MST, SĐT..."
+                searchPlaceholder={t("filter.searchPlaceholder")}
                 searchValue={search}
                 onSearchChange={setSearch}
                 filters={[{
-                    key: "status", label: "Trạng thái", value: statusFilter, onChange: setStatusFilter,
-                    options: [{ value: "all", label: "Tất cả" }, { value: "ACTIVE", label: "Đang hợp tác" }, { value: "INACTIVE", label: "Ngưng" }],
+                    key: "status", label: tc("filter.status"), value: statusFilter, onChange: setStatusFilter,
+                    options: [{ value: "all", label: tc("filter.all") }, { value: "ACTIVE", label: t("filter.active") }, { value: "INACTIVE", label: t("filter.inactive") }],
                 }]}
                 onReset={() => { setSearch(""); setStatusFilter("all"); }}
             />
@@ -187,19 +192,19 @@ export default function SuppliersPage() {
             {loading ? (
                 <div className="space-y-3">{[0, 1, 2, 3].map((i) => <div key={i} className="h-16 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />)}</div>
             ) : filtered.length === 0 ? (
-                <EmptyState icon="local_shipping" title={suppliers.length === 0 ? "Chưa có NCC" : "Không khớp bộ lọc"} description={suppliers.length === 0 ? "Thêm NCC đầu tiên để bắt đầu nhập kho." : "Thử đổi từ khoá."} />
+                <EmptyState icon="local_shipping" title={suppliers.length === 0 ? t("empty.none") : t("empty.noMatch")} description={suppliers.length === 0 ? t("empty.noneDesc") : t("empty.noMatchDesc")} />
             ) : (
                 <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead className="bg-[#f8f9fa] dark:bg-[#13191f] border-b border-[#dde0e4] dark:border-[#2d353e]">
                                 <tr>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">Mã / Tên</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">MST</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">Liên hệ</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">Địa chỉ</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">Trạng thái</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">Thao tác</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{t("table.codeName")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{t("table.taxCode")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{t("table.contact")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{t("table.address")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{tc("filter.status")}</th>
+                                    <th className="text-right px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{tc("table.actions")}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -219,15 +224,15 @@ export default function SuppliersPage() {
                                         <td className="px-4 py-3 text-xs text-[#687582] dark:text-gray-400 max-w-xs truncate" title={s.address}>{s.address || "—"}</td>
                                         <td className="px-4 py-3">
                                             <div className={`inline-flex text-[10px] font-bold px-2 py-1 rounded-md ${s.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"}`}>
-                                                {s.status === "ACTIVE" ? "Đang hợp tác" : "Ngưng"}
+                                                {s.status === "ACTIVE" ? t("statusLabel.active") : t("statusLabel.inactive")}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-1">
-                                                <button onClick={() => openEdit(s)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/[0.1] rounded-md" title="Sửa">
+                                                <button onClick={() => openEdit(s)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/[0.1] rounded-md" title={tc("table.editTitle")}>
                                                     <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
                                                 </button>
-                                                <button onClick={() => handleDelete(s)} className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md" title="Xoá">
+                                                <button onClick={() => handleDelete(s)} className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md" title={tc("table.deleteTitle")}>
                                                     <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>delete</span>
                                                 </button>
                                             </div>
@@ -245,26 +250,26 @@ export default function SuppliersPage() {
                     <div className="bg-white dark:bg-[#1e242b] rounded-2xl shadow-xl max-w-lg w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-lg font-bold text-[#121417] dark:text-white mb-4 flex items-center gap-2">
                             <span className="material-symbols-outlined text-[#3C81C6]">{form.id ? "edit" : "add"}</span>
-                            {form.id ? "Sửa nhà cung cấp" : "Thêm nhà cung cấp"}
+                            {form.id ? t("modal.titleEdit") : t("modal.titleCreate")}
                         </h3>
                         <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
-                                <FormInput label="Mã NCC *" value={form.code} onChange={(v) => setForm({ ...form, code: v })} placeholder="VD: NCC001" />
-                                <FormInput label="Mã số thuế" value={form.taxCode} onChange={(v) => setForm({ ...form, taxCode: v })} />
+                                <FormInput label={`${t("modal.code")} *`} value={form.code} onChange={(v) => setForm({ ...form, code: v })} placeholder={t("modal.codePlaceholder")} />
+                                <FormInput label={t("modal.taxCode")} value={form.taxCode} onChange={(v) => setForm({ ...form, taxCode: v })} />
                             </div>
-                            <FormInput label="Tên NCC *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+                            <FormInput label={`${t("modal.name")} *`} value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
                             <div className="grid grid-cols-2 gap-3">
-                                <FormInput label="Người liên hệ" value={form.contactPerson} onChange={(v) => setForm({ ...form, contactPerson: v })} />
-                                <FormInput label="SĐT" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+                                <FormInput label={t("modal.contactPerson")} value={form.contactPerson} onChange={(v) => setForm({ ...form, contactPerson: v })} />
+                                <FormInput label={t("modal.phone")} value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
                             </div>
-                            <FormInput label="Email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} type="email" />
-                            <FormInput label="Địa chỉ" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
-                            <FormTextarea label="Ghi chú" value={form.note} onChange={(v) => setForm({ ...form, note: v })} />
+                            <FormInput label={t("modal.email")} value={form.email} onChange={(v) => setForm({ ...form, email: v })} type="email" />
+                            <FormInput label={t("modal.address")} value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
+                            <FormTextarea label={t("modal.note")} value={form.note} onChange={(v) => setForm({ ...form, note: v })} />
                         </div>
                         <div className="flex items-center justify-end gap-2 mt-5 pt-4 border-t border-[#dde0e4] dark:border-[#2d353e]">
-                            <button onClick={() => setShowModal(false)} disabled={saving} className="px-4 py-2 text-sm text-[#687582] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl disabled:opacity-50">Huỷ</button>
+                            <button onClick={() => setShowModal(false)} disabled={saving} className="px-4 py-2 text-sm text-[#687582] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl disabled:opacity-50">{tc("actions.cancel")}</button>
                             <button onClick={handleSave} disabled={saving} className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md disabled:opacity-50">
-                                {saving ? "Đang lưu..." : "Lưu"}
+                                {saving ? tc("form.saving") : tc("actions.save")}
                             </button>
                         </div>
                     </div>

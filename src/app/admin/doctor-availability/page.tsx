@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { DOCTOR_AVAILABILITY_ENDPOINTS, DOCTOR_ABSENCE_ENDPOINTS, STAFF_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -93,14 +94,16 @@ function todayISO(): string {
 }
 
 export default function DoctorAvailabilityPage() {
+    const t = useTranslations("pages.doctorAvailability");
+    const tc = useTranslations("common");
     const [tab, setTab] = useState<TabKey>("availability");
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Độ rảnh & vắng mặt bác sĩ"
-                subtitle="Theo dõi độ rảnh của bác sĩ theo ngày và quản lý vắng mặt đột xuất"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="person_search"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Độ rảnh bác sĩ" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm p-1.5 inline-flex gap-1">

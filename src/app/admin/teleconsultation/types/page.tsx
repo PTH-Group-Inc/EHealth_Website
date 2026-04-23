@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { TELE_CONSULTATION_TYPE_ENDPOINTS, TELE_CONFIG_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -72,15 +73,17 @@ function formatVND(n: number): string {
 }
 
 export default function TeleTypesPage() {
+    const t = useTranslations("pages.tele.types");
+    const tc = useTranslations("common");
     const [tab, setTab] = useState<TabKey>("types");
 
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Cấu hình khám từ xa"
-                subtitle="Định nghĩa loại khám online, thông số cấu hình theo loại, và config admin chung"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="videocam"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Telemedicine" }, { label: "Loại & cấu hình" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm p-1.5 inline-flex gap-1">

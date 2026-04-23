@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { PatientNavbar } from "@/components/patient/PatientNavbar";
 import { PatientFooter } from "@/components/patient/PatientFooter";
 import { SpecialtyCard } from "@/components/patient/SpecialtyCard";
 import { getSpecialties, type Specialty } from "@/services/specialtyService";
 
 export default function SpecialtiesPage() {
+    const t = useTranslations("pages.public.specialties");
     const [specialties, setSpecialties] = useState<Specialty[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -48,10 +50,10 @@ export default function SpecialtiesPage() {
                         <span className="text-[#60a5fa] text-sm font-medium">Chuyên khoa y tế</span>
                     </div>
                     <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
-                        Danh sách <span className="bg-gradient-to-r from-[#60a5fa] to-[#06b6d4] bg-clip-text text-transparent">Chuyên khoa</span>
+                        {t("title")}
                     </h1>
                     <p className="text-[#94a3b8] text-base md:text-lg max-w-2xl mx-auto mb-8">
-                        Khám phá {specialties.length}+ chuyên khoa với đội ngũ bác sĩ giàu kinh nghiệm, trang thiết bị hiện đại
+                        {t("subtitle")}
                     </p>
 
                     {/* Search */}

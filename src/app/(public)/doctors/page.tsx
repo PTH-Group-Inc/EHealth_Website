@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { PatientNavbar } from "@/components/patient/PatientNavbar";
 import { PatientFooter } from "@/components/patient/PatientFooter";
@@ -14,6 +15,7 @@ import { branchService, type Branch } from "@/services/branchService";
 import { medicalServiceApi, type MedicalService } from "@/services/medicalService";
 
 function DoctorsPageInner() {
+    const t = useTranslations("pages.public.doctors");
     const searchParams = useSearchParams();
     const rawSpecialty = searchParams.get("specialtyId");
     const initialSpecialty = rawSpecialty && rawSpecialty !== "undefined" && rawSpecialty !== "null" ? rawSpecialty : "";
@@ -165,10 +167,10 @@ function DoctorsPageInner() {
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
-                        Đội ngũ <span className="bg-gradient-to-r from-[#60a5fa] to-[#06b6d4] bg-clip-text text-transparent">Bác sĩ</span>
+                        {t("title")}
                     </h1>
                     <p className="text-[#94a3b8] text-base md:text-lg max-w-2xl mx-auto mb-8">
-                        Tìm bác sĩ phù hợp từ đội ngũ chuyên gia giàu kinh nghiệm
+                        {t("subtitle")}
                     </p>
 
                     {/* Search */}

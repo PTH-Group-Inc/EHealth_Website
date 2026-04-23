@@ -78,6 +78,11 @@ export const medicalSignoffService = {
     );
     return unwrapList<any>(res);
   },
+
+  getLockStatus: async (encounterId: string) => {
+    const res = await axiosClient.get(SIGN_OFF_ENDPOINTS.LOCK_STATUS(encounterId));
+    return unwrap<{ locked?: boolean; reason?: string; [key: string]: any }>(res);
+  },
 };
 
 export default medicalSignoffService;

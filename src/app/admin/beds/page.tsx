@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { BED_ENDPOINTS, MEDICAL_ROOM_MANAGEMENT_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -38,11 +39,11 @@ interface FormState {
 
 const EMPTY_FORM: FormState = { code: "", name: "", roomId: "", bedType: "STANDARD", note: "" };
 
-const STATUS_META: Record<string, { label: string; color: string; icon: string; bg: string }> = {
-    AVAILABLE: { label: "Sẵn sàng", color: "emerald", icon: "bed", bg: "from-emerald-500 to-teal-500" },
-    OCCUPIED: { label: "Đang dùng", color: "blue", icon: "personal_injury", bg: "from-blue-500 to-indigo-500" },
-    MAINTENANCE: { label: "Bảo trì", color: "amber", icon: "build", bg: "from-amber-500 to-orange-500" },
-    RESERVED: { label: "Đã giữ", color: "violet", icon: "event_seat", bg: "from-violet-500 to-purple-500" },
+const STATUS_META: Record<string, { labelKey: string; color: string; icon: string; bg: string }> = {
+    AVAILABLE: { labelKey: "available", color: "emerald", icon: "bed", bg: "from-emerald-500 to-teal-500" },
+    OCCUPIED: { labelKey: "occupied", color: "blue", icon: "personal_injury", bg: "from-blue-500 to-indigo-500" },
+    MAINTENANCE: { labelKey: "maintenance", color: "amber", icon: "build", bg: "from-amber-500 to-orange-500" },
+    RESERVED: { labelKey: "reserved", color: "violet", icon: "event_seat", bg: "from-violet-500 to-purple-500" },
 };
 
 const BED_TYPES = [
@@ -85,6 +86,8 @@ function mapRoom(r: any): RoomLite {
 
 export default function BedsAdminPage() {
     const toast = useToast();
+    const t = useTranslations("pages.beds");
+    const tc = useTranslations("common");
     const [beds, setBeds] = useState<Bed[]>([]);
     const [rooms, setRooms] = useState<RoomLite[]>([]);
     const [loading, setLoading] = useState(true);
@@ -195,7 +198,8 @@ export default function BedsAdminPage() {
     const handleChangeStatus = async (b: Bed, next: BedStatus) => {
         try {
             await axiosClient.put(BED_ENDPOINTS.STATUS(b.id), { status: next });
-            toast.success(`Đã đổi trạng thái: ${STATUS_META[next]?.label}`);
+            const key = STATUS_META[next]?.labelKey;
+            toast.success(`Đã đổi trạng thái: ${key ? t(`statusLabel.${key}` as any) : next}`);
             await load();
         } catch {
             toast.error("Không đổi được trạng thái.");
@@ -216,30 +220,30 @@ export default function BedsAdminPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Giường bệnh"
-                subtitle="Quản lý tài nguyên giường bệnh theo phòng và tình trạng sử dụng"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="bed"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Giường bệnh" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <button
                         onClick={openCreate}
                         className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md transition-all inline-flex items-center gap-1"
                     >
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
-                        Tạo giường
+                        {t("addButton")}
                     </button>
                 }
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Tổng giường" value={stats.total} icon="bed" color="blue" loading={loading} />
-                <StatCard label="Sẵn sàng" value={stats.available} icon="check_circle" color="emerald" loading={loading} />
-                <StatCard label="Đang dùng" value={stats.occupied} icon="personal_injury" color="violet" loading={loading} />
-                <StatCard label="Bảo trì" value={stats.maintenance} icon="build" color="amber" loading={loading} />
+                <StatCard label={t("stats.total")} value={stats.total} icon="bed" color="blue" loading={loading} />
+                <StatCard label={t("stats.available")} value={stats.available} icon="check_circle" color="emerald" loading={loading} />
+                <StatCard label={t("stats.occupied")} value={stats.occupied} icon="personal_injury" color="violet" loading={loading} />
+                <StatCard label={t("stats.maintenance")} value={stats.maintenance} icon="build" color="amber" loading={loading} />
             </div>
 
             <FilterBar
-                searchPlaceholder="Tìm theo mã, tên, phòng, bệnh nhân..."
+                searchPlaceholder={t("filter.searchPlaceholder")}
                 searchValue={search}
                 onSearchChange={setSearch}
                 filters={[
@@ -260,7 +264,7 @@ export default function BedsAdminPage() {
                         onChange: setStatusFilter,
                         options: [
                             { value: "all", label: "Mọi trạng thái" },
-                            ...Object.entries(STATUS_META).map(([k, v]) => ({ value: k, label: v.label })),
+                            ...Object.entries(STATUS_META).map(([k, v]) => ({ value: k, label: t(`statusLabel.${v.labelKey}` as any) })),
                         ],
                     },
                 ]}
@@ -338,7 +342,7 @@ export default function BedsAdminPage() {
                                         meta.color === "violet" ? "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300" :
                                         "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
                                     }`}>
-                                        {meta.label}
+                                        {t(`statusLabel.${meta.labelKey}` as any)}
                                     </div>
 
                                     <div className="flex items-center gap-1 pt-3 border-t border-gray-50 dark:border-gray-800">
@@ -348,7 +352,7 @@ export default function BedsAdminPage() {
                                             className="flex-1 text-[10px] px-2 py-1 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-md outline-none focus:ring-1 focus:ring-[#3C81C6]/30 dark:text-white"
                                         >
                                             {Object.entries(STATUS_META).map(([k, v]) => (
-                                                <option key={k} value={k}>{v.label}</option>
+                                                <option key={k} value={k}>{t(`statusLabel.${v.labelKey}` as any)}</option>
                                             ))}
                                         </select>
                                         <button onClick={() => openEdit(b)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/[0.1] rounded-md" title="Sửa">

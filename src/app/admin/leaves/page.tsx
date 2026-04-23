@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { LEAVE_ENDPOINTS, STAFF_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -103,6 +104,8 @@ function formatDate(d?: string): string {
 
 export default function LeavesAdminPage() {
     const toast = useToast();
+    const t = useTranslations("pages.leaves");
+    const tc = useTranslations("common");
     const [leaves, setLeaves] = useState<Leave[]>([]);
     const [staffList, setStaffList] = useState<StaffLite[]>([]);
     const [loading, setLoading] = useState(true);
@@ -224,10 +227,10 @@ export default function LeavesAdminPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Nghỉ phép nhân sự"
-                subtitle="Duyệt/từ chối đơn nghỉ phép của bác sĩ, y tá và nhân viên y tế"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="event_busy"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Nghỉ phép" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

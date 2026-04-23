@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { inventoryService } from "@/services/inventoryService";
@@ -10,6 +11,7 @@ const GROUPS = ["Kháng sinh", "Giảm đau", "Tim mạch", "Tiêu hóa", "Hô h
 const UNITS = ["viên", "ống", "gói", "chai", "tuýp", "hộp"];
 
 export default function ImportMedicinePage() {
+    const t = useTranslations("pages.portal.pharmacist.inventoryImport");
     const router = useRouter();
     const [saving, setSaving] = useState(false);
     const [todayDisplay, setTodayDisplay] = useState("");
@@ -78,7 +80,7 @@ export default function ImportMedicinePage() {
                 <div className="p-6 border-b border-[#dde0e4] dark:border-[#2d353e] flex items-center justify-between">
                     <div>
                         <h1 className="text-xl font-bold text-[#121417] dark:text-white flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[#3C81C6]">inventory_2</span> Phiếu nhập thuốc
+                            <span className="material-symbols-outlined text-[#3C81C6]">inventory_2</span> {t("title")}
                         </h1>
                         <p className="text-sm text-[#687582] mt-1">Ngày nhập: {todayDisplay}</p>
                     </div>

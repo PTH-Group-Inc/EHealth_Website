@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
     PageHeader,
     StatsCards,
@@ -18,6 +19,7 @@ import { emptyDashboardReport, type DashboardReportDto } from "@/features/admin/
 
 export default function AdminDashboard() {
     usePageAIContext({ pageKey: "admin-dashboard" });
+    const t = useTranslations("pages.dashboard");
     const [report, setReport] = useState<DashboardReportDto>(emptyDashboardReport());
 
     useEffect(() => {
@@ -44,7 +46,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="space-y-4">
-            <h1 className="sr-only">Bang dieu khien quan tri</h1>
+            <h1 className="sr-only">{t("title")}</h1>
             <PageHeader />
             <StatsCards stats={report.stats} />
 

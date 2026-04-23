@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import { usePageAIContext } from "@/hooks/usePageAIContext";
@@ -224,6 +225,7 @@ export default function MedicationRemindersPage() {
     usePageAIContext({ pageKey: "medication-reminders" });
     const { user } = useAuth();
     const { showToast } = useToast();
+    const tp = useTranslations("pages.portal.patient.medicationReminders");
 
     const [profiles, setProfiles] = useState<PatientProfile[]>([]);
     const [selectedProfileId, setSelectedProfileId] = useState("");
@@ -407,9 +409,9 @@ export default function MedicationRemindersPage() {
             <div>
                 <h1 className="flex items-center gap-2 text-2xl font-bold text-[#121417] dark:text-white">
                     <span className="material-symbols-outlined text-[#3C81C6]" style={{ fontSize: "28px" }}>medication</span>
-                    Nhắc thuốc
+                    {tp("title")}
                 </h1>
-                <p className="mt-1 text-sm text-[#687582]">Lấy trực tiếp từ thuốc đang dùng trên hồ sơ bệnh nhân và ghi nhận tuân thủ hằng ngày.</p>
+                <p className="mt-1 text-sm text-[#687582]">{tp("subtitle")}</p>
             </div>
 
             {profiles.length > 0 ? (

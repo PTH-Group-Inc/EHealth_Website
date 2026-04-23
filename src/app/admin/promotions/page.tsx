@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { BILLING_PRICING_POLICY_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -106,15 +107,17 @@ function formatDiscount(type: string, value: number): string {
 }
 
 export default function PromotionsPage() {
+    const t = useTranslations("pages.promotions");
+    const tc = useTranslations("common");
     const [tab, setTab] = useState<TabKey>("discounts");
 
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Khuyến mãi & Ưu đãi"
-                subtitle="Quản lý chiết khấu, voucher, và gói dịch vụ combo"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="local_offer"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Khuyến mãi" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm p-1.5 inline-flex gap-1">
@@ -122,11 +125,11 @@ export default function PromotionsPage() {
                     { key: "discounts", label: "Chiết khấu", icon: "discount" },
                     { key: "vouchers", label: "Voucher", icon: "confirmation_number" },
                     { key: "bundles", label: "Gói combo", icon: "widgets" },
-                ] as { key: TabKey; label: string; icon: string }[]).map((t) => (
-                    <button key={t.key} onClick={() => setTab(t.key)}
-                        className={`px-4 py-2 text-sm font-medium rounded-xl inline-flex items-center gap-1.5 ${tab === t.key ? "bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] text-white shadow-sm" : "text-[#687582] dark:text-gray-400 hover:bg-[#f8f9fa] dark:hover:bg-[#13191f]"}`}>
-                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>{t.icon}</span>
-                        {t.label}
+                ] as { key: TabKey; label: string; icon: string }[]).map((item) => (
+                    <button key={item.key} onClick={() => setTab(item.key)}
+                        className={`px-4 py-2 text-sm font-medium rounded-xl inline-flex items-center gap-1.5 ${tab === item.key ? "bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] text-white shadow-sm" : "text-[#687582] dark:text-gray-400 hover:bg-[#f8f9fa] dark:hover:bg-[#13191f]"}`}>
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>{item.icon}</span>
+                        {item.label}
                     </button>
                 ))}
             </div>

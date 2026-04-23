@@ -130,11 +130,23 @@ export const ROUTES = {
   PORTAL: {
     DOCTOR: {
       DASHBOARD: "/portal/doctor",
+      TASKS: "/portal/doctor/tasks",
+      ALERTS: "/portal/doctor/alerts",
       APPOINTMENTS: "/portal/doctor/appointments",
       QUEUE: "/portal/doctor/queue",
+      SCHEDULE: "/portal/doctor/schedule",
+      LEAVES: "/portal/doctor/leaves",
+      SHIFT_SWAPS: "/portal/doctor/shift-swaps",
+      PATIENTS: "/portal/doctor/patients",
+      ENCOUNTERS: "/portal/doctor/encounters",
       EXAMINATION: "/portal/doctor/examination",
+      DIAGNOSIS: "/portal/doctor/diagnosis",
+      MEDICAL_ORDERS: "/portal/doctor/medical-orders",
       MEDICAL_RECORDS: "/portal/doctor/medical-records",
+      SIGN_OFF: "/portal/doctor/sign-off",
+      EHR: "/portal/doctor/ehr",
       PRESCRIPTIONS: "/portal/doctor/prescriptions",
+      TREATMENT_PLANS: "/portal/doctor/treatment-plans",
       AI_ASSISTANT: "/portal/doctor/ai-assistant",
       TELEMEDICINE: "/portal/doctor/telemedicine",
       SETTINGS: "/portal/doctor/settings",
@@ -144,6 +156,13 @@ export const ROUTES = {
       PRESCRIPTIONS: "/portal/pharmacist/prescriptions",
       DISPENSING: "/portal/pharmacist/dispensing",
       INVENTORY: "/portal/pharmacist/inventory",
+      STOCK_IN: "/portal/pharmacist/inventory/import",
+      STOCK_OUT: "/portal/pharmacist/stock-out",
+      ALERTS: "/portal/pharmacist/alerts",
+      MY_HISTORY: "/portal/pharmacist/my-history",
+      MASTER_DATA: "/portal/pharmacist/master-data",
+      PATIENTS: "/portal/pharmacist/patients",
+      MEDICATION_PROFILE: "/portal/pharmacist/medication-profile",
       SETTINGS: "/portal/pharmacist/settings",
     },
     STAFF: {
@@ -151,8 +170,15 @@ export const ROUTES = {
       RECEPTION: "/portal/receptionist/reception",
       APPOINTMENTS: "/portal/receptionist/appointments",
       QUEUE: "/portal/receptionist/queue",
+      ROOM_STATUS: "/portal/receptionist/room-status",
+      CHECK_IN: "/portal/receptionist/check-in",
+      CHANGE_HISTORY: "/portal/receptionist/change-history",
       PATIENTS: "/portal/receptionist/patients",
+      SUPPORT_DATA: "/portal/receptionist/support-data",
       BILLING: "/portal/receptionist/billing",
+      PAYMENTS: "/portal/receptionist/payments",
+      REFUNDS: "/portal/receptionist/refunds",
+      STAFF_INFO: "/portal/receptionist/staff-info",
       SETTINGS: "/portal/receptionist/settings",
     },
   },
@@ -185,6 +211,18 @@ export const DOCTOR_MENU_ITEMS = [
     label: "Trang chủ",
   },
   {
+    key: "tasks",
+    href: ROUTES.PORTAL.DOCTOR.TASKS,
+    icon: "checklist",
+    label: "Việc cần làm",
+  },
+  {
+    key: "alerts",
+    href: ROUTES.PORTAL.DOCTOR.ALERTS,
+    icon: "notifications_active",
+    label: "Cảnh báo",
+  },
+  {
     key: "appointments",
     href: ROUTES.PORTAL.DOCTOR.APPOINTMENTS,
     icon: "calendar_month",
@@ -197,10 +235,40 @@ export const DOCTOR_MENU_ITEMS = [
     label: "Hàng đợi",
   },
   {
+    key: "schedule",
+    href: ROUTES.PORTAL.DOCTOR.SCHEDULE,
+    icon: "event_note",
+    label: "Lịch làm việc",
+  },
+  {
+    key: "leaves",
+    href: ROUTES.PORTAL.DOCTOR.LEAVES,
+    icon: "event_busy",
+    label: "Nghỉ phép",
+  },
+  {
+    key: "shift-swaps",
+    href: ROUTES.PORTAL.DOCTOR.SHIFT_SWAPS,
+    icon: "swap_horiz",
+    label: "Đổi ca",
+  },
+  {
+    key: "patients",
+    href: ROUTES.PORTAL.DOCTOR.PATIENTS,
+    icon: "people",
+    label: "Bệnh nhân",
+  },
+  {
     key: "examination",
     href: ROUTES.PORTAL.DOCTOR.EXAMINATION,
     icon: "stethoscope",
     label: "Khám bệnh",
+  },
+  {
+    key: "medical-orders",
+    href: ROUTES.PORTAL.DOCTOR.MEDICAL_ORDERS,
+    icon: "experiment",
+    label: "Chỉ định",
   },
   {
     key: "medical-records",
@@ -209,10 +277,28 @@ export const DOCTOR_MENU_ITEMS = [
     label: "Hồ sơ bệnh án",
   },
   {
+    key: "sign-off",
+    href: ROUTES.PORTAL.DOCTOR.SIGN_OFF,
+    icon: "draw",
+    label: "Ký hồ sơ",
+  },
+  {
+    key: "ehr",
+    href: ROUTES.PORTAL.DOCTOR.EHR,
+    icon: "folder_special",
+    label: "EHR",
+  },
+  {
     key: "prescriptions",
     href: ROUTES.PORTAL.DOCTOR.PRESCRIPTIONS,
     icon: "pill",
     label: "Kê đơn",
+  },
+  {
+    key: "treatment-plans",
+    href: ROUTES.PORTAL.DOCTOR.TREATMENT_PLANS,
+    icon: "medical_information",
+    label: "Treatment plans",
   },
   {
     key: "ai-assistant",
@@ -383,48 +469,19 @@ export const ADMIN_MENU_ITEMS: AdminMenuItem[] = [
 
 // Staff sidebar menu items (formerly Receptionist)
 export const STAFF_MENU_ITEMS = [
-  {
-    key: "dashboard",
-    href: ROUTES.PORTAL.STAFF.DASHBOARD,
-    icon: "home",
-    label: "Trang chủ",
-  },
-  {
-    key: "reception",
-    href: ROUTES.PORTAL.STAFF.RECEPTION,
-    icon: "how_to_reg",
-    label: "Tiếp nhận BN",
-  },
-  {
-    key: "appointments",
-    href: ROUTES.PORTAL.STAFF.APPOINTMENTS,
-    icon: "calendar_month",
-    label: "Lịch hẹn",
-  },
-  {
-    key: "queue",
-    href: ROUTES.PORTAL.STAFF.QUEUE,
-    icon: "groups",
-    label: "Hàng đợi",
-  },
-  {
-    key: "patients",
-    href: ROUTES.PORTAL.STAFF.PATIENTS,
-    icon: "person_add",
-    label: "Bệnh nhân",
-  },
-  {
-    key: "billing",
-    href: ROUTES.PORTAL.STAFF.BILLING,
-    icon: "receipt_long",
-    label: "Thanh toán",
-  },
-  {
-    key: "settings",
-    href: ROUTES.PORTAL.STAFF.SETTINGS,
-    icon: "settings",
-    label: "Cài đặt",
-  },
+  { key: "dashboard", href: ROUTES.PORTAL.STAFF.DASHBOARD, icon: "home", label: "Trang chủ" },
+  { key: "queue", href: ROUTES.PORTAL.STAFF.QUEUE, icon: "groups", label: "Hàng đợi" },
+  { key: "room-status", href: ROUTES.PORTAL.STAFF.ROOM_STATUS, icon: "meeting_room", label: "Tình trạng phòng" },
+  { key: "patients", href: ROUTES.PORTAL.STAFF.PATIENTS, icon: "person_add", label: "Bệnh nhân" },
+  { key: "appointments", href: ROUTES.PORTAL.STAFF.APPOINTMENTS, icon: "calendar_month", label: "Lịch khám" },
+  { key: "check-in", href: ROUTES.PORTAL.STAFF.CHECK_IN, icon: "qr_code_scanner", label: "Check-in" },
+  { key: "change-history", href: ROUTES.PORTAL.STAFF.CHANGE_HISTORY, icon: "history", label: "Lịch sử thay đổi" },
+  { key: "support-data", href: ROUTES.PORTAL.STAFF.SUPPORT_DATA, icon: "database", label: "Hỗ trợ đặt lịch" },
+  { key: "billing", href: ROUTES.PORTAL.STAFF.BILLING, icon: "receipt_long", label: "Hoá đơn" },
+  { key: "payments", href: ROUTES.PORTAL.STAFF.PAYMENTS, icon: "qr_code", label: "Thanh toán QR" },
+  { key: "refunds", href: ROUTES.PORTAL.STAFF.REFUNDS, icon: "undo", label: "Hoàn tiền" },
+  { key: "staff-info", href: ROUTES.PORTAL.STAFF.STAFF_INFO, icon: "badge", label: "Vận hành nhân sự" },
+  { key: "settings", href: ROUTES.PORTAL.STAFF.SETTINGS, icon: "settings", label: "Tài khoản" },
 ] as const;
 
 // Backward compatibility alias
@@ -432,36 +489,18 @@ export const RECEPTIONIST_MENU_ITEMS = STAFF_MENU_ITEMS;
 
 // Pharmacist sidebar menu items
 export const PHARMACIST_MENU_ITEMS = [
-  {
-    key: "dashboard",
-    href: ROUTES.PORTAL.PHARMACIST.DASHBOARD,
-    icon: "home",
-    label: "Trang chủ",
-  },
-  {
-    key: "prescriptions",
-    href: ROUTES.PORTAL.PHARMACIST.PRESCRIPTIONS,
-    icon: "pill",
-    label: "Đơn thuốc",
-  },
-  {
-    key: "dispensing",
-    href: ROUTES.PORTAL.PHARMACIST.DISPENSING,
-    icon: "local_pharmacy",
-    label: "Cấp phát",
-  },
-  {
-    key: "inventory",
-    href: ROUTES.PORTAL.PHARMACIST.INVENTORY,
-    icon: "inventory_2",
-    label: "Kho thuốc",
-  },
-  {
-    key: "settings",
-    href: ROUTES.PORTAL.PHARMACIST.SETTINGS,
-    icon: "settings",
-    label: "Cài đặt",
-  },
+  { key: "dashboard", href: ROUTES.PORTAL.PHARMACIST.DASHBOARD, icon: "home", label: "Trang chủ" },
+  { key: "prescriptions", href: ROUTES.PORTAL.PHARMACIST.PRESCRIPTIONS, icon: "pill", label: "Đơn thuốc" },
+  { key: "dispensing", href: ROUTES.PORTAL.PHARMACIST.DISPENSING, icon: "local_pharmacy", label: "Cấp phát" },
+  { key: "my-history", href: ROUTES.PORTAL.PHARMACIST.MY_HISTORY, icon: "history", label: "Lịch sử của tôi" },
+  { key: "inventory", href: ROUTES.PORTAL.PHARMACIST.INVENTORY, icon: "inventory_2", label: "Tồn kho" },
+  { key: "stock-in", href: ROUTES.PORTAL.PHARMACIST.STOCK_IN, icon: "input", label: "Nhập kho" },
+  { key: "stock-out", href: ROUTES.PORTAL.PHARMACIST.STOCK_OUT, icon: "output", label: "Xuất kho" },
+  { key: "alerts", href: ROUTES.PORTAL.PHARMACIST.ALERTS, icon: "warning", label: "Cảnh báo" },
+  { key: "master-data", href: ROUTES.PORTAL.PHARMACIST.MASTER_DATA, icon: "database", label: "Master Data" },
+  { key: "patients", href: ROUTES.PORTAL.PHARMACIST.PATIENTS, icon: "groups", label: "Bệnh nhân" },
+  { key: "medication-profile", href: ROUTES.PORTAL.PHARMACIST.MEDICATION_PROFILE, icon: "medication", label: "Hồ sơ thuốc" },
+  { key: "settings", href: ROUTES.PORTAL.PHARMACIST.SETTINGS, icon: "settings", label: "Tài khoản" },
 ] as const;
 
 // Patient sidebar menu items

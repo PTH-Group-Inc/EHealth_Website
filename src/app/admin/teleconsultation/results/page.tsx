@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { TELE_RESULT_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -44,6 +45,8 @@ function formatDT(d?: string): string {
 
 export default function TeleResultsPage() {
     const toast = useToast();
+    const t = useTranslations("pages.tele.results");
+    const tc = useTranslations("common");
     const [items, setItems] = useState<Result[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -91,10 +94,10 @@ export default function TeleResultsPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Kết quả khám online"
-                subtitle="Danh sách kết quả khám từ xa, ký số & theo dõi follow-up"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="medical_information"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Telemedicine" }, { label: "Kết quả" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { APPOINTMENT_CONFIRMATION_ENDPOINTS, APPOINTMENT_STATUS_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -62,6 +63,7 @@ function formatTime(d?: string): string {
 }
 
 export default function QueueBatchOpsPage() {
+    const t = useTranslations("pages.portal.staff.queueBatch");
     const toast = useToast();
     const [items, setItems] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -162,8 +164,8 @@ export default function QueueBatchOpsPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Thao tác hàng loạt & QR check-in"
-                subtitle="Xác nhận lịch hàng loạt, gửi nhắc SMS/email, QR check-in nhanh"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="group"
                 breadcrumbs={[
                     { label: "Lễ tân", href: "/portal/receptionist" },

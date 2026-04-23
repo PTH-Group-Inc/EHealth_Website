@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { STOCK_OUT_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
@@ -83,6 +84,7 @@ function formatVND(n: number): string {
 }
 
 export default function StockOutPage() {
+    const t = useTranslations("pages.portal.pharmacist.stockOut");
     const toast = useToast();
     const [orders, setOrders] = useState<StockOutOrder[]>([]);
     const [loading, setLoading] = useState(true);
@@ -162,8 +164,8 @@ export default function StockOutPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Phiếu xuất kho"
-                subtitle="Theo dõi và duyệt các phiếu xuất kho thuốc/vật tư"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="output"
                 breadcrumbs={[{ label: "Dược sĩ", href: "/portal/pharmacist" }, { label: "Xuất kho" }]}
             />
