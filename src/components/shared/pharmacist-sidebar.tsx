@@ -48,7 +48,9 @@ export function PharmacistSidebar() {
             <nav className={`flex-1 ${collapsed ? "px-2" : "px-4"} flex flex-col gap-1 overflow-y-auto`}>
                 {PHARMACIST_MENU_ITEMS.map((item) => {
                     const active = item.key === "dashboard" ? pathname === item.href : pathname.startsWith(item.href);
-                    const label = tNav(`pharmacist.${item.key}`);
+                    // Map kebab-case key → camelCase key trong messages/common.json
+                    const camelKey = item.key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+                    const label = tNav(`pharmacist.${camelKey}`);
                     return (
                         <Link key={item.key} href={item.href}
                             title={collapsed ? label : undefined}

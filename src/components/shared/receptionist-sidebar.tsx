@@ -54,7 +54,9 @@ export function ReceptionistSidebar() {
                     const active = item.key === "dashboard"
                         ? pathname === item.href
                         : pathname.startsWith(item.href);
-                    const label = tNav(`staff.${item.key}`);
+                    // Map kebab-case key → camelCase key trong messages/common.json
+                    const camelKey = item.key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+                    const label = tNav(`staff.${camelKey}`);
 
                     return (
                         <Link
