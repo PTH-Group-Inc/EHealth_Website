@@ -159,7 +159,7 @@ export default function CashierOfflinePage() {
                 title={t("title")}
                 subtitle={t("subtitle")}
                 icon="point_of_sale"
-                breadcrumbs={[{ label: "Thu ngân", href: "/portal/cashier" }, { label: "POS offline" }]}
+                breadcrumbs={[{ label: "Thu ngân", href: "/portal/cashier" }, { label: "POS ngoại tuyến" }]}
                 actions={
                     <button onClick={() => setShowPay(true)} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md inline-flex items-center gap-1">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>point_of_sale</span>

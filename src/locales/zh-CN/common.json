@@ -175,6 +175,14 @@
             "quickBook": "快速预约",
             "expandSidebar": "展开侧边栏",
             "collapseSidebar": "收起侧边栏",
+            "doctorGroup": {
+                "overview": "概览",
+                "schedule-shifts": "排班与值班",
+                "examination": "诊疗",
+                "treatment-records": "治疗与病历",
+                "remote-ai": "远程与 AI",
+                "settings": "设置"
+            },
             "doctor": {
                 "dashboard": "首页",
                 "tasks": "今日任务",

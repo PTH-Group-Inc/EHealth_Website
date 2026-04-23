@@ -2,52 +2,69 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+// BE origin — dev mode gọi trực tiếp, prod mode proxy qua Next.js server (same-origin HTTPS)
+const BE_ORIGIN = process.env.BACKEND_ORIGIN || "http://160.250.186.97:3000";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // Bật Turbopack stable — compile nhanh 3-5x vs webpack trong dev mode
-    // (flag --turbo trong script dev đã kích hoạt; config này dùng cho production build)
+    // Tin cậy proxy (Cloudflare / Nginx) — lấy đúng client IP + protocol
+    // Cần cho next-intl detect locale khi đứng sau reverse proxy
+    poweredByHeader: false,
+    compress: true,
+
     images: {
         remotePatterns: [
             { protocol: "https", hostname: "lh3.googleusercontent.com" },
             { protocol: "https", hostname: "i.pravatar.cc" },
-            // Avatar/file từ BE server
+            // Avatar/file từ BE server (dev mode — prod đi qua rewrites)
             { protocol: "http", hostname: "160.250.186.97" },
             { protocol: "https", hostname: "dev.thanhhaishopwebsite.id.vn" },
-            // Cloudinary (thanhhai dùng cho avatar upload)
+            // Cloudinary (avatar upload)
             { protocol: "https", hostname: "res.cloudinary.com" },
         ],
     },
 
-    // Giảm bundle size — stub import không dùng
-    modularizeImports: {
-        // Tree-shake framer-motion nếu có hunk lớn chưa dùng (optional)
-        // Chỉ import những thứ đang dùng trong code
-    },
+    modularizeImports: {},
 
-    // Compiler options tăng tốc production build
     compiler: {
-        // Xóa console.log trong production (nhưng giữ console.error + console.warn)
+        // Production: xoá console.log (giữ error + warn để debug lỗi thật)
         removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
     },
 
-    // Experimental features
     experimental: {
-        // Optimize server components
-        optimizePackageImports: [
-            "framer-motion",
-            "axios",
-            "next-intl",
-        ],
+        optimizePackageImports: ["framer-motion", "axios", "next-intl"],
     },
 
-    // Không chặn build khi còn warning lint
-    eslint: {
-        ignoreDuringBuilds: false,
+    eslint: { ignoreDuringBuilds: false },
+    typescript: { ignoreBuildErrors: false },
+
+    // Same-origin proxy: browser gọi /api/... (HTTPS cùng domain), Next.js server chuyển tiếp sang BE HTTP
+    // → Tránh mixed-content block khi FE HTTPS + BE HTTP
+    async rewrites() {
+        return [
+            { source: "/api/:path*", destination: `${BE_ORIGIN}/api/:path*` },
+        ];
     },
 
-    // TypeScript strict, không cho qua nếu error
-    typescript: {
-        ignoreBuildErrors: false,
+    async headers() {
+        return [
+            {
+                source: "/:path*",
+                headers: [
+                    { key: "X-Content-Type-Options", value: "nosniff" },
+                    { key: "X-Frame-Options", value: "SAMEORIGIN" },
+                    { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+                    { key: "Permissions-Policy", value: "camera=(self), microphone=(self), geolocation=(self)" },
+                ],
+            },
+            {
+                // Không cache API (Cloudflare + browser)
+                source: "/api/:path*",
+                headers: [
+                    { key: "Cache-Control", value: "no-store, max-age=0" },
+                ],
+            },
+        ];
     },
 };
 

@@ -200,7 +200,7 @@
         "subtitle": "Cấu hình thời lượng khám/xử lý cho từng dịch vụ tại mỗi cơ sở"
     },
     "bookingConfigs": {
-        "title": "Cấu hình booking theo chi nhánh",
+        "title": "Cấu hình đặt lịch theo chi nhánh",
         "subtitle": "Thiết lập quy tắc đặt lịch riêng cho từng chi nhánh"
     },
     "operatingHours": {
@@ -353,7 +353,7 @@
     },
     "reconciliation": {
         "title": "Đối soát thanh toán",
-        "subtitle": "Phiên đối soát ca thu ngân và thanh toán online"
+        "subtitle": "Phiên đối soát ca thu ngân và thanh toán trực tuyến"
     },
     "refunds": {
         "title": "Hoàn tiền",
@@ -365,24 +365,24 @@
             "subtitle": "Cấu hình các loại và định giá tư vấn từ xa"
         },
         "bookings": {
-            "title": "Booking tư vấn từ xa",
-            "subtitle": "Danh sách lịch tư vấn online"
+            "title": "Đặt lịch tư vấn từ xa",
+            "subtitle": "Danh sách lịch tư vấn trực tuyến"
         },
         "rooms": {
             "title": "Phòng đang hoạt động",
-            "subtitle": "Realtime — các phòng tư vấn đang chạy"
+            "subtitle": "Thời gian thực — các phòng tư vấn đang chạy"
         },
         "results": {
-            "title": "Kết quả khám online",
+            "title": "Kết quả khám trực tuyến",
             "subtitle": "Chẩn đoán, kết luận và đơn kê sau tư vấn"
         },
         "prescriptions": {
-            "title": "Đơn thuốc online",
+            "title": "Đơn thuốc trực tuyến",
             "subtitle": "Đơn thuốc được bác sĩ ký trong phiên tư vấn"
         },
         "followups": {
-            "title": "Follow-up",
-            "subtitle": "Lịch tái khám/theo dõi sau tư vấn"
+            "title": "Tái khám / Theo dõi",
+            "subtitle": "Lịch tái khám / theo dõi sau tư vấn"
         },
         "quality": {
             "title": "Chất lượng tư vấn",
@@ -391,11 +391,11 @@
     },
     "permissions": {
         "title": "Quản lý quyền hệ thống",
-        "subtitle": "Permissions, menus, API permissions và modules"
+        "subtitle": "Phân quyền, menu, quyền API và các mô-đun"
     },
     "masterData": {
-        "title": "Master Data",
-        "subtitle": "Danh mục tham chiếu toàn hệ thống (categories + items)"
+        "title": "Dữ liệu gốc",
+        "subtitle": "Danh mục tham chiếu toàn hệ thống (nhóm và phần tử)"
     },
     "notifications": {
         "roleConfigs": {
@@ -403,7 +403,7 @@
             "subtitle": "Bật/tắt kênh thông báo theo từng vai trò và loại sự kiện"
         },
         "broadcast": {
-            "title": "Gửi thông báo Broadcast",
+            "title": "Gửi thông báo hàng loạt",
             "subtitle": "Gửi thông báo hàng loạt tới nhiều vai trò cùng lúc"
         }
     },
@@ -415,14 +415,14 @@
     },
     "cashier": {
         "offline": {
-            "title": "POS thu ngân offline",
+            "title": "POS thu ngân ngoại tuyến",
             "subtitle": "Thanh toán tiền mặt tại quầy"
         }
     },
     "queue": {
         "batch": {
-            "title": "Thao tác hàng loạt & QR check-in",
-            "subtitle": "Xác nhận lịch hàng loạt, gửi nhắc SMS/email, QR check-in nhanh"
+            "title": "Thao tác hàng loạt & QR tiếp đón",
+            "subtitle": "Xác nhận lịch hàng loạt, gửi nhắc SMS/email, QR tiếp đón nhanh"
         }
     },
     "auth": {
@@ -579,7 +579,7 @@
             },
             "telemedicine": {
                 "title": "Khám từ xa",
-                "subtitle": "Tư vấn và khám bệnh online."
+                "subtitle": "Tư vấn và khám bệnh trực tuyến."
             },
             "settings": {
                 "title": "Cài đặt",
@@ -638,8 +638,8 @@
                 "subtitle": "Quản lý hàng đợi bệnh nhân."
             },
             "queueBatch": {
-                "title": "Thao tác hàng loạt & QR check-in",
-                "subtitle": "Xác nhận lịch hàng loạt, gửi nhắc SMS/email, QR check-in nhanh."
+                "title": "Thao tác hàng loạt & QR tiếp đón",
+                "subtitle": "Xác nhận lịch hàng loạt, gửi nhắc SMS/email, QR tiếp đón nhanh."
             },
             "patients": {
                 "title": "Bệnh nhân",
@@ -668,7 +668,7 @@
         },
         "cashier": {
             "offline": {
-                "title": "POS thu ngân offline",
+                "title": "POS thu ngân ngoại tuyến",
                 "subtitle": "Thanh toán tiền mặt tại quầy."
             }
         },

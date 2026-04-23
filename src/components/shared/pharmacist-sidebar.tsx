@@ -5,10 +5,12 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { PHARMACIST_MENU_ITEMS } from "@/constants/routes";
 import { useSidebar } from "@/contexts/SidebarContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function PharmacistSidebar() {
     const pathname = usePathname();
     const { collapsed, toggleSidebar } = useSidebar();
+    const { logout } = useAuth();
     const tNav = useTranslations("common.nav.portal");
 
     return (
@@ -70,7 +72,11 @@ export function PharmacistSidebar() {
                                 <p className="text-sm font-semibold text-[#121417] dark:text-white truncate">Trần Văn Dược</p>
                                 <p className="text-xs text-[#687582] dark:text-gray-400">{tNav("pharmacistTagline")}</p>
                             </div>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <button
+                                onClick={() => logout()}
+                                title="Đăng xuất"
+                                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            >
                                 <span className="material-symbols-outlined text-[#687582]" style={{ fontSize: "20px" }}>logout</span>
                             </button>
                         </>

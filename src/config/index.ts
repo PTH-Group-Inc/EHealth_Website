@@ -28,12 +28,15 @@ export const ENV = {
 //   3. Fallback mặc định theo NODE_ENV
 // ============================================
 const DEFAULT_DEV_API = 'http://160.250.186.97:3000';
-const DEFAULT_PROD_API = 'https://dev.thanhhaishopwebsite.id.vn';
+// Production: empty = same-origin (browser gọi /api/... cùng FE domain, Next.js rewrites proxy sang BE)
+const DEFAULT_PROD_API = '';
 
 export const API_CONFIG = {
     // URL của Backend API — tự động chọn theo môi trường
-    BASE_URL: process.env.NEXT_PUBLIC_API_URL
-        || (ENV.IS_PROD ? DEFAULT_PROD_API : DEFAULT_DEV_API),
+    // Ưu tiên NEXT_PUBLIC_API_URL (rỗng trong prod = same-origin relative URL → axios gọi /api/...)
+    BASE_URL: process.env.NEXT_PUBLIC_API_URL !== undefined
+        ? process.env.NEXT_PUBLIC_API_URL
+        : (ENV.IS_PROD ? DEFAULT_PROD_API : DEFAULT_DEV_API),
 
     // Thời gian timeout cho mỗi request (30 giây)
     TIMEOUT: 30000,

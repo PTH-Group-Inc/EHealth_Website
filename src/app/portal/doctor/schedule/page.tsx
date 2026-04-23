@@ -8,7 +8,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageHeader, EmptyState, StatCard } from "@/components/shared/layout";
-import { doctorAvailabilityService } from "@/services/appointmentService";
 import { staffScheduleService } from "@/services/staffScheduleService";
 
 const formatDate = (v?: string) => {
@@ -61,27 +60,23 @@ export default function DoctorSchedulePage() {
     const load = useCallback(async () => {
         if (!user?.id) return;
         setLoading(true);
-        const [s, c, f] = await Promise.allSettled([
-            staffScheduleService.getByStaff(user.id, { from, to }),
-            doctorAvailabilityService.getConflicts(user.id, { from, to }),
-            doctorAvailabilityService.getFacilities(user.id),
-        ]);
-        if (s.status === "fulfilled") {
-            const arr = (s.value as any)?.data ?? [];
-            const rows = (arr as any[]).map((r: any) => ({
-                id: r.id ?? r.staff_schedule_id,
-                workDate: r.work_date ?? r.workDate ?? r.date,
-                shiftName: r.shift_name ?? r.shiftName ?? r.shift?.name,
-                startTime: r.start_time ?? r.startTime,
-                endTime: r.end_time ?? r.endTime,
-                facility: r.facility_name ?? r.facility?.name ?? r.branch_name ?? r.department_name,
-                status: (r.status ?? "SCHEDULED").toString().toUpperCase(),
-                note: r.note,
-            } as ScheduleRow));
-            setSchedules(rows);
-        } else setSchedules([]);
-        setConflicts(c.status === "fulfilled" ? c.value : []);
-        setFacilities(f.status === "fulfilled" ? f.value : []);
+        // Chỉ gọi staff-schedules (chạy theo user_id).
+        // doctor-availability endpoints cần doctors_id (DOC_xxx) riêng + tham số khác → không phù hợp list view.
+        const s = await staffScheduleService.getByStaff(user.id, { from, to }).catch(() => null);
+        const arr = (s as any)?.data ?? [];
+        const rows = (arr as any[]).map((r: any, idx: number) => ({
+            id: String(r.id ?? r.staff_schedule_id ?? `row-${idx}`),
+            workDate: r.work_date ?? r.workDate ?? r.date,
+            shiftName: r.shift_name ?? r.shiftName ?? r.shift?.name,
+            startTime: r.start_time ?? r.startTime,
+            endTime: r.end_time ?? r.endTime,
+            facility: r.facility_name ?? r.facility?.name ?? r.branch_name ?? r.department_name,
+            status: (r.status ?? "SCHEDULED").toString().toUpperCase(),
+            note: r.note,
+        } as ScheduleRow));
+        setSchedules(rows);
+        setConflicts([]);
+        setFacilities([]);
         setLoading(false);
     }, [user?.id, from, to]);
 

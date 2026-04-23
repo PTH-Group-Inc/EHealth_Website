@@ -281,6 +281,77 @@ export const DOCTOR_MENU_ITEMS = [
   },
 ] as const;
 
+// Doctor sidebar menu — nhóm lại thành module cho dễ điều hướng
+export interface DoctorMenuGroup {
+  key: string;
+  href?: string;
+  icon: string;
+  label: string;
+  children?: { key: string; href: string; icon?: string; label: string }[];
+}
+
+export const DOCTOR_MENU_GROUPS: DoctorMenuGroup[] = [
+  {
+    key: "overview",
+    icon: "dashboard",
+    label: "Tổng quan",
+    children: [
+      { key: "dashboard", href: ROUTES.PORTAL.DOCTOR.DASHBOARD, icon: "home", label: "Trang chủ" },
+      { key: "tasks", href: ROUTES.PORTAL.DOCTOR.TASKS, icon: "checklist", label: "Việc cần làm" },
+      { key: "alerts", href: ROUTES.PORTAL.DOCTOR.ALERTS, icon: "notifications_active", label: "Cảnh báo" },
+    ],
+  },
+  {
+    key: "schedule-shifts",
+    icon: "event",
+    label: "Lịch & Ca trực",
+    children: [
+      { key: "appointments", href: ROUTES.PORTAL.DOCTOR.APPOINTMENTS, icon: "calendar_month", label: "Lịch hẹn" },
+      { key: "queue", href: ROUTES.PORTAL.DOCTOR.QUEUE, icon: "groups", label: "Hàng đợi" },
+      { key: "schedule", href: ROUTES.PORTAL.DOCTOR.SCHEDULE, icon: "event_note", label: "Lịch làm việc" },
+      { key: "leaves", href: ROUTES.PORTAL.DOCTOR.LEAVES, icon: "event_busy", label: "Nghỉ phép" },
+      { key: "shift-swaps", href: ROUTES.PORTAL.DOCTOR.SHIFT_SWAPS, icon: "swap_horiz", label: "Đổi ca" },
+    ],
+  },
+  {
+    key: "examination",
+    icon: "stethoscope",
+    label: "Khám bệnh",
+    children: [
+      { key: "patients", href: ROUTES.PORTAL.DOCTOR.PATIENTS, icon: "people", label: "Bệnh nhân" },
+      { key: "examination", href: ROUTES.PORTAL.DOCTOR.EXAMINATION, icon: "medical_services", label: "Khám bệnh" },
+      { key: "medical-orders", href: ROUTES.PORTAL.DOCTOR.MEDICAL_ORDERS, icon: "experiment", label: "Chỉ định" },
+      { key: "medical-records", href: ROUTES.PORTAL.DOCTOR.MEDICAL_RECORDS, icon: "folder_shared", label: "Hồ sơ bệnh án" },
+      { key: "sign-off", href: ROUTES.PORTAL.DOCTOR.SIGN_OFF, icon: "draw", label: "Ký hồ sơ" },
+    ],
+  },
+  {
+    key: "treatment-records",
+    icon: "folder_special",
+    label: "Điều trị & Hồ sơ",
+    children: [
+      { key: "ehr", href: ROUTES.PORTAL.DOCTOR.EHR, icon: "folder_special", label: "Hồ sơ sức khoẻ" },
+      { key: "prescriptions", href: ROUTES.PORTAL.DOCTOR.PRESCRIPTIONS, icon: "pill", label: "Kê đơn" },
+      { key: "treatment-plans", href: ROUTES.PORTAL.DOCTOR.TREATMENT_PLANS, icon: "medical_information", label: "Kế hoạch điều trị" },
+    ],
+  },
+  {
+    key: "remote-ai",
+    icon: "videocam",
+    label: "Từ xa & AI",
+    children: [
+      { key: "telemedicine", href: ROUTES.PORTAL.DOCTOR.TELEMEDICINE, icon: "videocam", label: "Khám từ xa" },
+      { key: "ai-assistant", href: ROUTES.PORTAL.DOCTOR.AI_ASSISTANT, icon: "smart_toy", label: "Trợ lý AI" },
+    ],
+  },
+  {
+    key: "settings",
+    href: ROUTES.PORTAL.DOCTOR.SETTINGS,
+    icon: "settings",
+    label: "Cài đặt",
+  },
+];
+
 // Admin sidebar menu items — hỗ trợ nhóm + submenu
 export interface AdminMenuItem {
   key: string;
@@ -305,7 +376,7 @@ export const ADMIN_MENU_ITEMS: AdminMenuItem[] = [
       { key: "users-list", href: ROUTES.ADMIN.USERS, label: "Danh sách nhân sự" },
       { key: "doctors-list", href: ROUTES.ADMIN.DOCTORS, label: "Danh sách Bác sĩ" },
       { key: "users-roles", href: ROUTES.ADMIN.USERS_ROLES, label: "Vai trò" },
-      { key: "permissions", href: ROUTES.ADMIN.PERMISSIONS, label: "Permissions/Menus" },
+      { key: "permissions", href: ROUTES.ADMIN.PERMISSIONS, label: "Phân quyền / Menu" },
     ],
   },
   {
@@ -376,11 +447,11 @@ export const ADMIN_MENU_ITEMS: AdminMenuItem[] = [
     label: "Khám từ xa",
     children: [
       { key: "tele-types", href: ROUTES.ADMIN.TELE_TYPES, label: "Loại & cấu hình" },
-      { key: "tele-bookings", href: ROUTES.ADMIN.TELE_BOOKINGS, label: "Booking" },
+      { key: "tele-bookings", href: ROUTES.ADMIN.TELE_BOOKINGS, label: "Đặt lịch từ xa" },
       { key: "tele-rooms", href: ROUTES.ADMIN.TELE_ROOMS, label: "Phòng đang hoạt động" },
       { key: "tele-results", href: ROUTES.ADMIN.TELE_RESULTS, label: "Kết quả khám" },
       { key: "tele-prescriptions", href: ROUTES.ADMIN.TELE_PRESCRIPTIONS, label: "Đơn thuốc online" },
-      { key: "tele-followups", href: ROUTES.ADMIN.TELE_FOLLOWUPS, label: "Follow-up" },
+      { key: "tele-followups", href: ROUTES.ADMIN.TELE_FOLLOWUPS, label: "Tái khám / Theo dõi" },
       { key: "tele-quality", href: ROUTES.ADMIN.TELE_QUALITY, label: "Chất lượng" },
     ],
   },
