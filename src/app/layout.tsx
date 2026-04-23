@@ -46,6 +46,23 @@ export default async function RootLayout({
                 />
             </head>
             <body className="antialiased">
+                {/* Detect Material Symbols font ready → thêm class 'icons-ready' vào body
+                    để CSS switch icon từ color:transparent → màu thật.
+                    Chạy inline để eliminate FOUT (flash of unstyled text). */}
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `
+                            (function() {
+                                if (!document.fonts) { document.body.classList.add('icons-ready'); return; }
+                                document.fonts.load('24px "Material Symbols Outlined"').then(function() {
+                                    document.body.classList.add('icons-ready');
+                                }).catch(function() {
+                                    setTimeout(function() { document.body.classList.add('icons-ready'); }, 800);
+                                });
+                            })();
+                        `,
+                    }}
+                />
                 <NextIntlClientProvider locale={locale} messages={messages}>
                     <ToastProvider>
                         <AuthProvider>

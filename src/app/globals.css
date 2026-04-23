@@ -55,9 +55,11 @@ body {
 /* ============================================
    Material Symbols (Google Icons)
    - font-family explicit để không phụ thuộc vào Google stylesheet
-     (tránh lỗi font chưa load → hiển thị text ligature như "DISCOUNT")
-   - font-display: block đã set ở <link>, kết hợp các thuộc tính sau
-     để ẩn text ligature tới khi font load xong
+   - font-display: block đã set ở <link>
+   - FALLBACK AGGRESSIVE: nếu font không load (network fail, adblock,
+     timeout), color: transparent ẩn text ligature (tên icon) hiện
+     thay vì "DISCOUNT" chữ to đùng
+   - width/height min để giữ layout không nhảy
    ============================================ */
 .material-symbols-outlined,
 .material-symbols-filled {
@@ -74,6 +76,19 @@ body {
   -webkit-font-feature-settings: "liga";
   font-feature-settings: "liga";
   -webkit-font-smoothing: antialiased;
+  /* Fallback chống lộ text khi font chưa load / fail load */
+  overflow: hidden;
+  max-width: 1.5em;
+  max-height: 1.5em;
+  vertical-align: middle;
+}
+
+/* Khi browser chưa resolve font (FontFace chưa ready) → text tạm invisible
+   Thêm class .icons-ready vào body sau khi document.fonts.ready resolve.
+   Nếu JS không chạy được → fallback block 1.5em không hiện chữ to */
+body:not(.icons-ready) .material-symbols-outlined,
+body:not(.icons-ready) .material-symbols-filled {
+  color: transparent;
 }
 
 .material-symbols-outlined {

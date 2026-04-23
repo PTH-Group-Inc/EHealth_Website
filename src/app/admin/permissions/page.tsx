@@ -347,8 +347,8 @@ function ModulesTab() {
                 <EmptyState icon="view_module" title="Chưa có module" description="Modules được định nghĩa từ database, có thể lấy từ permissions." />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {items.map((m) => (
-                        <div key={m.name} className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm p-4">
+                    {items.map((m, idx) => (
+                        <div key={m.name || `module-${idx}`} className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm p-4">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-2">
                                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3C81C6] to-[#1d4ed8] flex items-center justify-center text-white"><span className="material-symbols-outlined" style={{ fontSize: "20px" }}>view_module</span></div>

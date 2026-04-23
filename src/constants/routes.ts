@@ -247,7 +247,7 @@ export const DOCTOR_MENU_ITEMS = [
     key: "ehr",
     href: ROUTES.PORTAL.DOCTOR.EHR,
     icon: "folder_special",
-    label: "EHR",
+    label: "Hồ sơ sức khoẻ",
   },
   {
     key: "prescriptions",
@@ -259,7 +259,7 @@ export const DOCTOR_MENU_ITEMS = [
     key: "treatment-plans",
     href: ROUTES.PORTAL.DOCTOR.TREATMENT_PLANS,
     icon: "medical_information",
-    label: "Treatment plans",
+    label: "Kế hoạch điều trị",
   },
   {
     key: "ai-assistant",
@@ -313,9 +313,9 @@ export const ADMIN_MENU_ITEMS: AdminMenuItem[] = [
     icon: "database",
     label: "Dữ liệu hệ thống",
     children: [
-      { key: "master-data", href: ROUTES.ADMIN.MASTER_DATA, label: "Master Data" },
+      { key: "master-data", href: ROUTES.ADMIN.MASTER_DATA, label: "Dữ liệu danh mục" },
       { key: "notif-role-configs", href: ROUTES.ADMIN.NOTIF_ROLE_CONFIGS, label: "Cấu hình thông báo" },
-      { key: "notif-broadcast", href: ROUTES.ADMIN.NOTIF_BROADCAST, label: "Gửi broadcast" },
+      { key: "notif-broadcast", href: ROUTES.ADMIN.NOTIF_BROADCAST, label: "Gửi thông báo chung" },
     ],
   },
   {
@@ -377,7 +377,7 @@ export const ADMIN_MENU_ITEMS: AdminMenuItem[] = [
     children: [
       { key: "tele-types", href: ROUTES.ADMIN.TELE_TYPES, label: "Loại & cấu hình" },
       { key: "tele-bookings", href: ROUTES.ADMIN.TELE_BOOKINGS, label: "Booking" },
-      { key: "tele-rooms", href: ROUTES.ADMIN.TELE_ROOMS, label: "Room đang hoạt động" },
+      { key: "tele-rooms", href: ROUTES.ADMIN.TELE_ROOMS, label: "Phòng đang hoạt động" },
       { key: "tele-results", href: ROUTES.ADMIN.TELE_RESULTS, label: "Kết quả khám" },
       { key: "tele-prescriptions", href: ROUTES.ADMIN.TELE_PRESCRIPTIONS, label: "Đơn thuốc online" },
       { key: "tele-followups", href: ROUTES.ADMIN.TELE_FOLLOWUPS, label: "Follow-up" },
@@ -442,7 +442,7 @@ export const STAFF_MENU_ITEMS = [
   { key: "room-status", href: ROUTES.PORTAL.STAFF.ROOM_STATUS, icon: "meeting_room", label: "Tình trạng phòng" },
   { key: "patients", href: ROUTES.PORTAL.STAFF.PATIENTS, icon: "person_add", label: "Bệnh nhân" },
   { key: "appointments", href: ROUTES.PORTAL.STAFF.APPOINTMENTS, icon: "calendar_month", label: "Lịch khám" },
-  { key: "check-in", href: ROUTES.PORTAL.STAFF.CHECK_IN, icon: "qr_code_scanner", label: "Check-in" },
+  { key: "check-in", href: ROUTES.PORTAL.STAFF.CHECK_IN, icon: "qr_code_scanner", label: "Tiếp nhận (QR)" },
   { key: "change-history", href: ROUTES.PORTAL.STAFF.CHANGE_HISTORY, icon: "history", label: "Lịch sử thay đổi" },
   { key: "support-data", href: ROUTES.PORTAL.STAFF.SUPPORT_DATA, icon: "database", label: "Hỗ trợ đặt lịch" },
   { key: "billing", href: ROUTES.PORTAL.STAFF.BILLING, icon: "receipt_long", label: "Hoá đơn" },
@@ -465,7 +465,7 @@ export const PHARMACIST_MENU_ITEMS = [
   { key: "stock-in", href: ROUTES.PORTAL.PHARMACIST.STOCK_IN, icon: "input", label: "Nhập kho" },
   { key: "stock-out", href: ROUTES.PORTAL.PHARMACIST.STOCK_OUT, icon: "output", label: "Xuất kho" },
   { key: "alerts", href: ROUTES.PORTAL.PHARMACIST.ALERTS, icon: "warning", label: "Cảnh báo" },
-  { key: "master-data", href: ROUTES.PORTAL.PHARMACIST.MASTER_DATA, icon: "database", label: "Master Data" },
+  { key: "master-data", href: ROUTES.PORTAL.PHARMACIST.MASTER_DATA, icon: "database", label: "Dữ liệu danh mục" },
   { key: "patients", href: ROUTES.PORTAL.PHARMACIST.PATIENTS, icon: "groups", label: "Bệnh nhân" },
   { key: "medication-profile", href: ROUTES.PORTAL.PHARMACIST.MEDICATION_PROFILE, icon: "medication", label: "Hồ sơ thuốc" },
   { key: "settings", href: ROUTES.PORTAL.PHARMACIST.SETTINGS, icon: "settings", label: "Tài khoản" },
