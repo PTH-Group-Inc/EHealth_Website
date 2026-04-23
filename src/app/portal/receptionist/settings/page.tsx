@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PageHeader, EmptyState } from "@/components/shared/layout";
 import { profileService, type MyProfile, type ProfileSession } from "@/services/profileService";
+import { ProfileCard } from "@/components/shared/ProfileCard";
 import axiosClient from "@/api/axiosClient";
 
 const TABS = [
@@ -238,7 +239,7 @@ export default function ReceptionistSettingsPage() {
                     </button>
                 ))}
             </div>
-            {tab === "profile" && <ProfileTab />}
+            {tab === "profile" && <ProfileCard currentRole="RECEPTIONIST" showWorkAssignment />}
             {tab === "security" && <SecurityTab />}
             {tab === "sessions" && <SessionsTab />}
             {tab === "settings" && <SettingsTab />}
