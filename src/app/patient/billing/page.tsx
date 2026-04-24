@@ -171,7 +171,7 @@ export default function BillingPage() {
             if (data.length > 0) {
                 const statusMap: Record<string, Invoice["status"]> = {
                     UNPAID: "pending", PENDING: "pending", OVERDUE: "overdue",
-                    PAID: "paid", PARTIAL: "paid",
+                    PAID: "paid", PARTIALLY_PAID: "paid",
                     REFUNDED: "refunded", CANCELLED: "refunded",
                 };
                 const mapped: InvoiceExtended[] = data.map((inv: any) => {
