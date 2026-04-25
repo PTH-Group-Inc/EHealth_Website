@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { ADMIN_MENU_ITEMS, type AdminMenuItem } from "@/constants/routes";
 import { UI_TEXT } from "@/constants/ui-text";
 import { useSidebar } from "@/contexts/SidebarContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Map key nhóm sidebar admin → i18n key trong common.json/nav.*
@@ -220,10 +221,15 @@ function SidebarItem({
     );
 }
 
+// Static — tính 1 lần vì ADMIN_MENU_ITEMS là const
+const ADMIN_ALL_HREFS = getAllHrefs(ADMIN_MENU_ITEMS);
+
 export function AdminSidebar() {
     const pathname = usePathname();
     const { collapsed, toggleSidebar } = useSidebar();
-    const allHrefs = getAllHrefs(ADMIN_MENU_ITEMS);
+    const { logout } = useAuth();
+    const t = useTranslations("common");
+    const allHrefs = ADMIN_ALL_HREFS;
     // Accordion: chỉ 1 nhóm mở tại 1 thời điểm
     const [openGroupKey, setOpenGroupKey] = useState<string | null>(null);
 
@@ -276,7 +282,7 @@ export function AdminSidebar() {
                 <button
                     onClick={toggleSidebar}
                     className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-[#687582] hover:text-[#3C81C6]"
-                    title={collapsed ? "Mở rộng sidebar" : "Thu nhỏ sidebar"}
+                    title={collapsed ? t("nav.portal.expandSidebar") : t("nav.portal.collapseSidebar")}
                 >
                     <span className="material-symbols-outlined text-[20px]">
                         {collapsed ? "menu_open" : "menu"}
@@ -319,7 +325,11 @@ export function AdminSidebar() {
                         </div>
                     )}
                     {!collapsed && (
-                        <button className="ml-auto text-[#687582] hover:text-red-500 transition-colors">
+                        <button
+                            onClick={() => logout()}
+                            title="Đăng xuất"
+                            className="ml-auto text-[#687582] hover:text-red-500 transition-colors"
+                        >
                             <span className="material-symbols-outlined text-[20px]">logout</span>
                         </button>
                     )}

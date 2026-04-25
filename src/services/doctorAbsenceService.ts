@@ -7,12 +7,6 @@ import axiosClient from "@/api/axiosClient";
 import { DOCTOR_ABSENCE_ENDPOINTS } from "@/api/endpoints";
 import { unwrap, unwrapList } from "@/api/response";
 
-// Endpoint bổ sung (fallback — chưa có trong endpoints.ts)
-const LOCAL_ENDPOINTS = {
-    BY_DOCTOR: (doctorId: string) =>
-        `/api/doctor-absences/by-doctor/${doctorId}`,
-};
-
 export interface DoctorAbsenceData {
     doctorId: string;
     startDate: string;
@@ -71,10 +65,10 @@ export const doctorAbsenceService = {
             })
             .then((r) => unwrapList(r)),
 
-    /** GET danh sách vắng theo bác sĩ */
-    getByDoctor: (doctorId: string, params?: DoctorAbsenceListParams) =>
+    /** GET danh sách vắng theo bác sĩ (dùng LIST + filter doctorId vì BE không có endpoint riêng) */
+    getByDoctor: (doctorId: string, params?: Omit<DoctorAbsenceListParams, "doctorId">) =>
         axiosClient
-            .get(LOCAL_ENDPOINTS.BY_DOCTOR(doctorId), { params })
+            .get(DOCTOR_ABSENCE_ENDPOINTS.LIST, { params: { ...params, doctorId } })
             .then((r) => unwrapList(r)),
 };
 

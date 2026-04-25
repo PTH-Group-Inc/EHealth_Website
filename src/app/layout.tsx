@@ -45,7 +45,24 @@ export default async function RootLayout({
                     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block"
                 />
             </head>
-            <body className="antialiased">
+            <body className="antialiased" suppressHydrationWarning>
+                {/* Detect Material Symbols font ready → thêm class 'icons-ready' vào body
+                    để CSS switch icon từ color:transparent → màu thật.
+                    Chạy inline để eliminate FOUT (flash of unstyled text). */}
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `
+                            (function() {
+                                if (!document.fonts) { document.body.classList.add('icons-ready'); return; }
+                                document.fonts.load('24px "Material Symbols Outlined"').then(function() {
+                                    document.body.classList.add('icons-ready');
+                                }).catch(function() {
+                                    setTimeout(function() { document.body.classList.add('icons-ready'); }, 800);
+                                });
+                            })();
+                        `,
+                    }}
+                />
                 <NextIntlClientProvider locale={locale} messages={messages}>
                     <ToastProvider>
                         <AuthProvider>

@@ -23,7 +23,7 @@ const PATIENT_MENU_KEY_MAP: Record<string, string> = {
 export function PatientSidebar() {
     const pathname = usePathname();
     const { collapsed, toggleSidebar } = useSidebar();
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const tNav = useTranslations("common.nav.portal");
     const tRole = useTranslations("common.role");
 
@@ -147,7 +147,11 @@ export function PatientSidebar() {
                                 </p>
                                 <p className="text-xs text-[#687582] dark:text-gray-400">{tRole("patient")}</p>
                             </div>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <button
+                                onClick={() => logout()}
+                                title="Đăng xuất"
+                                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            >
                                 <span className="material-symbols-outlined text-[#687582]" style={{ fontSize: "20px" }}>
                                     logout
                                 </span>

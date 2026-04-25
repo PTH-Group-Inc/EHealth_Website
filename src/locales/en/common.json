@@ -175,6 +175,14 @@
             "quickBook": "Quick booking",
             "expandSidebar": "Expand sidebar",
             "collapseSidebar": "Collapse sidebar",
+            "doctorGroup": {
+                "overview": "Overview",
+                "schedule-shifts": "Schedule & Shifts",
+                "examination": "Examination",
+                "treatment-records": "Treatment & Records",
+                "remote-ai": "Telemedicine & AI",
+                "settings": "Settings"
+            },
             "doctor": {
                 "dashboard": "Home",
                 "tasks": "Today tasks",

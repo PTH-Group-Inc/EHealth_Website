@@ -143,12 +143,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
             if (response.success && response.data) {
                 // Swagger: { accessToken, refreshToken, user: { userId, name, avatar, email, phone, roles[] } }
                 const { accessToken, refreshToken, user: apiUser } = response.data;
-                // Robust parse: roles có thể là string[] hoặc object[] ({name, code, role_name, ...})
+                // Robust parse: roles có thể là string[] hoặc object[] ({roles_id, code, name, ...})
+                // Ưu tiên `code` (machine-readable, vd "PATIENT") trước `name` (display label tiếng Việt "Bệnh nhân")
+                // để `getRedirectUrl()` + AuthGuard nhận diện đúng role.
                 const rolesRaw: string[] = (apiUser.roles || [])
                     .map((r: any) => {
                         if (typeof r === 'string') return r;
                         if (r && typeof r === 'object') {
-                            return r.name || r.code || r.role_name || r.role || '';
+                            return r.code || r.role_code || r.name || r.role_name || r.role || '';
                         }
                         return '';
                     })
