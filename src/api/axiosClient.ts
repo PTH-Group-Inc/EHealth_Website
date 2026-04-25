@@ -72,9 +72,33 @@ const processQueue = (error: any, token: string | null = null) => {
 axiosClient.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean; _retryCount?: number };
 
-        // Chỉ xử lý 401 (Token hết hạn), bỏ qua nếu đã retry
+        // ── Xử lý 429 (Rate Limited) — retry với backoff ──
+        if (error.response?.status === 429) {
+            const retryCount = originalRequest._retryCount || 0;
+            const MAX_RATE_LIMIT_RETRIES = 2;
+
+            if (retryCount < MAX_RATE_LIMIT_RETRIES) {
+                originalRequest._retryCount = retryCount + 1;
+
+                // Đọc Retry-After header (giây), fallback exponential backoff
+                const retryAfterHeader = error.response.headers['retry-after'];
+                const waitMs = retryAfterHeader
+                    ? parseInt(retryAfterHeader, 10) * 1000
+                    : Math.min(1000 * Math.pow(2, retryCount), 10000); // 1s, 2s, max 10s
+
+                console.warn(`[Rate Limited] Retry ${retryCount + 1}/${MAX_RATE_LIMIT_RETRIES} after ${waitMs}ms — ${originalRequest.url}`);
+
+                await new Promise(resolve => setTimeout(resolve, waitMs));
+                return axiosClient(originalRequest);
+            }
+
+            // Hết số lần retry → reject với error rõ ràng
+            console.error('[Rate Limited] Max retries exceeded:', originalRequest.url);
+        }
+
+        // ── Xử lý 401 (Token hết hạn) — refresh token ──
         if (error.response?.status === 401 && !originalRequest._retry) {
             // Nếu đang refresh rồi, đợi kết quả từ request đầu tiên
             if (isRefreshing) {
