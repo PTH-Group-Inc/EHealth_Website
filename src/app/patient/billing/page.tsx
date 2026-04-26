@@ -193,7 +193,7 @@ export default function BillingPage() {
                         department:      inv.department_name ?? inv.department ?? inv.departmentName ?? "",
                         facilityName:    inv.facility_name ?? inv.facilityName ?? "",
                         encounterType:   inv.encounter_type ?? inv.encounterType ?? "",
-                        status:          statusMap[rawStatus] ?? (rawStatus.toLowerCase() as Invoice["status"]),
+                        status:          (statusMap[rawStatus] ?? rawStatus.toLowerCase()) as Invoice["status"],
                         subtotal:        Number(inv.total_amount ?? inv.subtotal ?? 0),
                         insuranceCovered: Number(inv.insurance_amount ?? inv.insuranceCovered ?? 0),
                         discount:        Number(inv.discount_amount ?? inv.discount ?? 0),
