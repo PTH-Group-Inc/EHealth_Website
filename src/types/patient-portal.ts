@@ -91,7 +91,7 @@ export interface Invoice {
     insuranceCovered: number;
     discount: number;
     total: number;
-    status: "pending" | "paid" | "overdue" | "refunded" | "partial";
+    status: "pending" | "paid" | "overdue" | "refunded" | "partial" | "cancelled";
     paymentMethod?: string;
     paidAt?: string;
     appointmentId?: string;
