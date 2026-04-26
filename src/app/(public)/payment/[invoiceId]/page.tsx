@@ -55,20 +55,42 @@ function PaymentPageContent() {
 
         const fetchData = async () => {
             try {
-                const [aptRes, qrRes] = await Promise.all([
-                    getAppointmentById(appointmentId),
-                    regenerateAppointmentQr(appointmentId)
-                ]);
-
+                // 1. Fetch appointment details first
+                const aptRes = await getAppointmentById(appointmentId);
                 setAppointment(aptRes);
+
+                // 2. Determine if we need to regenerate QR based on status
+                if (['COMPLETED', 'CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS'].includes(aptRes.status)) {
+                    setStatus("PAID");
+                    stopped.current = true;
+                    setLoading(false);
+                    return;
+                }
+
+                if (['CANCELLED', 'NO_SHOW'].includes(aptRes.status)) {
+                    setStatus("EXPIRED");
+                    stopped.current = true;
+                    setLoading(false);
+                    return;
+                }
+
+                // 3. If PENDING_DEPOSIT, regenerate/fetch QR
+                const qrRes = await regenerateAppointmentQr(appointmentId);
+
                 if (typeof qrRes.remaining_seconds === "number") {
                     const remainingSeconds = Math.max(0, qrRes.remaining_seconds);
                     setTimeLeft(remainingSeconds);
-                    if (remainingSeconds === 0) setStatus("EXPIRED");
+                    if (remainingSeconds === 0) {
+                        setStatus("EXPIRED");
+                        stopped.current = true;
+                    }
                 } else if (qrRes.expires_at) {
                     const remainingSeconds = Math.max(0, Math.floor((new Date(qrRes.expires_at).getTime() - Date.now()) / 1000));
                     setTimeLeft(remainingSeconds);
-                    if (remainingSeconds === 0) setStatus("EXPIRED");
+                    if (remainingSeconds === 0) {
+                        setStatus("EXPIRED");
+                        stopped.current = true;
+                    }
                 }
 
                 setQrData(qrRes.qrTemplateData || qrRes.qr_url || qrRes.qr_code_url || "");
@@ -85,6 +107,8 @@ function PaymentPageContent() {
 
     // Countdown Timer
     useEffect(() => {
+        if (!appointmentId || stopped.current) return;
+
         const iv = setInterval(() => {
             setTimeLeft((prev) => {
                 if (prev <= 1) {
@@ -94,12 +118,7 @@ function PaymentPageContent() {
                     
                     // Auto-cancel on server side to free up slot
                     if (appointmentId) {
-                        cancelAppointment(appointmentId, "Quá thời hạn thanh toán cọc").then(() => {
-                            // Chuyển sang trang đơn hủy hoặc trang khám bệnh sau khi hết hạn 1 chút
-                            setTimeout(() => {
-                                router.push("/patient/appointments");
-                            }, 3000);
-                        }).catch(err => {
+                        cancelAppointment(appointmentId, "Quá thời hạn thanh toán cọc").catch(err => {
                             console.error("Failed to auto-cancel appointment on expire:", err);
                         });
                     }
@@ -116,9 +135,8 @@ function PaymentPageContent() {
 
     // Polling Status with exponential backoff
     useEffect(() => {
-        if (!appointmentId || loading) return;
+        if (!appointmentId || loading || stopped.current) return;
         
-        stopped.current = false;
         let timeoutId: NodeJS.Timeout;
         let currentInterval = 5000; // Start with 5 seconds
         let consecutiveErrors = 0;
@@ -301,11 +319,11 @@ function PaymentPageContent() {
                                     
                                     <div className="flex justify-between items-center py-2 border-b border-gray-200">
                                         <span className="text-gray-500">Số tài khoản</span>
-                                        <span className="font-semibold text-gray-800">19039012390123 (Techcombank)</span>
+                                        <span className="font-semibold text-gray-800">3015112004 (MBBank)</span>
                                     </div>
                                     <div className="flex justify-between items-center py-2 border-b border-gray-200">
                                         <span className="text-gray-500">Chủ tài khoản</span>
-                                        <span className="font-semibold text-gray-800">PHONG KHAM EHEALTH</span>
+                                        <span className="font-semibold text-gray-800">PHAN THANH HAI</span>
                                     </div>
                                     <div className="flex justify-between items-center py-2">
                                         <span className="text-gray-500">Nội dung CK</span>

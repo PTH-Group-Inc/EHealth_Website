@@ -40,6 +40,10 @@ const SERVICE_GROUP_LABELS: Record<string, string> = {
     XN: "Xét nghiệm",
     CDHA: "Chẩn đoán hình ảnh",
     THUTHUAT: "Thủ thuật",
+    PHAUTHU: "Phẫu thuật",
+    NOITRU: "Nội trú",
+    SANKHOA: "Sản khoa",
+    PHCN: "Phục hồi chức năng",
 };
 
 // Extended invoice type to hold raw date info from BE
@@ -169,10 +173,10 @@ export default function BillingPage() {
             const res = await billingService.getByPatient(selectedProfileId, { limit: 50 });
             const { data } = unwrapList<any>(res);
             if (data.length > 0) {
-                const statusMap: Record<string, Invoice["status"]> = {
+                const statusMap: Record<string, string> = {
                     UNPAID: "pending", PENDING: "pending", OVERDUE: "overdue",
                     PAID: "paid", PARTIALLY_PAID: "paid",
-                    REFUNDED: "refunded", CANCELLED: "refunded",
+                    REFUNDED: "refunded", CANCELLED: "cancelled",
                 };
                 const mapped: InvoiceExtended[] = data.map((inv: any) => {
                     const rawStatus = (inv.status ?? "pending").toString().toUpperCase();
@@ -221,14 +225,16 @@ export default function BillingPage() {
 
     // ── Load catalog from API ────────────────────────────────────────────────
     useEffect(() => {
-        if (!facilityId) return;
+        // Always use facility catalog (which includes prices).
+        // Default to main facility when no facilityId is derived from invoices.
+        const effectiveFacilityId = facilityId || "FAC_EHEALTH";
         setLoadingCatalog(true);
-        billingService.getCatalogByFacility(facilityId, { limit: 200 })
+        billingService.getCatalogByFacility(effectiveFacilityId, { limit: 200 })
             .then(res => {
                 const { data } = unwrapList<any>(res);
                 if (data.length > 0) {
                     const mapped: ServicePrice[] = data.map((s: any) => {
-                        const basePrice = Number(s.base_price ?? 0);
+                        const basePrice = Number(s.base_price ?? s.price ?? 0);
                         const insPrice  = Number(s.insurance_price ?? 0);
                         const insRate   = basePrice > 0 && insPrice > 0
                             ? Math.round(((basePrice - insPrice) / basePrice) * 100)
@@ -246,6 +252,8 @@ export default function BillingPage() {
                         };
                     });
                     setCatalog(mapped);
+                } else {
+                    setCatalog([]);
                 }
             })
             .catch(() => { setCatalog([]); })
@@ -253,7 +261,7 @@ export default function BillingPage() {
     }, [facilityId]);
 
     const pending = invoices.filter(i => i.status === "pending" || i.status === "overdue");
-    const paid    = invoices.filter(i => i.status === "paid" || i.status === "refunded");
+    const history = invoices.filter(i => i.status === "paid" || i.status === "refunded" || i.status === "cancelled");
     const totalPending = pending.reduce((s, i) => s + i.total, 0);
 
     const serviceGroups = Array.from(new Set(catalog.map(s => s.serviceGroup).filter(Boolean)));
@@ -398,10 +406,11 @@ export default function BillingPage() {
     // ── Status config ─────────────────────────────────────────────────────────
     const getStatusBadge = (status: string) => {
         const cfg: Record<string, { label: string; cls: string }> = {
-            pending:  { label: "Chờ thanh toán", cls: "bg-amber-100 text-amber-700" },
-            paid:     { label: "Đã thanh toán",  cls: "bg-green-100 text-green-700" },
-            overdue:  { label: "Quá hạn",        cls: "bg-red-100 text-red-700" },
-            refunded: { label: "Đã hoàn",        cls: "bg-gray-100 text-gray-600" },
+            pending:   { label: "Chờ thanh toán", cls: "bg-amber-100 text-amber-700" },
+            paid:      { label: "Đã thanh toán",  cls: "bg-green-100 text-green-700" },
+            overdue:   { label: "Quá hạn",        cls: "bg-red-100 text-red-700" },
+            refunded:  { label: "Đã hoàn tiền",   cls: "bg-blue-100 text-blue-600" },
+            cancelled: { label: "Đã hủy",         cls: "bg-red-50 text-red-600 border border-red-200" },
         };
         return cfg[status] || cfg.pending;
     };
@@ -594,18 +603,24 @@ export default function BillingPage() {
             {/* ── History tab ──────────────────────────────────────────────── */}
             {!loadingInvoices && activeTab === "history" && (
                 <div className="space-y-4">
-                    {paid.length === 0 ? (
+                    {history.length === 0 ? (
                         <div className="rounded-2xl border border-gray-100 bg-white py-16 text-center">
                             <span className="material-symbols-outlined mb-4 text-gray-300" style={{ fontSize: "64px" }}>receipt_long</span>
                             <h3 className="mb-1 text-lg font-semibold text-gray-700">Chưa có lịch sử thanh toán</h3>
                             <p className="text-sm text-gray-400">Lịch sử sẽ hiển thị sau khi thanh toán</p>
                         </div>
                     ) : (
-                        paid.map(inv => (
+                        history.map(inv => (
                             <div key={inv.id} className="group rounded-2xl border border-gray-100 bg-white p-5 transition-all hover:shadow-md hover:border-[#3C81C6]/30">
                                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                                    <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-green-50">
-                                        <span className="material-symbols-outlined text-green-500" style={{ fontSize: "24px" }}>check_circle</span>
+                                    <div className={`flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl ${
+                                        inv.status === "cancelled" ? "bg-red-50" : "bg-green-50"
+                                    }`}>
+                                        <span className={`material-symbols-outlined ${
+                                            inv.status === "cancelled" ? "text-red-500" : "text-green-500"
+                                        }`} style={{ fontSize: "24px" }}>
+                                            {inv.status === "cancelled" ? "cancel" : "check_circle"}
+                                        </span>
                                     </div>
 
                                     <div className="min-w-0 flex-1">
@@ -621,7 +636,9 @@ export default function BillingPage() {
                                                     <p className="mt-0.5 text-sm text-gray-600">{inv.patientName}</p>
                                                 )}
                                             </div>
-                                            <p className="text-lg font-bold text-green-600 shrink-0">{formatVND(inv.total)}</p>
+                                            <p className={`text-lg font-bold shrink-0 ${
+                                                inv.status === "cancelled" ? "text-red-500 line-through" : "text-green-600"
+                                            }`}>{formatVND(inv.total)}</p>
                                         </div>
 
                                         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500">

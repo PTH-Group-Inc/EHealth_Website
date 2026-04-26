@@ -28,9 +28,9 @@ export default function BookingSuccessPage({ params }: { params: Promise<{ appoi
                 const data = await getAppointmentById(appointmentId);
                 setAppointment(data);
 
-                // If appointment is SCHEDULED, COMPLETED, or has PAID status logically
-                // Actually the API returns status string (e.g. 'SCHEDULED', 'PENDING_DEPOSIT')
-                if (data.status === 'SCHEDULED' || data.status === 'COMPLETED') {
+                // If appointment is SCHEDULED, CONFIRMED, COMPLETED, or has PAID status logically
+                // Actually the API returns status string (e.g. 'SCHEDULED', 'CONFIRMED', 'PENDING_DEPOSIT')
+                if (data.status === 'SCHEDULED' || data.status === 'CONFIRMED' || data.status === 'COMPLETED') {
                     // 2. Generate check-in QR code
                     try {
                         const qrData = await generateAppointmentQr(appointmentId);
@@ -120,9 +120,9 @@ export default function BookingSuccessPage({ params }: { params: Promise<{ appoi
                                         <div className="flex flex-col">
                                             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Trạng thái</span>
                                             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium w-fit
-                                                ${appointment?.status === 'SCHEDULED' ? 'bg-green-100 text-green-800' : 
+                                                ${(appointment?.status === 'SCHEDULED' || appointment?.status === 'CONFIRMED') ? 'bg-green-100 text-green-800' : 
                                                   appointment?.status === 'PENDING_DEPOSIT' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
-                                                {appointment?.status === 'SCHEDULED' ? 'Đã xác nhận' : 
+                                                {(appointment?.status === 'SCHEDULED' || appointment?.status === 'CONFIRMED') ? 'Đã xác nhận' : 
                                                  appointment?.status === 'PENDING_DEPOSIT' ? 'Chờ xác nhận thanh toán' : appointment?.status}
                                             </span>
                                         </div>

@@ -69,11 +69,32 @@ function BookingPageInner() {
         initDoctorId || initDoctorName ? "doctor" : initServiceId ? "service" : "specialty"
     );
 
-    // Sync step from URL if user clicks browser back button
+    // Sync step from URL if user clicks browser back button or navigates to /booking
     useEffect(() => {
-        const urlStep = parseInt(searchParams.get("step") || "1", 10);
+        const urlStepStr = searchParams.get("step");
+        const urlStep = parseInt(urlStepStr || "1", 10);
         if (urlStep !== step) {
             _setStep(urlStep);
+        }
+        
+        // If user navigates directly to /booking without a step, they expect a fresh booking page
+        if (!urlStepStr) {
+            sessionStorage.removeItem("ehealth_booking_state");
+            setBookingType(initDoctorId || initDoctorName ? "doctor" : initServiceId ? "service" : "specialty");
+            setConsultType("in-person");
+            setSelectedFacility("");
+            setSelectedBranch("");
+            setSelectedSpecialty(initSpecialtyId);
+            setSelectedDoctor(initDoctorId);
+            setSelectedDoctorObj(null);
+            setSelectedService(initServiceId);
+            setSelectedDate(initDate);
+            setSelectedTime(initTime);
+            setSelectedSlotId("");
+            setForm(emptyForm);
+            setAgreedTerms(false);
+            setSelectedProfileId("");
+            setAvailableSlots([]);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams.get("step")]);
@@ -116,6 +137,7 @@ function BookingPageInner() {
     const [availableSlots, setAvailableSlots] = useState<{ id?: string, time: string; available: boolean; remaining: number }[]>([]);
     const [isFetchingSlots, setIsFetchingSlots] = useState(false);
     const [facilityClosedMessage, setFacilityClosedMessage] = useState("");
+    const [isBookingCompleted, setIsBookingCompleted] = useState(false);
 
     // Data
     const [facilities, setFacilities] = useState<any[]>([]);
@@ -132,30 +154,36 @@ function BookingPageInner() {
     const [isClientSessionReady, setIsClientSessionReady] = useState(false);
 
     useEffect(() => {
-        const stored = sessionStorage.getItem("ehealth_booking_state");
-        if (stored) {
-            try {
-                const data = JSON.parse(stored);
-                if (data.bookingType) setBookingType(data.bookingType);
-                if (data.consultType) setConsultType(data.consultType);
-                if (data.selectedFacility) setSelectedFacility(data.selectedFacility);
-                if (data.selectedBranch) setSelectedBranch(data.selectedBranch);
-                if (data.selectedSpecialty) setSelectedSpecialty(data.selectedSpecialty);
-                if (data.selectedDoctor) setSelectedDoctor(data.selectedDoctor);
-                if (data.selectedService) setSelectedService(data.selectedService);
-                if (data.selectedDate) setSelectedDate(data.selectedDate);
-                if (data.selectedTime) setSelectedTime(data.selectedTime);
-                if (data.selectedSlotId) setSelectedSlotId(data.selectedSlotId);
-                if (data.form) setForm(data.form);
-                if (data.agreedTerms !== undefined) setAgreedTerms(data.agreedTerms);
-                if (data.selectedProfileId) setSelectedProfileId(data.selectedProfileId);
-            } catch (err) {}
+        // Only load from sessionStorage if step is in URL (meaning they are continuing a flow or reloaded)
+        if (!searchParams.has("step")) {
+            sessionStorage.removeItem("ehealth_booking_state");
+        } else {
+            const stored = sessionStorage.getItem("ehealth_booking_state");
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    if (data.bookingType) setBookingType(data.bookingType);
+                    if (data.consultType) setConsultType(data.consultType);
+                    if (data.selectedFacility) setSelectedFacility(data.selectedFacility);
+                    if (data.selectedBranch) setSelectedBranch(data.selectedBranch);
+                    if (data.selectedSpecialty) setSelectedSpecialty(data.selectedSpecialty);
+                    if (data.selectedDoctor) setSelectedDoctor(data.selectedDoctor);
+                    if (data.selectedService) setSelectedService(data.selectedService);
+                    if (data.selectedDate) setSelectedDate(data.selectedDate);
+                    if (data.selectedTime) setSelectedTime(data.selectedTime);
+                    if (data.selectedSlotId) setSelectedSlotId(data.selectedSlotId);
+                    if (data.form) setForm(data.form);
+                    if (data.agreedTerms !== undefined) setAgreedTerms(data.agreedTerms);
+                    if (data.selectedProfileId) setSelectedProfileId(data.selectedProfileId);
+                } catch (err) {}
+            }
         }
         setIsClientSessionReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
-        if (!isClientSessionReady) return;
+        if (!isClientSessionReady || isBookingCompleted) return;
         
         if (step === 5) {
             sessionStorage.removeItem("ehealth_booking_state");
@@ -166,7 +194,7 @@ function BookingPageInner() {
                 selectedSlotId, form, agreedTerms, selectedProfileId
             }));
         }
-    }, [isClientSessionReady, step, consultType, selectedFacility, selectedBranch, selectedSpecialty, selectedDoctor, selectedService, selectedDate, selectedTime, selectedSlotId, form, agreedTerms, selectedProfileId]);
+    }, [isClientSessionReady, isBookingCompleted, step, consultType, selectedFacility, selectedBranch, selectedSpecialty, selectedDoctor, selectedService, selectedDate, selectedTime, selectedSlotId, form, agreedTerms, selectedProfileId]);
 
     // Load available services dynamically based on selected doctor OR specialty
     useEffect(() => {
@@ -699,6 +727,8 @@ function BookingPageInner() {
                     appointment = { appointments_id: aptId, id: aptId, ...pre };
 
                     if (aptId && invId) {
+                        setIsBookingCompleted(true);
+                        sessionStorage.removeItem("ehealth_booking_state");
                         router.push(`/payment/${invId}?appointmentId=${aptId}`);
                         return;
                     }
