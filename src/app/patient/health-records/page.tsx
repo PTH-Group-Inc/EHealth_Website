@@ -280,7 +280,7 @@ const parseMetricValue = (value: unknown) => {
 };
 
 const getMetricNumericValue = (metric: any) => {
-    const parsed = parseMetricValue(metric?.metric_value);
+    const parsed = parseMetricValue(metric?.metric_value ?? metric?.metricValue);
     if (typeof parsed === "number") return parsed;
     if (parsed && typeof parsed === "object" && "value" in parsed) {
         return toNumber((parsed as { value?: unknown }).value, 0);
@@ -293,32 +293,34 @@ const applyHealthMetricsToVital = (baseVital: VitalSign | null, metrics: any[]) 
     const mostRecentByCode = new Map<string, any>();
 
     metrics.forEach((metric) => {
-        const code = String(metric?.metric_code ?? "");
+        const code = String(metric?.metric_code ?? metric?.metricCode ?? "").toUpperCase();
         if (!code) return;
         const current = mostRecentByCode.get(code);
-        if (!current || new Date(metric?.measured_at ?? 0).getTime() >= new Date(current?.measured_at ?? 0).getTime()) {
+        const measuredAt = metric?.measured_at ?? metric?.measuredAt ?? 0;
+        const currentMeasuredAt = current?.measured_at ?? current?.measuredAt ?? 0;
+        if (!current || new Date(measuredAt).getTime() >= new Date(currentMeasuredAt).getTime()) {
             mostRecentByCode.set(code, metric);
         }
     });
 
     mostRecentByCode.forEach((metric, code) => {
-        const measuredAt = metric?.measured_at ?? latest.date;
+        const measuredAt = metric?.measured_at ?? metric?.measuredAt ?? latest.date;
         latest.date = measuredAt || latest.date;
 
-        if (code === "BLOOD_PRESSURE") {
-            const parsed = parseMetricValue(metric?.metric_value) as { systolic?: unknown; diastolic?: unknown } | null;
+        if (code === "BLOOD_PRESSURE" || code === "BP") {
+            const parsed = parseMetricValue(metric?.metric_value ?? metric?.metricValue) as { systolic?: unknown; diastolic?: unknown } | null;
             latest.bloodPressureSystolic = toNumber(parsed?.systolic, latest.bloodPressureSystolic);
             latest.bloodPressureDiastolic = toNumber(parsed?.diastolic, latest.bloodPressureDiastolic);
             return;
         }
 
         const numericValue = getMetricNumericValue(metric);
-        if (code === "HEART_RATE") latest.heartRate = numericValue;
-        if (code === "TEMPERATURE") latest.temperature = numericValue;
-        if (code === "SPO2") latest.spo2 = numericValue;
+        if (code === "HEART_RATE" || code === "HR" || code === "PULSE") latest.heartRate = numericValue;
+        if (code === "TEMPERATURE" || code === "TEMP") latest.temperature = numericValue;
+        if (code === "SPO2" || code === "O2") latest.spo2 = numericValue;
         if (code === "WEIGHT") latest.weight = numericValue;
         if (code === "HEIGHT") latest.height = numericValue;
-        if (code === "BLOOD_SUGAR") latest.bloodSugar = numericValue;
+        if (code === "BLOOD_SUGAR" || code === "GLU" || code === "GLUCOSE") latest.bloodSugar = numericValue;
     });
 
     if (latest.weight && latest.height) {
@@ -332,11 +334,11 @@ const buildVitalsFromHealthMetrics = (metrics: any[]) => {
     const grouped = new Map<string, VitalSign>();
 
     metrics.forEach((metric) => {
-        const measuredAt = String(metric?.measured_at ?? "");
+        const measuredAt = String(metric?.measured_at ?? metric?.measuredAt ?? "");
         if (!measuredAt) return;
 
         const current = grouped.get(measuredAt) ?? {
-            id: metric?.patient_health_metrics_id ?? `metric_${measuredAt}`,
+            id: metric?.patient_health_metrics_id ?? metric?.patientHealthMetricsId ?? metric?.id ?? `metric_${measuredAt}`,
             date: measuredAt,
             bloodPressureSystolic: Number.NaN,
             bloodPressureDiastolic: Number.NaN,
@@ -348,28 +350,29 @@ const buildVitalsFromHealthMetrics = (metrics: any[]) => {
             bloodSugar: Number.NaN,
             spo2: Number.NaN,
             respiratoryRate: Number.NaN,
-            sourceType: metric?.source_type ?? "DEVICE",
+            sourceType: metric?.source_type ?? metric?.sourceType ?? "DEVICE",
         };
 
-        current.id = current.id || metric?.patient_health_metrics_id || `metric_${measuredAt}`;
+        current.id = current.id || metric?.patient_health_metrics_id || metric?.patientHealthMetricsId || metric?.id || `metric_${measuredAt}`;
         current.date = measuredAt;
-        current.sourceType = metric?.source_type ?? current.sourceType;
+        current.sourceType = metric?.source_type ?? metric?.sourceType ?? current.sourceType;
 
-        const parsed = parseMetricValue(metric?.metric_value);
+        const rawValue = metric?.metric_value ?? metric?.metricValue;
+        const parsed = parseMetricValue(rawValue);
         const numericValue = getMetricNumericValue(metric);
-        const code = String(metric?.metric_code ?? "").toUpperCase();
+        const code = String(metric?.metric_code ?? metric?.metricCode ?? "").toUpperCase();
 
-        if (code === "BLOOD_PRESSURE") {
+        if (code === "BLOOD_PRESSURE" || code === "BP") {
             const bloodPressure = parsed as { systolic?: unknown; diastolic?: unknown } | null;
             current.bloodPressureSystolic = toNumber(bloodPressure?.systolic, current.bloodPressureSystolic);
             current.bloodPressureDiastolic = toNumber(bloodPressure?.diastolic, current.bloodPressureDiastolic);
         }
-        if (code === "HEART_RATE") current.heartRate = numericValue;
-        if (code === "TEMPERATURE") current.temperature = numericValue;
-        if (code === "SPO2") current.spo2 = numericValue;
+        if (code === "HEART_RATE" || code === "HR" || code === "PULSE") current.heartRate = numericValue;
+        if (code === "TEMPERATURE" || code === "TEMP") current.temperature = numericValue;
+        if (code === "SPO2" || code === "O2") current.spo2 = numericValue;
         if (code === "WEIGHT") current.weight = numericValue;
         if (code === "HEIGHT") current.height = numericValue;
-        if (code === "BLOOD_SUGAR") current.bloodSugar = numericValue;
+        if (code === "BLOOD_SUGAR" || code === "GLU" || code === "GLUCOSE") current.bloodSugar = numericValue;
 
         if (current.weight && current.height) {
             current.bmi = toNumber(current.weight / ((current.height / 100) ** 2), current.bmi);

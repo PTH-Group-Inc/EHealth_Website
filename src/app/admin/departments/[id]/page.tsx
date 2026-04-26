@@ -6,6 +6,7 @@ import Link from "next/link";
 import { DEPARTMENT_STATUS } from "@/constants/status";
 import type { Department } from "@/types";
 import { getDepartmentById, getStaffByDepartment } from "@/services/departmentService";
+import { getImageUrl } from "@/utils/helpers";
 
 const TABS = [
     { key: "info", label: "Thông tin", icon: "info" },
@@ -285,7 +286,7 @@ function StaffTab({ staff, loading }: { staff: DeptStaff[]; loading: boolean }) 
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-[#3C81C6]/10 flex items-center justify-center text-[#3C81C6] overflow-hidden">
                                                 {doc.avatar ? (
-                                                    <img src={doc.avatar} alt={doc.name} className="w-full h-full object-cover" />
+                                                    <img src={getImageUrl(doc.avatar)} alt={doc.name} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <span className="material-symbols-outlined">person</span>
                                                 )}

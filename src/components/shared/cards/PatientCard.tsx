@@ -5,7 +5,7 @@
  * Hiển thị avatar, tên, thông tin cơ bản, BHYT, thao tác nhanh.
  */
 
-import { getInitials } from "@/utils/helpers";
+import { getInitials, getImageUrl } from "@/utils/helpers";
 import { formatDate } from "@/utils/formatters";
 
 export interface PatientCardProps {
@@ -60,7 +60,7 @@ export function PatientCard({
                 <div className="flex items-start gap-3">
                     {avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={avatarUrl} alt={fullName}
+                        <img src={getImageUrl(avatarUrl)} alt={fullName}
                             className="w-14 h-14 rounded-xl object-cover flex-shrink-0 border border-gray-100 dark:border-gray-800" />
                     ) : (
                         <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${genderColor} flex items-center justify-center text-white font-bold flex-shrink-0 shadow-sm`}>
