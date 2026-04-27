@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { getNotifications, markNotificationAsRead, patchMarkAllNotificationsRead } from "@/services/notificationService";
+import { useRouter } from "next/navigation";
+import { NotificationInboxModal, HighlightedText } from "./NotificationInboxModal";
 
 interface NotificationItem {
     id: string;
@@ -17,6 +19,8 @@ interface NotificationItem {
     created_at?: string;
     actionUrl?: string;
     action_url?: string;
+    user_notifications_id?: string;
+    data_payload?: any;
 }
 
 const CATEGORY_ICONS: Record<string, { icon: string; color: string }> = {
@@ -43,10 +47,13 @@ function timeAgo(iso?: string): string {
 
 export function NotificationBell() {
     const [open, setOpen] = useState(false);
+    const [inboxModalOpen, setInboxModalOpen] = useState(false);
+    const [initialSelectedId, setInitialSelectedId] = useState<string | null>(null);
     const [items, setItems] = useState<NotificationItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
 
     const fetchNotifications = useCallback(async () => {
         setLoading(true);
@@ -88,6 +95,14 @@ export function NotificationBell() {
         } catch {
             // silent
         }
+    };
+
+    const handleItemClick = (id: string | undefined) => {
+        if (!id) return;
+        handleMarkRead(id);
+        setOpen(false);
+        setInitialSelectedId(id);
+        setInboxModalOpen(true);
     };
 
     const handleMarkAllRead = async () => {
@@ -155,7 +170,8 @@ export function NotificationBell() {
                                 const rawUrl = n.actionUrl ?? n.action_url;
                                 const url = typeof rawUrl === 'string' && rawUrl.startsWith('/') ? rawUrl : undefined;
                                 const content = n.content ?? n.body ?? "";
-                                const itemKey = String(n.id || `notification-${idx}`);
+                                const notifId = n.user_notifications_id || n.id;
+                                const itemKey = String(notifId || `notification-${idx}`);
 
                                 const inner = (
                                     <div className={`flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#13191f] transition-colors cursor-pointer border-b border-gray-50 dark:border-[#2d353e]/50 ${!isRead ? "bg-blue-50/30 dark:bg-blue-900/10" : ""}`}>
@@ -167,7 +183,7 @@ export function NotificationBell() {
                                                 {n.title}
                                             </p>
                                             {content && (
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-0.5">{content}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-0.5 whitespace-pre-wrap"><HighlightedText text={content} payload={(n as any).data_payload} /></p>
                                             )}
                                             <p className="text-[10px] text-gray-400 mt-1">{time}</p>
                                         </div>
@@ -175,12 +191,8 @@ export function NotificationBell() {
                                     </div>
                                 );
 
-                                return url ? (
-                                    <Link href={url} key={itemKey} onClick={() => { handleMarkRead(n.id); setOpen(false); }}>
-                                        {inner}
-                                    </Link>
-                                ) : (
-                                    <div key={itemKey} onClick={() => handleMarkRead(n.id)}>
+                                return (
+                                    <div key={itemKey} onClick={() => handleItemClick(notifId)}>
                                         {inner}
                                     </div>
                                 );
@@ -190,16 +202,25 @@ export function NotificationBell() {
 
                     {/* Footer */}
                     <div className="border-t border-gray-100 dark:border-[#2d353e] px-4 py-2.5">
-                        <Link
-                            href="/notifications/inbox"
-                            onClick={() => setOpen(false)}
-                            className="block text-center text-sm text-[#3C81C6] hover:underline font-medium"
+                        <button
+                            onClick={() => {
+                                setOpen(false);
+                                setInitialSelectedId(null);
+                                setInboxModalOpen(true);
+                            }}
+                            className="block w-full text-center text-sm text-[#3C81C6] hover:underline font-medium"
                         >
                             Xem tất cả thông báo
-                        </Link>
+                        </button>
                     </div>
                 </div>
             )}
+            
+            <NotificationInboxModal
+                isOpen={inboxModalOpen}
+                onClose={() => setInboxModalOpen(false)}
+                initialSelectedId={initialSelectedId}
+            />
         </div>
     );
 }
