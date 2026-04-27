@@ -32,12 +32,20 @@ export interface NotificationTemplate {
 }
 
 export interface NotificationItem {
-    id: string;
+    id?: string;
+    user_notifications_id?: string;
     title: string;
-    content: string;
+    content?: string;
+    body?: string;
     category?: string;
-    isRead: boolean;
-    createdAt: string;
+    type?: string;
+    isRead?: boolean;
+    is_read?: boolean;
+    createdAt?: string;
+    created_at?: string;
+    actionUrl?: string;
+    action_url?: string;
+    data_payload?: any;
 }
 
 // ============================================
