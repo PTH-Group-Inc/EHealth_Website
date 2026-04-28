@@ -80,7 +80,7 @@ export default function ReceptionPage() {
         setSearching(true);
         try {
             const res = await getPatients({ search: searchQuery.trim(), limit: 5 });
-            const items: any[] = (res as any)?.data?.data ?? (res as any)?.data ?? [];
+            const items: any[] = res?.data?.items ?? (Array.isArray((res as any)?.data) ? (res as any).data : []);
             if (Array.isArray(items) && items.length > 0) {
                 const p = items[0];
                 setFoundPatient({

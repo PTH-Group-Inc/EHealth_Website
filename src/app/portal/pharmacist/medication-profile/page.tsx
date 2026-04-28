@@ -52,7 +52,7 @@ export default function PharmacistMedicationProfilePage() {
     const [newAdherence, setNewAdherence] = useState("");
 
     useEffect(() => {
-        getPatients({ limit: 50 }).then((r: any) => setPatientOptions(r?.data ?? [])).catch(() => {});
+        getPatients({ limit: 50 }).then((r: any) => setPatientOptions(r?.data?.items ?? (Array.isArray(r?.data) ? r.data : []))).catch(() => {});
     }, []);
 
     useEffect(() => {

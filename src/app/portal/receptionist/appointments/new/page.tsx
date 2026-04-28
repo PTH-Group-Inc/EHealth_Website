@@ -59,7 +59,7 @@ export default function NewAppointmentPage() {
         setSearching(true);
         try {
             const res = await getPatients({ search: patientSearch.trim(), limit: 5 });
-            const items: any[] = (res as any)?.data?.data ?? (res as any)?.data ?? [];
+            const items: any[] = res?.data?.items ?? (Array.isArray((res as any)?.data) ? (res as any).data : []);
             setFoundPatients(Array.isArray(items) ? items : []);
         } catch {
             setFoundPatients([]);

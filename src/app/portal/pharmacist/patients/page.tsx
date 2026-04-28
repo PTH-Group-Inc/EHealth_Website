@@ -22,7 +22,8 @@ export default function PharmacistPatientsPage() {
         setLoading(true);
         try {
             const r = await getPatients({ limit: 100, search: search || undefined });
-            setItems((r as any)?.data ?? []);
+            const resData = r?.data?.items ?? (r?.data as any)?.data ?? r?.data;
+            setItems(Array.isArray(resData) ? resData : []);
         } finally { setLoading(false); }
     }, [search]);
 
