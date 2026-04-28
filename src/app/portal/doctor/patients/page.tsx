@@ -69,7 +69,7 @@ export default function DoctorPatientsPage() {
         setLoading(true);
         try {
             const res = await getPatients({ limit: 100, search: search || undefined });
-            const data = (res as any)?.data ?? [];
+            const data = res?.data?.items ?? (Array.isArray((res as any)?.data) ? (res as any).data : []);
             setItems(Array.isArray(data) ? data.map(normalizePatient) : []);
         } catch {
             setItems([]);
