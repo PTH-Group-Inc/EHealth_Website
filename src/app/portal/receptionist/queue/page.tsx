@@ -73,7 +73,13 @@ export default function ReceptionistQueuePage() {
         } finally { setLoading(false); }
     }, []);
 
-    useEffect(() => { load(); }, [load]);
+    useEffect(() => {
+        load();
+        const interval = setInterval(() => {
+            load();
+        }, 30000);
+        return () => clearInterval(interval);
+    }, [load]);
 
     const rooms = useMemo(() => Array.from(new Set(items.map(q => q.room).filter(Boolean) as string[])), [items]);
 
@@ -185,6 +191,17 @@ export default function ReceptionistQueuePage() {
                                                 )}
                                                 {q.status === "skipped" && (
                                                     <button onClick={() => doAction(q.id, "recall")} disabled={disabled} className="px-2 py-1 text-xs rounded bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50">Gọi lại</button>
+                                                )}
+                                                {q.status === "completed" && (
+                                                    <div className="relative inline-flex">
+                                                        <span className="flex h-2.5 w-2.5 absolute -top-1 -right-1 z-10">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                                        </span>
+                                                        <Link href={`/portal/receptionist/billing?search=${encodeURIComponent(q.appointmentCode || q.patientName)}`} className="px-3 py-1.5 text-xs rounded-lg bg-teal-600 text-white shadow-md shadow-teal-200 dark:shadow-none hover:bg-teal-700 font-bold whitespace-nowrap transition-all flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-[16px]">receipt_long</span> Thanh toán ngay
+                                                        </Link>
+                                                    </div>
                                                 )}
                                             </div>
                                         </td>

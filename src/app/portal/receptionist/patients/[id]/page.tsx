@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
     getPatientDetail,
@@ -19,8 +19,10 @@ import {
     uploadDocument,
     deleteDocument,
     updatePatientStatus,
+    getPatientInsurances,
     Patient,
     PatientContact,
+    PatientInsurance,
     PatientRelation,
     MedicalRecord,
     RelationType,
@@ -106,6 +108,7 @@ function ErrorMsg({ msg, onRetry }: { msg: string; onRetry?: () => void }) {
 // ==================== PAGE ====================
 const TABS = [
     { key: "info", label: "Thông tin chung", icon: "person" },
+    { key: "insurance", label: "Bảo hiểm", icon: "health_and_safety" },
     { key: "contact", label: "Liên hệ", icon: "call" },
     { key: "history", label: "Lịch sử khám", icon: "history" },
     { key: "prescriptions", label: "Đơn thuốc", icon: "medication" },
@@ -113,9 +116,10 @@ const TABS = [
     { key: "relations", label: "Người thân", icon: "family_restroom" },
 ];
 
-export default function PatientDetailPage({ params }: { params: { id: string } }) {
+export default function PatientDetailPage() {
     const router = useRouter();
-    const patientId = params.id;
+    const params = useParams();
+    const patientId = params.id as string;
 
     // Patient info
     const [patient, setPatient] = useState<Patient | null>(null);
@@ -155,6 +159,11 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
     const [errorDocs, setErrorDocs] = useState<string | null>(null);
     const [uploadingDoc, setUploadingDoc] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Insurance
+    const [insurances, setInsurances] = useState<PatientInsurance[]>([]);
+    const [loadingInsurance, setLoadingInsurance] = useState(false);
+    const [errorInsurance, setErrorInsurance] = useState<string | null>(null);
 
     // Relations
     const [relations, setRelations] = useState<PatientRelation[]>([]);
@@ -204,11 +213,31 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
         if (loadedTabs.current.has(tabKey)) return;
         loadedTabs.current.add(tabKey);
 
+        if (tabKey === "insurance") fetchInsurances();
         if (tabKey === "contact") fetchContacts();
         if (tabKey === "history") fetchHistory();
         if (tabKey === "prescriptions") fetchPrescriptions();
         if (tabKey === "documents") fetchDocuments();
         if (tabKey === "relations") fetchRelations();
+    };
+
+    // ===== Insurance =====
+    const fetchInsurances = async () => {
+        setLoadingInsurance(true);
+        setErrorInsurance(null);
+        try {
+            const res = await getPatientInsurances(patientId);
+            if (res.success) {
+                const arr = Array.isArray(res.data) ? res.data : [];
+                setInsurances(arr);
+            } else {
+                setErrorInsurance(res.message ?? "Lỗi tải bảo hiểm");
+            }
+        } catch {
+            setErrorInsurance("Không thể tải thông tin bảo hiểm");
+        } finally {
+            setLoadingInsurance(false);
+        }
     };
 
     // ===== Contacts =====
@@ -312,8 +341,9 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
         try {
             const fd = new FormData();
             fd.append("file", file);
-            fd.append("document_type", "GENERAL");
-            fd.append("file_name", file.name);
+            fd.append("patient_id", patientId);
+            fd.append("document_type_id", "GENERAL");
+            fd.append("document_name", file.name);
             const res = await uploadDocument(patientId, fd);
             if (res.success) fetchDocuments();
             else alert(res.message || "Tải lên thất bại");
@@ -497,23 +527,33 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
                 </div>
 
                 {/* Quick info cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     {[
-                        { icon: "call", label: "Điện thoại", value: primaryContact?.phone_number ?? "—" },
-                        { icon: "badge", label: "CCCD/CMND", value: patient.identity_number ?? "—" },
-                        { icon: "bloodtype", label: "Nhóm máu", value: patient.blood_type ?? "—" },
-                        { icon: "calendar_today", label: "Ngày đăng ký", value: fmtDatetime(patient.created_at) },
-                    ].map((item) => (
-                        <div key={item.label} className="bg-white dark:bg-[#1e242b] rounded-xl border border-[#dde0e4] dark:border-[#2d353e] p-4 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
-                                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400" style={{ fontSize: "20px" }}>{item.icon}</span>
+                        { icon: "call", label: "Điện thoại", value: primaryContact?.phone_number ?? "—", color: "blue" },
+                        { icon: "badge", label: "CCCD/CMND", value: patient.identity_number ?? "—", color: "blue" },
+                        { icon: "bloodtype", label: "Nhóm máu", value: patient.blood_type ?? "—", color: "red" },
+                        { icon: "warning", label: "Dị ứng", value: patient.allergies || "Không có", color: patient.allergies ? "amber" : "blue" },
+                        { icon: "health_and_safety", label: "Bảo hiểm", value: patient.has_insurance ? "Có BHYT" : "Không", color: patient.has_insurance ? "emerald" : "blue" },
+                        { icon: "calendar_today", label: "Ngày đăng ký", value: fmtDatetime(patient.created_at), color: "blue" },
+                    ].map((item) => {
+                        const colorMap: Record<string, string> = {
+                            blue: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
+                            red: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
+                            amber: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400",
+                            emerald: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400",
+                        };
+                        return (
+                            <div key={item.label} className="bg-white dark:bg-[#1e242b] rounded-xl border border-[#dde0e4] dark:border-[#2d353e] p-3.5 flex items-center gap-3">
+                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${colorMap[item.color] ?? colorMap.blue}`}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>{item.icon}</span>
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[11px] text-[#687582]">{item.label}</p>
+                                    <p className="text-sm font-semibold text-[#121417] dark:text-white truncate">{item.value}</p>
+                                </div>
                             </div>
-                            <div className="min-w-0">
-                                <p className="text-xs text-[#687582]">{item.label}</p>
-                                <p className="text-sm font-semibold text-[#121417] dark:text-white truncate">{item.value}</p>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* Tabs */}
@@ -634,6 +674,55 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
                             </div>
                         )}
 
+                        {/* ====== TAB: BẢO HIỂM ====== */}
+                        {activeTab === "insurance" && (
+                            <div className="space-y-5">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-bold text-[#121417] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[18px] text-[#3C81C6]">health_and_safety</span>
+                                        Thông tin bảo hiểm
+                                    </h3>
+                                </div>
+                                {loadingInsurance ? (
+                                    <LoadingSpinner text="Đang tải bảo hiểm..." />
+                                ) : errorInsurance ? (
+                                    <ErrorMsg msg={errorInsurance} onRetry={fetchInsurances} />
+                                ) : !Array.isArray(insurances) || insurances.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <span className="material-symbols-outlined text-[48px] text-[#cdd5de] dark:text-gray-600 mb-3 block">shield</span>
+                                        <p className="text-sm text-[#687582]">Chưa có thông tin bảo hiểm</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {insurances.map((ins: any, idx: number) => {
+                                            const isActive = ins.status === "ACTIVE" || (!ins.expiry_date || new Date(ins.expiry_date) > new Date());
+                                            return (
+                                                <div key={ins.insurance_id ?? idx} className="bg-gray-50 dark:bg-[#171c23] rounded-xl border border-[#dde0e4] dark:border-[#2d353e] p-5 space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="material-symbols-outlined text-[20px] text-[#3C81C6]">verified_user</span>
+                                                            <span className="text-sm font-semibold text-[#121417] dark:text-white">{ins.provider_name ?? ins.insurance_provider ?? "Nhà cung cấp"}</span>
+                                                        </div>
+                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
+                                                            <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-red-500"}`} />
+                                                            {isActive ? "Đang hoạt động" : "Hết hạn"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <InfoRow label="Số thẻ BHYT" value={ins.card_number ?? ins.insurance_number ?? "—"} />
+                                                        <InfoRow label="Loại bảo hiểm" value={ins.coverage_type ?? ins.insurance_type ?? "—"} />
+                                                        <InfoRow label="Ngày hiệu lực" value={ins.effective_date ? fmtDob(ins.effective_date) : "—"} />
+                                                        <InfoRow label="Ngày hết hạn" value={ins.expiry_date ? fmtDob(ins.expiry_date) : "—"} />
+                                                        {ins.notes && <InfoRow label="Ghi chú" value={ins.notes} />}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* ====== TAB: LIÊN HỆ ====== */}
                         {activeTab === "contact" && (
                             <div className="space-y-5">
@@ -750,11 +839,11 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
                                 <h3 className="text-sm font-bold text-[#121417] dark:text-white uppercase tracking-wider">Đơn thuốc</h3>
                                 {loadingRx && <LoadingSpinner />}
                                 {!loadingRx && errorRx && <ErrorMsg msg={errorRx} onRetry={fetchPrescriptions} />}
-                                {!loadingRx && !errorRx && prescriptions.length === 0 && (
+                                {!loadingRx && !errorRx && (!Array.isArray(prescriptions) || prescriptions.length === 0) && (
                                     <EmptyState icon="medication" text="Chưa có đơn thuốc" />
                                 )}
-                                {!loadingRx && prescriptions.map((rx, idx) => (
-                                    <div key={rx.prescription_id ?? idx} className="flex items-center gap-4 p-4 rounded-xl border border-[#dde0e4] dark:border-[#2d353e]">
+                                {!loadingRx && Array.isArray(prescriptions) && prescriptions.map((rx, idx) => (
+                                    <div key={rx.prescription_id ? `${rx.prescription_id}-${idx}` : `rx-${idx}`} className="flex items-center gap-4 p-4 rounded-xl border border-[#dde0e4] dark:border-[#2d353e]">
                                         <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900/20 flex items-center justify-center flex-shrink-0">
                                             <span className="material-symbols-outlined text-teal-600" style={{ fontSize: "20px" }}>medication</span>
                                         </div>

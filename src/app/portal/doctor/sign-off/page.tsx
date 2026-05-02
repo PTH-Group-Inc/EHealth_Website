@@ -14,6 +14,8 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PageHeader, EmptyState, StatCard } from "@/components/shared/layout";
 import { medicalSignoffService, type SignoffRecord, type Signature } from "@/services/medicalSignoffService";
+import { billingService } from "@/services/billingService";
+import { useToast } from "@/contexts/ToastContext";
 
 const fmt = (v?: string) => {
     if (!v) return "—";
@@ -122,6 +124,7 @@ function SignoffDetail({ encounterId, onBack }: { encounterId: string; onBack: (
     const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
     const [pin, setPin] = useState("");
+    const toast = useToast();
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -145,10 +148,19 @@ function SignoffDetail({ encounterId, onBack }: { encounterId: string; onBack: (
         try {
             if (kind === "draft") await medicalSignoffService.draftSign(encounterId, {});
             if (kind === "official") await medicalSignoffService.officialSign(encounterId, { pin });
-            if (kind === "complete") await medicalSignoffService.complete(encounterId, {});
+            if (kind === "complete") {
+                await medicalSignoffService.complete(encounterId, {});
+                try {
+                    await billingService.generateInvoice(encounterId);
+                    toast.success("Hóa đơn đã được tự động tạo và chuyển đến Lễ tân/Thu ngân.");
+                } catch (err) {
+                    console.error("Lỗi tự động tạo hóa đơn:", err);
+                    toast.error("Không thể tự động tạo hóa đơn. Vui lòng báo Thu ngân kiểm tra lại.");
+                }
+            }
             await load();
         } catch (e: any) {
-            alert(e?.response?.data?.message ?? e?.message ?? "Ký thất bại");
+            toast.error(e?.response?.data?.message ?? e?.message ?? "Ký thất bại");
         } finally { setBusy(false); }
     };
 
