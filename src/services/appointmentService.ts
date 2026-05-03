@@ -468,9 +468,9 @@ export const getAppointmentPaymentStatus = async (id: string): Promise<PaymentSt
         const res = await axiosClient.get(APPOINTMENT_ENDPOINTS.PAYMENT_STATUS(id));
         const d = unwrapOne(res) as any;
         return {
-            isPaid: !!(d?.isPaid ?? d?.is_paid),
+            isPaid: !!(d?.isPaid || d?.is_paid || d?.payment_status === 'PAID' || d?.appointment_status === 'CONFIRMED' || d?.appointment_status === 'SCHEDULED'),
             appointment_status: d?.appointment_status ?? d?.appointmentStatus,
-            invoice_status: d?.invoice_status ?? d?.invoiceStatus,
+            invoice_status: d?.invoice_status ?? d?.invoiceStatus ?? d?.payment_status,
             ...d,
         };
     } catch (error: any) {
