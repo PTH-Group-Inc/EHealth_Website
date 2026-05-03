@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -9,11 +9,10 @@ import { PatientNavbar } from "@/components/patient/PatientNavbar";
 import { PatientFooter } from "@/components/patient/PatientFooter";
 import { getAppointmentById, generateAppointmentQr, type Appointment } from "@/services/appointmentService";
 
-export default function BookingSuccessPage({ params }: { params: Promise<{ appointmentId: string }> }) {
+export default function BookingSuccessPage({ params }: { params: { appointmentId: string } }) {
     const t = useTranslations("pages.public.booking");
     const router = useRouter();
-    const resolvedParams = use(params);
-    const { appointmentId } = resolvedParams;
+    const { appointmentId } = params;
 
     const [appointment, setAppointment] = useState<Appointment | null>(null);
     const [qrToken, setQrToken] = useState<string | null>(null);
