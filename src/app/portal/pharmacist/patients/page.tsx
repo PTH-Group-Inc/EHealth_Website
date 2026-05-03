@@ -22,8 +22,13 @@ export default function PharmacistPatientsPage() {
         setLoading(true);
         try {
             const r = await getPatients({ limit: 100, search: search || undefined });
-            const resData = r?.data?.items ?? (r?.data as any)?.data ?? r?.data;
-            setItems(Array.isArray(resData) ? resData : []);
+            let resData: any[] = [];
+            if (Array.isArray(r?.data?.items)) resData = r.data.items;
+            else if (Array.isArray((r as any)?.data?.data)) resData = (r as any).data.data;
+            else if (Array.isArray((r as any)?.data)) resData = (r as any).data;
+            else if (Array.isArray(r?.data)) resData = r.data;
+            else if (Array.isArray(r)) resData = r as any;
+            setItems(resData);
         } finally { setLoading(false); }
     }, [search]);
 
@@ -69,13 +74,13 @@ export default function PharmacistPatientsPage() {
                         </thead>
                         <tbody className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
                             {items.map((p: any) => (
-                                <tr key={p.id}>
+                                <tr key={p.patient_id || p.id}>
                                     <td className="px-4 py-3 font-mono text-xs">{p.patient_code ?? "—"}</td>
                                     <td className="px-4 py-3 font-medium">{p.full_name ?? p.fullName ?? "—"}</td>
                                     <td className="px-4 py-3">{genderLabel(p.gender)}</td>
                                     <td className="px-4 py-3">{p.phone_number ?? "—"}</td>
                                     <td className="px-4 py-3 text-right">
-                                        <Link href={`/portal/pharmacist/medication-profile?patientId=${p.id}`} className="px-2 py-1 text-xs rounded bg-[#3C81C6] text-white">Hồ sơ thuốc</Link>
+                                        <Link href={`/portal/pharmacist/medication-profile?patientId=${p.patient_id || p.id}`} className="px-2 py-1 text-xs rounded bg-[#3C81C6] text-white">Hồ sơ thuốc</Link>
                                     </td>
                                 </tr>
                             ))}

@@ -65,12 +65,13 @@ export default function ReceptionistPatients() {
     });
 
     // Stats tính từ list hiện tại
-    const withInsurance = patients.filter(p => {
+    const safePatients = Array.isArray(patients) ? patients : [];
+    const withInsurance = safePatients.filter(p => {
         // Kiểm tra qua contact hoặc insurance array nếu có
         const ins = (p as any).insurance_number || (p as any).insurance;
         return ins && ins !== "" && ins !== null;
     }).length;
-    const insurancePct = patients.length > 0 ? Math.round(withInsurance / patients.length * 100) : 0;
+    const insurancePct = safePatients.length > 0 ? Math.round(withInsurance / safePatients.length * 100) : 0;
 
     const fetchPatients = useCallback(async (pg: number, f: FilterState) => {
         setLoading(true);
@@ -89,8 +90,14 @@ export default function ReceptionistPatients() {
             if (f.hasInsurance === "no") params.hasInsurance = false;
 
             const res = await getPatients(params);
-            const items: Patient[] = res?.data?.items ?? (res as any)?.data ?? [];
-            const pag = res?.data?.pagination;
+            let items: Patient[] = [];
+            if (Array.isArray(res?.data?.items)) items = res.data.items;
+            else if (Array.isArray((res as any)?.data?.data)) items = (res as any).data.data;
+            else if (Array.isArray((res as any)?.data)) items = (res as any).data;
+            else if (Array.isArray((res as any)?.items)) items = (res as any).items;
+            else if (Array.isArray(res)) items = res as any;
+
+            const pag = res?.data?.pagination ?? (res as any)?.pagination;
             setPatients(items);
             setTotalPages(pag?.total_pages ?? 1);
             setTotalItems(pag?.total_items ?? items.length);
@@ -133,7 +140,7 @@ export default function ReceptionistPatients() {
     const handleExportCSV = () => {
         const headers = ["Mã BN", "Họ tên", "Ngày sinh", "Giới tính", "Trạng thái", "Ngày đăng ký"];
         const rows = patients.map(p => [
-            p.patient_code ?? p.patient_id,
+            p.patient_code ?? p.patient_id ?? p.id,
             p.full_name,
             fmtDob(p.date_of_birth),
             p.gender === "MALE" ? "Nam" : p.gender === "FEMALE" ? "Nữ" : p.gender,
@@ -354,9 +361,9 @@ export default function ReceptionistPatients() {
                                             patients.map((p) => {
                                                 const st = statusLabel(p.status);
                                                 return (
-                                                    <tr key={p.patient_id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                                                    <tr key={p.patient_id || p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
                                                         <td className="px-4 py-3 text-sm font-mono text-[#3C81C6] font-medium">
-                                                            {p.patient_code ?? p.patient_id}
+                                                            {p.patient_code ?? p.patient_id ?? p.id}
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <div className="flex items-center gap-3">
@@ -389,14 +396,14 @@ export default function ReceptionistPatients() {
                                                         <td className="px-4 py-3">
                                                             <div className="flex items-center gap-1">
                                                                 <button
-                                                                    onClick={() => router.push(`/portal/receptionist/patients/${p.patient_id}`)}
+                                                                    onClick={() => router.push(`/portal/receptionist/patients/${p.patient_id || p.id}`)}
                                                                     className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-600 transition-colors"
                                                                     title="Xem hồ sơ"
                                                                 >
                                                                     <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>visibility</span>
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => router.push(`/portal/receptionist/patients/${p.patient_id}`)}
+                                                                    onClick={() => router.push(`/portal/receptionist/patients/${p.patient_id || p.id}`)}
                                                                     className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-[#687582] transition-colors"
                                                                     title="Sửa thông tin"
                                                                 >

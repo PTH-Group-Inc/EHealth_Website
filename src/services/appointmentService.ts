@@ -260,6 +260,17 @@ export const cancelAppointment = async (id: string, reason?: string): Promise<vo
 };
 
 // ============================================
+// Đánh dấu Không đến (No-Show)
+// ============================================
+export const markNoShow = async (id: string): Promise<void> => {
+    try {
+        await axiosClient.post(APPOINTMENT_STATUS_ENDPOINTS.NO_SHOW(id));
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Đánh dấu Không đến thất bại');
+    }
+};
+
+// ============================================
 // Tạo mã QR check-in cho lịch hẹn
 // ============================================
 export const generateAppointmentQr = async (id: string): Promise<{ qr_token: string; expires_at: string }> => {
@@ -457,9 +468,9 @@ export const getAppointmentPaymentStatus = async (id: string): Promise<PaymentSt
         const res = await axiosClient.get(APPOINTMENT_ENDPOINTS.PAYMENT_STATUS(id));
         const d = unwrapOne(res) as any;
         return {
-            isPaid: !!(d?.isPaid ?? d?.is_paid),
+            isPaid: !!(d?.isPaid || d?.is_paid || d?.payment_status === 'PAID' || d?.appointment_status === 'CONFIRMED' || d?.appointment_status === 'SCHEDULED'),
             appointment_status: d?.appointment_status ?? d?.appointmentStatus,
-            invoice_status: d?.invoice_status ?? d?.invoiceStatus,
+            invoice_status: d?.invoice_status ?? d?.invoiceStatus ?? d?.payment_status,
             ...d,
         };
     } catch (error: any) {

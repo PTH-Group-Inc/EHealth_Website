@@ -5,8 +5,8 @@ import {
     PATIENT_ENDPOINTS_EXT,
     PATIENT_CONTACT_ENDPOINTS,
     RELATION_TYPE_ENDPOINTS,
-    DOCUMENT_ENDPOINTS,
-    EMR_ENDPOINTS,
+    PATIENT_DOCUMENT_ENDPOINTS,
+    MEDICAL_HISTORY_ENDPOINTS,
     PRESCRIPTION_ENDPOINTS,
 } from '@/api/endpoints';
 
@@ -556,6 +556,22 @@ export const getPatientAppointments = async (patientId: string): Promise<{ succe
 };
 
 /**
+ * Lấy danh sách bảo hiểm của bệnh nhân
+ */
+export const getPatientInsurances = async (patientId: string): Promise<{ success: boolean; data?: PatientInsurance[]; message?: string }> => {
+    try {
+        const response = await axiosClient.get('/api/patient-insurances', { params: { patient_id: patientId } });
+        const raw = response.data;
+        // Unwrap: handle { data: { items: [] } }, { data: { data: [] } }, { data: { insurances: [] } }, { data: [] }, or [] directly
+        let list = raw?.data?.items ?? raw?.data?.data ?? raw?.data?.insurances ?? raw?.data ?? raw ?? [];
+        if (!Array.isArray(list)) list = [];
+        return { success: true, data: list as PatientInsurance[] };
+    } catch (error: any) {
+        return { success: false, data: [], message: error.response?.data?.message || 'Không thể tải thông tin bảo hiểm' };
+    }
+};
+
+/**
  * Liên kết hồ sơ bệnh nhân với tài khoản hiện tại
  */
 export const linkAccount = async (patientId: string, accountId: string): Promise<{ success: boolean; message?: string }> => {
@@ -746,16 +762,31 @@ export const deleteRelation = async (patientId: string, relationId: string): Pro
 // ============================================
 
 /**
- * Lấy lịch sử khám (encounters) theo bệnh nhân
+ * Lấy lịch sử khám (encounters) theo bệnh nhân — dùng endpoint danh sách encounter đầy đủ
  */
-export const getMedicalHistory = async (patientId: string): Promise<{ success: boolean; data?: MedicalRecord[]; message?: string }> => {
+export const getMedicalHistory = async (patientId: string): Promise<{ success: boolean; data?: any[]; message?: string }> => {
     try {
-        const response = await axiosClient.get(EMR_ENDPOINTS.BY_PATIENT(patientId));
+        const response = await axiosClient.get(`/api/medical-history`, {
+            params: { patient_id: patientId, limit: 50 }
+        });
         const raw = response.data;
-        const data: MedicalRecord[] = raw?.data?.items ?? raw?.data ?? raw ?? [];
+        const data: any[] = raw?.data?.data ?? raw?.data?.items ?? raw?.data ?? raw ?? [];
         return { success: true, data };
     } catch (error: any) {
         return { success: false, message: error.response?.data?.message || 'Lấy lịch sử khám thất bại' };
+    }
+};
+
+/**
+ * Lấy chi tiết đầy đủ lượt khám — sinh hiệu, chẩn đoán ICD-10, đơn thuốc, xét nghiệm
+ */
+export const getEncounterDetail = async (encounterId: string): Promise<{ success: boolean; data?: any; message?: string }> => {
+    try {
+        const response = await axiosClient.get(`/api/medical-history/${encounterId}`);
+        const raw = response.data;
+        return { success: true, data: raw?.data ?? raw };
+    } catch (error: any) {
+        return { success: false, message: error.response?.data?.message || 'Lấy chi tiết lượt khám thất bại' };
     }
 };
 
@@ -764,9 +795,13 @@ export const getMedicalHistory = async (patientId: string): Promise<{ success: b
  */
 export const getPrescriptions = async (patientId: string): Promise<{ success: boolean; data?: any[]; message?: string }> => {
     try {
-        const response = await axiosClient.get(PRESCRIPTION_ENDPOINTS.BY_PATIENT(patientId));
+        const response = await axiosClient.get(`/api/prescriptions/by-patient/${patientId}`);
         const raw = response.data;
-        const data: any[] = raw?.data?.items ?? raw?.data ?? raw ?? [];
+        const data: any[] = Array.isArray(raw?.data?.items) ? raw.data.items 
+                          : Array.isArray(raw?.data?.data) ? raw.data.data
+                          : Array.isArray(raw?.data) ? raw.data 
+                          : Array.isArray(raw) ? raw 
+                          : [];
         return { success: true, data };
     } catch (error: any) {
         return { success: false, message: error.response?.data?.message || 'Lấy đơn thuốc thất bại' };
@@ -782,7 +817,7 @@ export const getPrescriptions = async (patientId: string): Promise<{ success: bo
  */
 export const getDocuments = async (patientId: string): Promise<{ success: boolean; data?: PatientDocument[]; message?: string }> => {
     try {
-        const response = await axiosClient.get(DOCUMENT_ENDPOINTS.LIST(patientId));
+        const response = await axiosClient.get(PATIENT_ENDPOINTS_EXT.PATIENT_DOCUMENTS(patientId));
         const raw = response.data;
         const data: PatientDocument[] = raw?.data?.items ?? raw?.data ?? raw ?? [];
         return { success: true, data };
@@ -793,10 +828,11 @@ export const getDocuments = async (patientId: string): Promise<{ success: boolea
 
 /**
  * Upload tài liệu bệnh nhân (FormData)
+ * Backend expects: file, patient_id, document_type_id, document_name
  */
 export const uploadDocument = async (patientId: string, formData: FormData): Promise<{ success: boolean; data?: PatientDocument; message?: string }> => {
     try {
-        const response = await axiosClient.post(DOCUMENT_ENDPOINTS.UPLOAD(patientId), formData, {
+        const response = await axiosClient.post(PATIENT_ENDPOINTS_EXT.UPLOAD_DOCUMENT(patientId), formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         const raw = response.data;
@@ -811,7 +847,8 @@ export const uploadDocument = async (patientId: string, formData: FormData): Pro
  */
 export const deleteDocument = async (patientId: string, docId: string): Promise<{ success: boolean; message?: string }> => {
     try {
-        const response = await axiosClient.delete(DOCUMENT_ENDPOINTS.DELETE(patientId, docId));
+        // Assume DOCUMENT_ENDPOINTS.DELETE exists in endpoints.ts for this
+        const response = await axiosClient.delete(`/api/patients/${patientId}/documents/${docId}`);
         return response.data;
     } catch (error: any) {
         return { success: false, message: error.response?.data?.message || 'Xóa tài liệu thất bại' };
