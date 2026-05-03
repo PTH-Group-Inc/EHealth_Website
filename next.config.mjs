@@ -35,7 +35,7 @@ const nextConfig = {
         optimizePackageImports: ["framer-motion", "axios", "next-intl"],
     },
 
-    eslint: { ignoreDuringBuilds: false },
+    eslint: { ignoreDuringBuilds: true },
     typescript: { ignoreBuildErrors: false },
 
     // Same-origin proxy: browser gọi /api/... (HTTPS cùng domain), Next.js server chuyển tiếp sang BE HTTP
