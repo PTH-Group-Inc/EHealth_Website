@@ -14,6 +14,7 @@ import {
     addRelation,
     deleteRelation,
     getMedicalHistory,
+    getEncounterDetail,
     getPrescriptions,
     getDocuments,
     uploadDocument,
@@ -27,6 +28,8 @@ import {
     MedicalRecord,
     RelationType,
 } from "@/services/patientService";
+import { prescriptionService } from "@/services/prescriptionService";
+import { toast } from "react-hot-toast";
 import { validateFile } from "@/utils/fileValidation";
 
 // ==================== HELPERS ====================
@@ -109,7 +112,6 @@ function ErrorMsg({ msg, onRetry }: { msg: string; onRetry?: () => void }) {
 const TABS = [
     { key: "info", label: "Thông tin chung", icon: "person" },
     { key: "insurance", label: "Bảo hiểm", icon: "health_and_safety" },
-    { key: "contact", label: "Liên hệ", icon: "call" },
     { key: "history", label: "Lịch sử khám", icon: "history" },
     { key: "prescriptions", label: "Đơn thuốc", icon: "medication" },
     { key: "documents", label: "Tài liệu", icon: "folder" },
@@ -135,18 +137,19 @@ export default function PatientDetailPage() {
     const [activeTab, setActiveTab] = useState("info");
     const loadedTabs = useRef<Set<string>>(new Set(["info"]));
 
-    // Contact tab
-    const [contacts, setContacts] = useState<PatientContact[]>([]);
-    const [loadingContact, setLoadingContact] = useState(false);
-    const [errorContact, setErrorContact] = useState<string | null>(null);
-    const [showAddContact, setShowAddContact] = useState(false);
-    const [contactForm, setContactForm] = useState({ phone_number: "", email: "", street_address: "", ward: "", province: "" });
-    const [savingContact, setSavingContact] = useState(false);
-
     // Medical history
     const [history, setHistory] = useState<MedicalRecord[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [errorHistory, setErrorHistory] = useState<string | null>(null);
+    // Modal Lịch sử khám
+    const [selectedHistory, setSelectedHistory] = useState<any>(null);
+    const [encounterDetail, setEncounterDetail] = useState<any>(null);
+    const [loadingEncounterDetail, setLoadingEncounterDetail] = useState(false);
+
+    // Modal Đơn thuốc
+    const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
+    const [prescriptionDetails, setPrescriptionDetails] = useState<any[]>([]);
+    const [loadingPrescriptionDetails, setLoadingPrescriptionDetails] = useState(false);
 
     // Prescriptions
     const [prescriptions, setPrescriptions] = useState<any[]>([]);
@@ -203,7 +206,11 @@ export default function PatientDetailPage() {
     };
 
     useEffect(() => {
-        if (patientId) fetchPatient();
+        if (patientId) {
+            fetchPatient();
+            fetchInsurances();
+            fetchRelations();
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [patientId]);
 
@@ -213,12 +220,9 @@ export default function PatientDetailPage() {
         if (loadedTabs.current.has(tabKey)) return;
         loadedTabs.current.add(tabKey);
 
-        if (tabKey === "insurance") fetchInsurances();
-        if (tabKey === "contact") fetchContacts();
         if (tabKey === "history") fetchHistory();
         if (tabKey === "prescriptions") fetchPrescriptions();
         if (tabKey === "documents") fetchDocuments();
-        if (tabKey === "relations") fetchRelations();
     };
 
     // ===== Insurance =====
@@ -240,52 +244,8 @@ export default function PatientDetailPage() {
         }
     };
 
-    // ===== Contacts =====
-    const fetchContacts = async () => {
-        setLoadingContact(true);
-        setErrorContact(null);
-        try {
-            const res = await getContacts(patientId);
-            if (res.success) setContacts(res.data ?? []);
-            else setErrorContact(res.message ?? "Lỗi tải liên hệ");
-        } catch {
-            setErrorContact("Không thể tải thông tin liên hệ");
-        } finally {
-            setLoadingContact(false);
-        }
-    };
 
-    const handleAddContact = async () => {
-        if (!contactForm.phone_number) return;
-        setSavingContact(true);
-        try {
-            const res = await addContact(patientId, {
-                phone_number: contactForm.phone_number,
-                email: contactForm.email || undefined,
-                street_address: contactForm.street_address || undefined,
-                ward: contactForm.ward || undefined,
-                province: contactForm.province || undefined,
-            });
-            if (res.success) {
-                setShowAddContact(false);
-                setContactForm({ phone_number: "", email: "", street_address: "", ward: "", province: "" });
-                fetchContacts();
-            } else {
-                alert(res.message || "Thêm liên hệ thất bại");
-            }
-        } catch {
-            alert("Thêm liên hệ thất bại");
-        } finally {
-            setSavingContact(false);
-        }
-    };
 
-    const handleDeleteContact = async (contactId: string) => {
-        if (!confirm("Xóa liên hệ này?")) return;
-        const res = await deleteContact(patientId, contactId);
-        if (res.success) fetchContacts();
-        else alert(res.message || "Xóa thất bại");
-    };
 
     // ===== Medical History =====
     const fetchHistory = async () => {
@@ -302,6 +262,23 @@ export default function PatientDetailPage() {
         }
     };
 
+    const handleViewEncounter = async (enc: any) => {
+        setSelectedHistory(enc);
+        setEncounterDetail(null);
+        setLoadingEncounterDetail(true);
+        try {
+            const encId = enc.encounters_id || enc.encounter_id || enc.id;
+            if (encId) {
+                const res = await getEncounterDetail(encId);
+                if (res.success) setEncounterDetail(res.data);
+            }
+        } catch (e) {
+            console.error("Failed to load encounter detail", e);
+        } finally {
+            setLoadingEncounterDetail(false);
+        }
+    };
+
     // ===== Prescriptions =====
     const fetchPrescriptions = async () => {
         setLoadingRx(true);
@@ -314,6 +291,20 @@ export default function PatientDetailPage() {
             setErrorRx("Không thể tải đơn thuốc");
         } finally {
             setLoadingRx(false);
+        }
+    };
+
+    const handleViewPrescription = async (rx: any) => {
+        setSelectedPrescription(rx);
+        setLoadingPrescriptionDetails(true);
+        try {
+            const details = await prescriptionService.getDetails(rx.prescriptions_id || rx.id);
+            setPrescriptionDetails(Array.isArray(details) ? details : []);
+        } catch (e) {
+            console.error("Failed to load prescription details", e);
+            toast.error("Không thể tải chi tiết đơn thuốc");
+        } finally {
+            setLoadingPrescriptionDetails(false);
         }
     };
 
@@ -413,7 +404,9 @@ export default function PatientDetailPage() {
         if (!patient) return;
         setSaving(true);
         try {
-            const res = await updatePatient(patient.patient_id, {
+            const idToUpdate = patient.patient_id || patient.id;
+            if (!idToUpdate) throw new Error("Missing patient ID");
+            const res = await updatePatient(idToUpdate, {
                 full_name: editForm.full_name,
                 date_of_birth: editForm.date_of_birth,
                 gender: editForm.gender,
@@ -464,11 +457,11 @@ export default function PatientDetailPage() {
 
     const st = statusInfo(patient.status);
     const age = calcAge(patient.date_of_birth);
-    const primaryContact = patient.contact ?? contacts[0];
+    const primaryContact = patient.contact;
 
     return (
         <div className="p-6 md:p-8">
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="max-w-5xl mx-auto space-y-6">
                 {/* Breadcrumb + Header */}
                 <div>
                     <div className="flex items-center gap-1.5 text-xs text-[#687582] dark:text-gray-500 mb-3">
@@ -494,7 +487,7 @@ export default function PatientDetailPage() {
                             <div>
                                 <h1 className="text-2xl font-bold text-[#121417] dark:text-white">{patient.full_name}</h1>
                                 <p className="text-sm text-[#687582] mt-0.5">
-                                    Mã BN: <span className="font-mono text-[#3C81C6] font-medium">{patient.patient_code ?? patient.patient_id}</span>
+                                    Mã BN: <span className="font-mono text-[#3C81C6] font-medium">{patient.patient_code ?? patient.patient_id ?? patient.id}</span>
                                     {" · "}{genderLabel(patient.gender)}{" · "}{age > 0 ? `${age} tuổi` : "—"}
                                 </p>
                             </div>
@@ -528,14 +521,24 @@ export default function PatientDetailPage() {
 
                 {/* Quick info cards */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {[
-                        { icon: "call", label: "Điện thoại", value: primaryContact?.phone_number ?? "—", color: "blue" },
-                        { icon: "badge", label: "CCCD/CMND", value: patient.identity_number ?? "—", color: "blue" },
-                        { icon: "bloodtype", label: "Nhóm máu", value: patient.blood_type ?? "—", color: "red" },
-                        { icon: "warning", label: "Dị ứng", value: patient.allergies || "Không có", color: patient.allergies ? "amber" : "blue" },
-                        { icon: "health_and_safety", label: "Bảo hiểm", value: patient.has_insurance ? "Có BHYT" : "Không", color: patient.has_insurance ? "emerald" : "blue" },
-                        { icon: "calendar_today", label: "Ngày đăng ký", value: fmtDatetime(patient.created_at), color: "blue" },
-                    ].map((item) => {
+                    {(() => {
+                        const activeInsurance = insurances.find((ins: any) => ins.status === "ACTIVE" || (!ins.expiry_date || new Date(ins.expiry_date) > new Date()));
+                        const insuranceValue = activeInsurance ? (activeInsurance.provider_name ?? (activeInsurance as any).insurance_provider ?? "Có BHYT") : "Không";
+                        const insuranceColor = activeInsurance ? "emerald" : "blue";
+                        
+                        const emergencyContact = relations.find(r => r.is_emergency || r.is_emergency_contact);
+                        const emergencyValue = emergencyContact ? `${emergencyContact.full_name || emergencyContact.contact_name} - ${emergencyContact.phone_number}` : "Chưa cập nhật";
+                        const emergencyColor = emergencyContact ? "amber" : "blue";
+
+                        return [
+                            { icon: "call", label: "Điện thoại", value: patient.phone_number ?? primaryContact?.phone_number ?? "—", color: "blue" },
+                            { icon: "badge", label: "CCCD/CMND", value: patient.id_card_number ?? patient.identity_number ?? "—", color: "blue" },
+                            { icon: "location_on", label: "Địa chỉ", value: patient.address ?? "—", color: "red" },
+                            { icon: "warning", label: "Dị ứng", value: (patient as any).allergies || "Không có", color: (patient as any).allergies ? "amber" : "blue" },
+                            { icon: "health_and_safety", label: "Bảo hiểm", value: insuranceValue, color: insuranceColor },
+                            { icon: "contact_emergency", label: "LH Khẩn cấp", value: emergencyValue, color: emergencyColor },
+                        ];
+                    })().map((item) => {
                         const colorMap: Record<string, string> = {
                             blue: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
                             red: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
@@ -559,24 +562,25 @@ export default function PatientDetailPage() {
                 {/* Tabs */}
                 <div className="bg-white dark:bg-[#1e242b] rounded-xl border border-[#dde0e4] dark:border-[#2d353e]">
                     {/* Tab headers */}
-                    <div className="flex border-b border-[#dde0e4] dark:border-[#2d353e] overflow-x-auto">
-                        {TABS.map((tab) => (
-                            <button
-                                key={tab.key}
-                                onClick={() => handleTabChange(tab.key)}
-                                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                                    activeTab === tab.key
-                                        ? "border-[#3C81C6] text-[#3C81C6]"
-                                        : "border-transparent text-[#687582] hover:text-[#121417] dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/30"
-                                }`}
-                            >
-                                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>{tab.icon}</span>
-                                {tab.label}
-                            </button>
-                        ))}
+                    <div className="p-4 md:p-6 pb-0 border-b border-gray-100 dark:border-gray-800">
+                        <div className="flex flex-nowrap overflow-x-auto gap-2 pb-4 hide-scrollbar">
+                            {TABS.map((t) => (
+                                <button
+                                    key={t.key}
+                                    onClick={() => handleTabChange(t.key)}
+                                    className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-300 ${activeTab === t.key
+                                            ? "bg-[#3C81C6] text-white shadow-md shadow-blue-500/20"
+                                            : "bg-gray-50 dark:bg-[#171c23] text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                                        }`}
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">{t.icon}</span>
+                                    {t.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="p-6">
+                    <div className="p-4 md:p-6">
                         {/* ====== TAB: THÔNG TIN CHUNG ====== */}
                         {activeTab === "info" && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -594,38 +598,56 @@ export default function PatientDetailPage() {
                                             <InfoField label="Ngày sinh">
                                                 <input type="date" className={inputCls} value={editForm.date_of_birth?.split("T")[0] ?? ""} onChange={e => setEditForm(p => ({ ...p, date_of_birth: e.target.value }))} />
                                             </InfoField>
-                                            <InfoField label="Giới tính">
-                                                <select className={inputCls} value={editForm.gender ?? ""} onChange={e => setEditForm(p => ({ ...p, gender: e.target.value as any }))}>
-                                                    <option value="MALE">Nam</option>
-                                                    <option value="FEMALE">Nữ</option>
-                                                    <option value="OTHER">Khác</option>
-                                                </select>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <InfoField label="Giới tính">
+                                                    <select className={inputCls} value={editForm.gender ?? ""} onChange={e => setEditForm(p => ({ ...p, gender: e.target.value as any }))}>
+                                                        <option value="MALE">Nam</option>
+                                                        <option value="FEMALE">Nữ</option>
+                                                        <option value="OTHER">Khác</option>
+                                                    </select>
+                                                </InfoField>
+                                                <InfoField label="Quốc tịch">
+                                                    <input className={inputCls} value={editForm.nationality ?? ""} onChange={e => setEditForm(p => ({ ...p, nationality: e.target.value }))} />
+                                                </InfoField>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <InfoField label="Điện thoại">
+                                                    <input className={inputCls} value={editForm.phone_number ?? ""} onChange={e => setEditForm(p => ({ ...p, phone_number: e.target.value }))} />
+                                                </InfoField>
+                                                <InfoField label="Email">
+                                                    <input className={inputCls} value={editForm.email ?? ""} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} />
+                                                </InfoField>
+                                            </div>
+                                            <InfoField label="Địa chỉ">
+                                                <input className={inputCls} value={editForm.address ?? ""} onChange={e => setEditForm(p => ({ ...p, address: e.target.value }))} />
                                             </InfoField>
-                                            <InfoField label="Loại giấy tờ">
-                                                <select className={inputCls} value={editForm.identity_type ?? ""} onChange={e => setEditForm(p => ({ ...p, identity_type: e.target.value as any }))}>
-                                                    <option value="">-- Chọn --</option>
-                                                    <option value="CCCD">CCCD</option>
-                                                    <option value="PASSPORT">Hộ chiếu</option>
-                                                    <option value="OTHER">Khác</option>
-                                                </select>
-                                            </InfoField>
-                                            <InfoField label="Số giấy tờ">
-                                                <input className={inputCls} value={editForm.identity_number ?? ""} onChange={e => setEditForm(p => ({ ...p, identity_number: e.target.value }))} />
-                                            </InfoField>
-                                            <InfoField label="Quốc tịch">
-                                                <input className={inputCls} value={editForm.nationality ?? ""} onChange={e => setEditForm(p => ({ ...p, nationality: e.target.value }))} />
-                                            </InfoField>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <InfoField label="Loại giấy tờ">
+                                                    <select className={inputCls} value={editForm.identity_type ?? ""} onChange={e => setEditForm(p => ({ ...p, identity_type: e.target.value as any }))}>
+                                                        <option value="">-- Chọn --</option>
+                                                        <option value="CCCD">CCCD</option>
+                                                        <option value="PASSPORT">Hộ chiếu</option>
+                                                        <option value="OTHER">Khác</option>
+                                                    </select>
+                                                </InfoField>
+                                                <InfoField label="Số giấy tờ">
+                                                    <input className={inputCls} value={editForm.identity_number ?? editForm.id_card_number ?? ""} onChange={e => setEditForm(p => ({ ...p, identity_number: e.target.value }))} />
+                                                </InfoField>
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
                                             {[
                                                 { l: "Họ và tên", v: patient.full_name },
                                                 { l: "Ngày sinh", v: fmtDob(patient.date_of_birth) },
-                                                { l: "Tuổi", v: `${age} tuổi` },
+                                                { l: "Tuổi", v: age > 0 ? `${age} tuổi` : "—" },
                                                 { l: "Giới tính", v: genderLabel(patient.gender) },
-                                                { l: "Loại giấy tờ", v: patient.identity_type ?? "—" },
-                                                { l: "Số giấy tờ", v: patient.identity_number ?? "—" },
-                                                { l: "Quốc tịch", v: patient.nationality ?? "—" },
+                                                { l: "Điện thoại", v: patient.phone_number },
+                                                { l: "Email", v: patient.email },
+                                                { l: "Địa chỉ", v: patient.address },
+                                                { l: "Loại giấy tờ", v: patient.identity_type },
+                                                { l: "Số giấy tờ", v: patient.identity_number ?? patient.id_card_number },
+                                                { l: "Quốc tịch", v: patient.nationality },
                                             ].map(f => <InfoRow key={f.l} label={f.l} value={f.v} />)}
                                         </div>
                                     )}
@@ -639,11 +661,8 @@ export default function PatientDetailPage() {
                                     </h3>
                                     {editing ? (
                                         <div className="space-y-4">
-                                            <InfoField label="Nhóm máu">
-                                                <select className={inputCls} value={editForm.blood_type ?? ""} onChange={e => setEditForm(p => ({ ...p, blood_type: e.target.value }))}>
-                                                    <option value="">-- Chưa rõ --</option>
-                                                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bt => <option key={bt} value={bt}>{bt}</option>)}
-                                                </select>
+                                            <InfoField label="Email">
+                                                <input type="email" className={inputCls} value={editForm.email ?? ""} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} />
                                             </InfoField>
                                             <InfoField label="Dị ứng">
                                                 <textarea className={inputCls + " resize-none"} rows={2} value={editForm.allergies ?? ""} onChange={e => setEditForm(p => ({ ...p, allergies: e.target.value }))} />
@@ -654,19 +673,21 @@ export default function PatientDetailPage() {
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
-                                            <InfoRow label="Nhóm máu" value={patient.blood_type ?? "—"} />
+                                            <InfoRow label="Email" value={patient.email ?? "—"} />
                                             <div className="flex items-start gap-2">
-                                                <span className="text-sm text-[#687582] w-36 flex-shrink-0">Dị ứng:</span>
-                                                <span className={`text-sm font-medium ${patient.allergies ? "text-red-600" : "text-[#121417] dark:text-white"}`}>
-                                                    {patient.allergies || "Không có"}
+                                                <span className="text-[13px] text-[#687582] w-32 flex-shrink-0">Dị ứng:</span>
+                                                <span className={`text-[13px] font-medium ${(patient as any).allergies ? "text-red-600" : "text-[#121417] dark:text-white"}`}>
+                                                    {(patient as any).allergies || "Không có"}
                                                 </span>
                                             </div>
                                             <div className="flex items-start gap-2">
-                                                <span className="text-sm text-[#687582] w-36 flex-shrink-0">Bệnh mãn tính:</span>
-                                                <span className="text-sm font-medium text-[#121417] dark:text-white">{patient.chronic_diseases || "Không có"}</span>
+                                                <span className="text-[13px] text-[#687582] w-32 flex-shrink-0">Bệnh mãn tính:</span>
+                                                <span className="text-[13px] font-medium text-[#121417] dark:text-white">{(patient as any).chronic_diseases || "Không có"}</span>
                                             </div>
                                             <InfoRow label="Trạng thái" value={st.label} />
-                                            <InfoRow label="Ngày đăng ký" value={fmtDatetime(patient.created_at)} />
+                                            <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                                                <InfoRow label="Ngày tạo hồ sơ" value={fmtDatetime(patient.created_at)} />
+                                            </div>
                                             <InfoRow label="Cập nhật" value={fmtDatetime(patient.updated_at)} />
                                         </div>
                                     )}
@@ -697,23 +718,42 @@ export default function PatientDetailPage() {
                                         {insurances.map((ins: any, idx: number) => {
                                             const isActive = ins.status === "ACTIVE" || (!ins.expiry_date || new Date(ins.expiry_date) > new Date());
                                             return (
-                                                <div key={ins.insurance_id ?? idx} className="bg-gray-50 dark:bg-[#171c23] rounded-xl border border-[#dde0e4] dark:border-[#2d353e] p-5 space-y-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="material-symbols-outlined text-[20px] text-[#3C81C6]">verified_user</span>
-                                                            <span className="text-sm font-semibold text-[#121417] dark:text-white">{ins.provider_name ?? ins.insurance_provider ?? "Nhà cung cấp"}</span>
+                                                <div key={ins.insurance_id ?? idx} className="group relative overflow-hidden bg-white dark:bg-[#171c23] rounded-2xl border border-gray-100 dark:border-gray-800 p-5 space-y-4 hover:border-emerald-500/30 hover:shadow-md transition-all duration-300">
+                                                    <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    <div className="flex items-start justify-between gap-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                                                <span className="material-symbols-outlined text-[20px] text-emerald-600">health_and_safety</span>
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-base font-semibold text-gray-900 dark:text-white group-hover:text-emerald-600 transition-colors">{ins.provider_name ?? ins.insurance_provider ?? "Nhà cung cấp"}</h4>
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400">{ins.insurance_number || ins.card_number || "Chưa có mã thẻ"}</p>
+                                                            </div>
                                                         </div>
-                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
+                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
                                                             <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-red-500"}`} />
                                                             {isActive ? "Đang hoạt động" : "Hết hạn"}
                                                         </span>
                                                     </div>
-                                                    <div className="space-y-2">
-                                                        <InfoRow label="Số thẻ BHYT" value={ins.card_number ?? ins.insurance_number ?? "—"} />
-                                                        <InfoRow label="Loại bảo hiểm" value={ins.coverage_type ?? ins.insurance_type ?? "—"} />
-                                                        <InfoRow label="Ngày hiệu lực" value={ins.effective_date ? fmtDob(ins.effective_date) : "—"} />
-                                                        <InfoRow label="Ngày hết hạn" value={ins.expiry_date ? fmtDob(ins.expiry_date) : "—"} />
-                                                        {ins.notes && <InfoRow label="Ghi chú" value={ins.notes} />}
+                                                    <div className="grid grid-cols-2 gap-y-3 gap-x-4 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs text-gray-500">Mức hưởng</p>
+                                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{ins.coverage_percent ? `${ins.coverage_percent}%` : "—"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs text-gray-500">Ngày hiệu lực</p>
+                                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{ins.start_date ? fmtDob(ins.start_date) : "—"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs text-gray-500">Ngày hết hạn</p>
+                                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{ins.end_date ? fmtDob(ins.end_date) : "—"}</p>
+                                                        </div>
+                                                        {ins.notes && (
+                                                            <div className="col-span-2 space-y-1">
+                                                                <p className="text-xs text-gray-500">Ghi chú</p>
+                                                                <p className="text-sm font-medium text-gray-900 dark:text-white">{ins.notes}</p>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );
@@ -723,82 +763,7 @@ export default function PatientDetailPage() {
                             </div>
                         )}
 
-                        {/* ====== TAB: LIÊN HỆ ====== */}
-                        {activeTab === "contact" && (
-                            <div className="space-y-5">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-bold text-[#121417] dark:text-white uppercase tracking-wider">Thông tin liên hệ</h3>
-                                    <button
-                                        onClick={() => setShowAddContact(v => !v)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-lg text-sm font-medium transition-colors"
-                                    >
-                                        <span className="material-symbols-outlined text-[18px]">add</span>
-                                        Thêm liên hệ
-                                    </button>
-                                </div>
 
-                                {/* Add contact form */}
-                                {showAddContact && (
-                                    <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-200 dark:border-blue-500/20 space-y-3">
-                                        <h4 className="text-sm font-semibold text-[#121417] dark:text-white">Thêm liên hệ mới</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="text-xs text-[#687582] mb-1 block">Số điện thoại *</label>
-                                                <input className={inputCls} aria-label="Số điện thoại" placeholder="0901234567" value={contactForm.phone_number} onChange={e => setContactForm(p => ({ ...p, phone_number: e.target.value }))} />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs text-[#687582] mb-1 block">Email</label>
-                                                <input className={inputCls} aria-label="Email" placeholder="email@example.com" value={contactForm.email} onChange={e => setContactForm(p => ({ ...p, email: e.target.value }))} />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="text-xs text-[#687582] mb-1 block">Địa chỉ</label>
-                                                <input className={inputCls} aria-label="Địa chỉ" placeholder="Số nhà, đường..." value={contactForm.street_address} onChange={e => setContactForm(p => ({ ...p, street_address: e.target.value }))} />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs text-[#687582] mb-1 block">Phường/Xã</label>
-                                                <input className={inputCls} aria-label="Phường/Xã" value={contactForm.ward} onChange={e => setContactForm(p => ({ ...p, ward: e.target.value }))} />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs text-[#687582] mb-1 block">Tỉnh/Thành</label>
-                                                <input className={inputCls} aria-label="Tỉnh/Thành" value={contactForm.province} onChange={e => setContactForm(p => ({ ...p, province: e.target.value }))} />
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2 pt-2">
-                                            <button onClick={() => setShowAddContact(false)} className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-[#687582] hover:bg-gray-50">Hủy</button>
-                                            <button onClick={handleAddContact} disabled={savingContact || !contactForm.phone_number} className="px-4 py-2 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2">
-                                                {savingContact && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                                                Lưu
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {loadingContact && <LoadingSpinner />}
-                                {!loadingContact && errorContact && <ErrorMsg msg={errorContact} onRetry={fetchContacts} />}
-                                {!loadingContact && !errorContact && contacts.length === 0 && (
-                                    <EmptyState icon="call" text="Chưa có thông tin liên hệ" />
-                                )}
-                                {!loadingContact && contacts.map((c) => (
-                                    <div key={c.contact_id} className="p-4 rounded-xl border border-[#dde0e4] dark:border-[#2d353e] flex items-start justify-between gap-4">
-                                        <div className="space-y-1.5">
-                                            <div className="flex items-center gap-2">
-                                                <p className="text-sm font-semibold text-[#121417] dark:text-white">{c.phone_number}</p>
-                                                {c.is_primary && (
-                                                    <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 dark:bg-blue-500/20 text-blue-600 font-medium">Chính</span>
-                                                )}
-                                            </div>
-                                            {c.email && <p className="text-xs text-[#687582]">{c.email}</p>}
-                                            {c.street_address && <p className="text-xs text-[#687582]">{[c.street_address, c.ward, c.province].filter(Boolean).join(", ")}</p>}
-                                        </div>
-                                        {!c.is_primary && (
-                                            <button onClick={() => handleDeleteContact(c.contact_id)} aria-label="Xóa liên hệ" className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-red-400 hover:text-red-600 transition-colors flex-shrink-0" title="Xóa">
-                                                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>delete</span>
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
 
                         {/* ====== TAB: LỊCH SỬ KHÁM ====== */}
                         {activeTab === "history" && (
@@ -809,24 +774,66 @@ export default function PatientDetailPage() {
                                 {!loadingHistory && !errorHistory && history.length === 0 && (
                                     <EmptyState icon="history" text="Chưa có lịch sử khám" />
                                 )}
-                                {!loadingHistory && history.map((v, idx) => (
-                                    <div key={v.encounter_id ?? v.record_id ?? idx} className="flex items-center gap-4 p-4 rounded-xl border border-[#dde0e4] dark:border-[#2d353e] hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors">
-                                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
-                                            <span className="material-symbols-outlined text-blue-600" style={{ fontSize: "20px" }}>stethoscope</span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-[#121417] dark:text-white">{v.diagnosis ?? v.chief_complaint ?? "Khám bệnh"}</p>
-                                            <p className="text-xs text-[#687582]">
-                                                {[v.doctor_name, v.department_name].filter(Boolean).join(" · ")}
-                                            </p>
-                                        </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <p className="text-sm text-[#121417] dark:text-white">{fmtDatetime(v.visit_date ?? v.created_at)}</p>
-                                            {v.status && (
-                                                <span className={`text-xs ${v.status === "COMPLETED" || v.status === "completed" ? "text-emerald-600" : "text-amber-600"}`}>
-                                                    {v.status === "COMPLETED" || v.status === "completed" ? "Hoàn thành" : v.status}
-                                                </span>
-                                            )}
+                                {!loadingHistory && history.map((v: any, idx: number) => (
+                                    <div 
+                                        key={v.encounters_id ?? v.encounter_id ?? idx} 
+                                        onClick={() => handleViewEncounter(v)}
+                                        className="group relative overflow-hidden p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#121417] hover:border-[#3C81C6]/30 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                                    >
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-[#3C81C6] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                                            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                                <span className="material-symbols-outlined text-[#3C81C6]" style={{ fontSize: "24px" }}>stethoscope</span>
+                                            </div>
+                                            <div className="flex-1 space-y-1.5 w-full">
+                                                <div className="flex items-center flex-wrap gap-2">
+                                                    <h4 className="text-base font-semibold text-gray-900 dark:text-white group-hover:text-[#3C81C6] transition-colors">
+                                                        {v.primary_diagnosis || v.chief_complaint || v.diagnosis || "Khám bệnh"}
+                                                    </h4>
+                                                    {v.encounter_type && (
+                                                        <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 uppercase">
+                                                            {v.encounter_type === "OUTPATIENT" ? "Ngoại trú" : v.encounter_type === "INPATIENT" ? "Nội trú" : v.encounter_type === "EMERGENCY" ? "Cấp cứu" : v.encounter_type}
+                                                        </span>
+                                                    )}
+                                                    {v.status && (
+                                                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${v.status === "COMPLETED" || v.status === "CLOSED" ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700" : v.status === "IN_PROGRESS" ? "bg-amber-100 dark:bg-amber-500/20 text-amber-700" : "bg-gray-100 text-gray-600"}`}>
+                                                            {v.status === "COMPLETED" ? "Hoàn thành" : v.status === "CLOSED" ? "Đã đóng" : v.status === "IN_PROGRESS" ? "Đang khám" : v.status === "WAITING_FOR_RESULTS" ? "Chờ KQ" : v.status}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-4 text-sm text-gray-500 dark:text-gray-400">
+                                                    {v.doctor_name && (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="material-symbols-outlined text-[15px]">person</span>
+                                                            <span>{v.doctor_title ? `${v.doctor_title} ` : "BS. "}{v.doctor_name}</span>
+                                                        </div>
+                                                    )}
+                                                    {(v.specialty_name || v.department_name) && (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="material-symbols-outlined text-[15px]">domain</span>
+                                                            <span>{v.specialty_name || v.department_name}</span>
+                                                        </div>
+                                                    )}
+                                                    {v.room_name && (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="material-symbols-outlined text-[15px]">meeting_room</span>
+                                                            <span>{v.room_name}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {v.chief_complaint && v.primary_diagnosis && (
+                                                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Lý do: {v.chief_complaint}</p>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t md:border-t-0 md:border-l border-gray-100 dark:border-gray-800 pt-3 md:pt-0 md:pl-4 mt-3 md:mt-0 w-full md:w-auto">
+                                                <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
+                                                    <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                                                    <span>{fmtDatetime(v.start_time ?? v.visit_date ?? v.created_at)}</span>
+                                                </div>
+                                                <button className="text-xs font-medium text-[#3C81C6] hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                                                    Xem chi tiết <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -843,25 +850,45 @@ export default function PatientDetailPage() {
                                     <EmptyState icon="medication" text="Chưa có đơn thuốc" />
                                 )}
                                 {!loadingRx && Array.isArray(prescriptions) && prescriptions.map((rx, idx) => (
-                                    <div key={rx.prescription_id ? `${rx.prescription_id}-${idx}` : `rx-${idx}`} className="flex items-center gap-4 p-4 rounded-xl border border-[#dde0e4] dark:border-[#2d353e]">
-                                        <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900/20 flex items-center justify-center flex-shrink-0">
-                                            <span className="material-symbols-outlined text-teal-600" style={{ fontSize: "20px" }}>medication</span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-[#121417] dark:text-white">
-                                                {rx.medicines ?? rx.drug_name ?? rx.prescription_id ?? `Đơn #${idx + 1}`}
-                                            </p>
-                                            <p className="text-xs text-[#687582]">
-                                                {rx.doctor_name ?? ""}{rx.encounter_id ? ` · Mã: ${rx.encounter_id}` : ""}
-                                            </p>
-                                        </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <p className="text-sm text-[#121417] dark:text-white">{fmtDatetime(rx.created_at ?? rx.prescription_date)}</p>
-                                            {rx.status && (
-                                                <span className={`text-xs ${rx.status === "DISPENSED" || rx.status === "dispensed" ? "text-emerald-600" : "text-amber-600"}`}>
-                                                    {rx.status === "DISPENSED" || rx.status === "dispensed" ? "Đã cấp phát" : rx.status}
-                                                </span>
-                                            )}
+                                    <div key={rx.prescription_id ? `${rx.prescription_id}-${idx}` : `rx-${idx}`} className="group relative overflow-hidden p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#121417] hover:border-teal-500/30 hover:shadow-lg transition-all duration-300">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                                            <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                                <span className="material-symbols-outlined text-teal-600" style={{ fontSize: "24px" }}>medication</span>
+                                            </div>
+                                            <div className="flex-1 space-y-1 w-full">
+                                                <div className="flex items-center justify-between md:justify-start gap-3">
+                                                    <h4 className="text-base font-semibold text-gray-900 dark:text-white group-hover:text-teal-600 transition-colors">
+                                                        {rx.prescription_code ? `Đơn thuốc: ${rx.prescription_code}` : (rx.medicines ?? rx.drug_name ?? `Đơn thuốc #${idx + 1}`)}
+                                                    </h4>
+                                                    {rx.status && (
+                                                        <span className={`px-2 py-0.5 rounded-md text-[11px] font-medium ${rx.status === "DISPENSED" || rx.status === "dispensed" ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400" : "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400"}`}>
+                                                            {rx.status === "DISPENSED" || rx.status === "dispensed" ? "Đã cấp phát" : rx.status}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-500 dark:text-gray-400">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="material-symbols-outlined text-[16px]">medical_services</span>
+                                                        <span className="truncate max-w-[200px]">{rx.medicines ?? rx.drug_name ?? "Các loại thuốc"}</span>
+                                                    </div>
+                                                    {rx.doctor_name && (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="material-symbols-outlined text-[16px]">person</span>
+                                                            <span>BS. {rx.doctor_name}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t md:border-t-0 md:border-l border-gray-100 dark:border-gray-800 pt-3 md:pt-0 md:pl-4 mt-3 md:mt-0 w-full md:w-auto">
+                                                <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
+                                                    <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                                                    <span>{fmtDatetime(rx.created_at ?? rx.prescription_date)}</span>
+                                                </div>
+                                                <button onClick={() => handleViewPrescription(rx)} className="text-xs font-medium text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                                                    Chi tiết <span className="material-symbols-outlined text-[14px]">receipt_long</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -889,23 +916,32 @@ export default function PatientDetailPage() {
                                     <EmptyState icon="folder_open" text="Chưa có tài liệu" />
                                 )}
                                 {!loadingDocs && documents.map((d, idx) => (
-                                    <div key={d.document_id ?? idx} className="flex items-center gap-4 p-4 rounded-xl border border-[#dde0e4] dark:border-[#2d353e] hover:bg-gray-50 dark:hover:bg-gray-800/20 transition-colors">
-                                        <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
-                                            <span className="material-symbols-outlined text-orange-600" style={{ fontSize: "20px" }}>description</span>
+                                    <div key={d.document_id ?? idx} className="group relative overflow-hidden p-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#121417] hover:border-orange-500/30 hover:shadow-md transition-all duration-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                                            <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0 group-hover:rotate-6 transition-transform duration-300">
+                                                <span className="material-symbols-outlined text-orange-500" style={{ fontSize: "24px" }}>description</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0 space-y-1">
+                                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-orange-600 transition-colors" title={d.file_name ?? d.document_type ?? `Tài liệu #${idx + 1}`}>
+                                                    {d.file_name ?? d.document_type ?? `Tài liệu #${idx + 1}`}
+                                                </h4>
+                                                <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                                    {d.document_type && (
+                                                        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">folder</span>{d.document_type}</span>
+                                                    )}
+                                                    <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">database</span>{fmtFileSize(d.file_size)}</span>
+                                                    <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">calendar_today</span>{fmtDatetime(d.created_at)}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-[#121417] dark:text-white truncate">{d.file_name ?? d.document_type ?? `Tài liệu #${idx + 1}`}</p>
-                                            <p className="text-xs text-[#687582]">{d.document_type ?? ""} · {fmtFileSize(d.file_size)}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2 flex-shrink-0">
-                                            <span className="text-sm text-[#687582]">{fmtDatetime(d.created_at)}</span>
+                                        <div className="flex items-center gap-2 flex-shrink-0 self-end md:self-auto">
                                             {d.file_url && (
-                                                <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-[#687582] hover:text-[#3C81C6] transition-colors" title="Tải xuống">
-                                                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>download</span>
+                                                <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-orange-50 dark:hover:bg-orange-500/20 text-gray-600 dark:text-gray-400 hover:text-orange-600 transition-colors" title="Mở tài liệu">
+                                                    <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>open_in_new</span>
                                                 </a>
                                             )}
-                                            <button onClick={() => handleDeleteDoc(d.document_id)} aria-label="Xóa tài liệu" className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-[#687582] hover:text-red-500 transition-colors" title="Xóa">
-                                                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>delete</span>
+                                            <button onClick={() => handleDeleteDoc(d.document_id)} className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-500/20 text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors" title="Xóa tài liệu">
+                                                <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>delete</span>
                                             </button>
                                         </div>
                                     </div>
@@ -941,7 +977,7 @@ export default function PatientDetailPage() {
                                             </div>
                                             <div>
                                                 <label className="text-xs text-[#687582] mb-1 block">Quan hệ</label>
-                                                <select className={inputCls} aria-label="Quan hệ với bệnh nhân" value={relationForm.relationship} onChange={e => setRelationForm(p => ({ ...p, relationship: e.target.value as RelationType }))}>
+                                                <select className={inputCls} aria-label="Quan hệ với bệnh nhân" value={relationForm.relationship} onChange={e => setRelationForm(p => ({ ...p, relationship: e.target.value as any }))}>
                                                     <option value="PARENT">Phụ huynh</option>
                                                     <option value="SPOUSE">Vợ/Chồng</option>
                                                     <option value="CHILD">Con</option>
@@ -970,23 +1006,34 @@ export default function PatientDetailPage() {
                                     <EmptyState icon="family_restroom" text="Chưa có thông tin người thân" />
                                 )}
                                 {!loadingRelations && relations.map((r) => (
-                                    <div key={r.relation_id} className="p-4 rounded-xl border border-[#dde0e4] dark:border-[#2d353e] flex items-center justify-between gap-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-900/20 flex items-center justify-center flex-shrink-0">
-                                                <span className="material-symbols-outlined text-violet-600" style={{ fontSize: "20px" }}>person</span>
+                                    <div key={r.relation_id || r.patient_contacts_id} className="group p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#121417] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-violet-500/30 hover:shadow-md transition-all duration-300">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                                <span className="material-symbols-outlined text-violet-600" style={{ fontSize: "24px" }}>person</span>
                                             </div>
-                                            <div>
+                                            <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
-                                                    <p className="text-sm font-semibold text-[#121417] dark:text-white">{r.full_name || r.contact_name || "Chưa cập nhật"}</p>
+                                                    <h4 className="text-base font-semibold text-gray-900 dark:text-white group-hover:text-violet-600 transition-colors">
+                                                        {r.full_name || r.contact_name || "Chưa cập nhật"}
+                                                    </h4>
                                                     {r.is_emergency && (
-                                                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-100 dark:bg-red-500/20 text-red-600 font-medium">Khẩn cấp</span>
+                                                        <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400">Khẩn cấp</span>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-[#687582]">{r.phone_number} · {relLabel(r.relationship || "OTHER")}</p>
+                                                <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="material-symbols-outlined text-[16px]">call</span>
+                                                        <span>{r.phone_number || "—"}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="material-symbols-outlined text-[16px]">group</span>
+                                                        <span>{relLabel((r.relationship || r.relation_type_code || "OTHER") as any)}</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <button onClick={() => handleDeleteRelation(r.relation_id || r.patient_contacts_id)} aria-label="Xóa người thân" className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-[#687582] hover:text-red-500 transition-colors flex-shrink-0" title="Xóa">
-                                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>delete</span>
+                                        <button onClick={() => handleDeleteRelation(r.relation_id || r.patient_contacts_id)} className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-500/20 text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors self-end md:self-auto" title="Xóa người thân">
+                                            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>delete</span>
                                         </button>
                                     </div>
                                 ))}
@@ -995,6 +1042,301 @@ export default function PatientDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Modal for Medical History Details */}
+            {selectedHistory && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-[#121417] rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-gray-100 dark:border-gray-800">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    Chi tiết lượt khám
+                                    {selectedHistory.status && (
+                                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${selectedHistory.status === "COMPLETED" || selectedHistory.status === "CLOSED" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                                            {selectedHistory.status === "COMPLETED" ? "Hoàn thành" : selectedHistory.status === "CLOSED" ? "Đã đóng" : selectedHistory.status === "IN_PROGRESS" ? "Đang khám" : selectedHistory.status}
+                                        </span>
+                                    )}
+                                    {selectedHistory.encounter_type && (
+                                        <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-blue-50 text-blue-600 uppercase">
+                                            {selectedHistory.encounter_type === "OUTPATIENT" ? "Ngoại trú" : selectedHistory.encounter_type === "INPATIENT" ? "Nội trú" : selectedHistory.encounter_type === "EMERGENCY" ? "Cấp cứu" : selectedHistory.encounter_type}
+                                        </span>
+                                    )}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-0.5">{fmtDatetime(selectedHistory.start_time ?? selectedHistory.created_at)}</p>
+                            </div>
+                            <button onClick={() => { setSelectedHistory(null); setEncounterDetail(null); }} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                            {loadingEncounterDetail ? (
+                                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                    <div className="w-8 h-8 border-4 border-[#3C81C6] border-t-transparent rounded-full animate-spin" />
+                                    <p className="text-sm text-gray-500">Đang tải chi tiết...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Thông tin cơ bản */}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        <div className="space-y-0.5"><p className="text-[11px] text-gray-400 uppercase">Bác sĩ</p><p className="text-sm font-medium text-gray-900 dark:text-white">{selectedHistory.doctor_title ? `${selectedHistory.doctor_title} ` : ""}{selectedHistory.doctor_name || "—"}</p></div>
+                                        <div className="space-y-0.5"><p className="text-[11px] text-gray-400 uppercase">Chuyên khoa</p><p className="text-sm font-medium text-gray-900 dark:text-white">{selectedHistory.specialty_name || "—"}</p></div>
+                                        <div className="space-y-0.5"><p className="text-[11px] text-gray-400 uppercase">Phòng khám</p><p className="text-sm font-medium text-gray-900 dark:text-white">{selectedHistory.room_name || "—"}</p></div>
+                                        <div className="space-y-0.5"><p className="text-[11px] text-gray-400 uppercase">Thời gian</p><p className="text-sm font-medium text-gray-900 dark:text-white">{fmtDatetime(selectedHistory.start_time ?? selectedHistory.created_at)}</p></div>
+                                    </div>
+
+                                    {/* Sinh hiệu */}
+                                    {encounterDetail?.clinical_examination && (() => {
+                                        const ce = encounterDetail.clinical_examination;
+                                        const hasVitals = ce.pulse || ce.blood_pressure_systolic || ce.temperature || ce.spo2 || ce.weight || ce.height;
+                                        if (!hasVitals) return null;
+                                        return (
+                                            <div className="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 space-y-2">
+                                                <p className="text-xs font-semibold text-[#3C81C6] uppercase tracking-wider flex items-center gap-1.5">
+                                                    <span className="material-symbols-outlined text-[16px]">monitor_heart</span> Sinh hiệu
+                                                </p>
+                                                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                                                    {ce.pulse && <div><p className="text-[11px] text-gray-400">Mạch</p><p className="text-sm font-semibold text-gray-900 dark:text-white">{ce.pulse} <span className="text-[10px] text-gray-400">bpm</span></p></div>}
+                                                    {(ce.blood_pressure_systolic || ce.blood_pressure_diastolic) && <div><p className="text-[11px] text-gray-400">Huyết áp</p><p className="text-sm font-semibold text-gray-900 dark:text-white">{ce.blood_pressure_systolic || "—"}/{ce.blood_pressure_diastolic || "—"} <span className="text-[10px] text-gray-400">mmHg</span></p></div>}
+                                                    {ce.temperature && <div><p className="text-[11px] text-gray-400">Nhiệt độ</p><p className="text-sm font-semibold text-gray-900 dark:text-white">{ce.temperature}°C</p></div>}
+                                                    {ce.respiratory_rate && <div><p className="text-[11px] text-gray-400">Nhịp thở</p><p className="text-sm font-semibold text-gray-900 dark:text-white">{ce.respiratory_rate} <span className="text-[10px] text-gray-400">l/p</span></p></div>}
+                                                    {ce.spo2 && <div><p className="text-[11px] text-gray-400">SpO2</p><p className="text-sm font-semibold text-gray-900 dark:text-white">{ce.spo2}%</p></div>}
+                                                    {ce.weight && <div><p className="text-[11px] text-gray-400">Cân nặng</p><p className="text-sm font-semibold text-gray-900 dark:text-white">{ce.weight} kg</p></div>}
+                                                    {ce.height && <div><p className="text-[11px] text-gray-400">Chiều cao</p><p className="text-sm font-semibold text-gray-900 dark:text-white">{ce.height} cm</p></div>}
+                                                    {ce.bmi && <div><p className="text-[11px] text-gray-400">BMI</p><p className="text-sm font-semibold text-gray-900 dark:text-white">{ce.bmi}</p></div>}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* Khám lâm sàng */}
+                                    {encounterDetail?.clinical_examination && (() => {
+                                        const ce = encounterDetail.clinical_examination;
+                                        if (!ce.chief_complaint && !ce.medical_history_notes && !ce.physical_examination) return null;
+                                        return (
+                                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 space-y-3">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                                    <span className="material-symbols-outlined text-[16px]">clinical_notes</span> Khám lâm sàng
+                                                </p>
+                                                {ce.chief_complaint && <div><p className="text-[11px] text-gray-400 mb-0.5">Lý do khám / Triệu chứng chính</p><p className="text-sm text-gray-900 dark:text-white">{ce.chief_complaint}</p></div>}
+                                                {ce.medical_history_notes && <div className="pt-2 border-t border-gray-200 dark:border-gray-700"><p className="text-[11px] text-gray-400 mb-0.5">Tiền sử bệnh</p><p className="text-sm text-gray-900 dark:text-white">{ce.medical_history_notes}</p></div>}
+                                                {ce.physical_examination && <div className="pt-2 border-t border-gray-200 dark:border-gray-700"><p className="text-[11px] text-gray-400 mb-0.5">Khám thực thể</p><p className="text-sm text-gray-900 dark:text-white">{ce.physical_examination}</p></div>}
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* Fallback: nếu chưa có encounterDetail, hiện thông tin cơ bản từ selectedHistory */}
+                                    {!encounterDetail && (selectedHistory.chief_complaint || selectedHistory.primary_diagnosis) && (
+                                        <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 space-y-3">
+                                            {selectedHistory.chief_complaint && <div><p className="text-[11px] text-gray-400 uppercase mb-0.5">Triệu chứng chính</p><p className="text-sm text-gray-900 dark:text-white">{selectedHistory.chief_complaint}</p></div>}
+                                            {selectedHistory.primary_diagnosis && <div className="pt-2 border-t border-gray-200 dark:border-gray-700"><p className="text-[11px] text-gray-400 uppercase mb-0.5">Chẩn đoán chính</p><p className="text-sm font-medium text-[#3C81C6]">{selectedHistory.primary_diagnosis}</p></div>}
+                                        </div>
+                                    )}
+
+                                    {/* Chẩn đoán ICD-10 */}
+                                    {encounterDetail?.diagnoses && encounterDetail.diagnoses.length > 0 && (
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                                <span className="material-symbols-outlined text-[16px]">diagnosis</span> Chẩn đoán ({encounterDetail.diagnoses.length})
+                                            </p>
+                                            <div className="space-y-2">
+                                                {encounterDetail.diagnoses.map((d: any, i: number) => (
+                                                    <div key={d.encounter_diagnoses_id || i} className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-800">
+                                                        <span className={`mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${d.diagnosis_type === "PRIMARY" ? "bg-red-100 text-red-700" : d.diagnosis_type === "FINAL" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>
+                                                            {d.diagnosis_type === "PRIMARY" ? "Chính" : d.diagnosis_type === "FINAL" ? "Cuối cùng" : d.diagnosis_type === "SECONDARY" ? "Phụ" : d.diagnosis_type || "—"}
+                                                        </span>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{d.diagnosis_name}</p>
+                                                            <p className="text-xs text-gray-500">ICD-10: <span className="font-mono font-semibold">{d.icd10_code}</span></p>
+                                                            {d.notes && <p className="text-xs text-gray-400 mt-0.5">{d.notes}</p>}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Đơn thuốc */}
+                                    {encounterDetail?.prescription && (
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                                <span className="material-symbols-outlined text-[16px]">medication</span> Đơn thuốc — {encounterDetail.prescription.prescription_code || ""}
+                                                <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${encounterDetail.prescription.status === "DISPENSED" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                                                    {encounterDetail.prescription.status === "DISPENSED" ? "Đã cấp" : encounterDetail.prescription.status || "—"}
+                                                </span>
+                                            </p>
+                                            {encounterDetail.prescription.clinical_diagnosis && (
+                                                <p className="text-xs text-gray-500">Chẩn đoán: <span className="text-gray-700 dark:text-gray-300">{encounterDetail.prescription.clinical_diagnosis}</span></p>
+                                            )}
+                                            {encounterDetail.prescription.details && encounterDetail.prescription.details.length > 0 && (
+                                                <div className="space-y-1.5">
+                                                    {encounterDetail.prescription.details.map((drug: any, i: number) => (
+                                                        <div key={i} className="p-3 rounded-lg border border-gray-100 dark:border-gray-800 hover:bg-teal-50/30 transition-colors">
+                                                            <div className="flex justify-between items-start">
+                                                                <p className="text-sm font-medium text-gray-900 dark:text-white">{drug.drug_name}</p>
+                                                                <span className="text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded">{drug.quantity} {drug.unit || "viên"}</span>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs text-gray-500">
+                                                                {drug.dosage && <span>Liều: <span className="text-gray-700 dark:text-gray-300">{drug.dosage}</span></span>}
+                                                                {drug.frequency && <span>Tần suất: <span className="text-gray-700 dark:text-gray-300">{drug.frequency}</span></span>}
+                                                                {drug.duration_days && <span>Số ngày: <span className="text-gray-700 dark:text-gray-300">{drug.duration_days} ngày</span></span>}
+                                                            </div>
+                                                            {drug.usage_instruction && <p className="text-xs text-gray-400 mt-1">HD: {drug.usage_instruction}</p>}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Chỉ định CLS */}
+                                    {encounterDetail?.medical_orders && encounterDetail.medical_orders.length > 0 && (
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                                <span className="material-symbols-outlined text-[16px]">science</span> Chỉ định CLS ({encounterDetail.medical_orders.length})
+                                            </p>
+                                            <div className="space-y-1.5">
+                                                {encounterDetail.medical_orders.map((o: any, i: number) => (
+                                                    <div key={o.medical_orders_id || i} className="p-3 rounded-lg border border-gray-100 dark:border-gray-800 flex items-start justify-between gap-3">
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{o.service_name}</p>
+                                                            <p className="text-xs text-gray-500">{o.service_code}{o.clinical_indicator ? ` · ${o.clinical_indicator}` : ""}</p>
+                                                            {o.result_summary && <p className="text-xs text-emerald-600 mt-0.5">KQ: {o.result_summary}</p>}
+                                                        </div>
+                                                        <div className="text-right shrink-0">
+                                                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${o.status === "COMPLETED" ? "bg-emerald-100 text-emerald-700" : o.status === "PENDING" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"}`}>
+                                                                {o.status === "COMPLETED" ? "Có KQ" : o.status === "PENDING" ? "Chờ KQ" : o.status || "—"}
+                                                            </span>
+                                                            {o.priority === "URGENT" && <p className="text-[10px] text-red-500 font-medium mt-0.5">Khẩn cấp</p>}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Trường hợp không có dữ liệu chi tiết */}
+                                    {!loadingEncounterDetail && !encounterDetail && (
+                                        <div className="text-center py-6 text-sm text-gray-400">Không tải được chi tiết lượt khám này.</div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                        {/* Footer */}
+                        <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex justify-end shrink-0">
+                            <button 
+                                onClick={() => { setSelectedHistory(null); setEncounterDetail(null); }}
+                                className="px-5 py-2.5 text-sm font-medium rounded-xl text-gray-700 bg-gray-100 hover:bg-gray-200 dark:text-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal for Prescription Details */}
+            {selectedPrescription && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
+                    <div className="bg-white dark:bg-[#121417] rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl border border-gray-100 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    Chi tiết đơn thuốc
+                                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium ${selectedPrescription.status === "DISPENSED" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                                        {selectedPrescription.status === "DISPENSED" ? "Đã cấp phát" : selectedPrescription.status || "Chưa xác định"}
+                                    </span>
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Mã đơn: <span className="font-semibold text-gray-700 dark:text-gray-300">{selectedPrescription.prescription_code || selectedPrescription.id || "—"}</span>
+                                </p>
+                            </div>
+                            <button 
+                                onClick={() => { setSelectedPrescription(null); setPrescriptionDetails([]); }}
+                                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <p className="text-xs text-gray-500">Bác sĩ kê đơn</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedPrescription.doctor_name || "—"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500">Ngày kê</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white">{fmtDatetime(selectedPrescription.created_at ?? selectedPrescription.prescribed_at ?? selectedPrescription.prescription_date)}</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-xs text-gray-500">Chẩn đoán / Ghi chú</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedPrescription.clinical_diagnosis || selectedPrescription.doctor_notes || selectedPrescription.diagnosis || "Không có ghi chú"}</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-3">Danh sách thuốc ({prescriptionDetails.length})</h4>
+                                {loadingPrescriptionDetails ? (
+                                    <div className="flex justify-center py-8">
+                                        <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                ) : prescriptionDetails.length === 0 ? (
+                                    <div className="text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                                        <p className="text-sm text-gray-500">Không có dữ liệu chi tiết thuốc</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {prescriptionDetails.map((detail, idx) => (
+                                            <div key={idx} className="p-4 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-teal-100 dark:hover:border-teal-900/50 hover:bg-teal-50/30 transition-all">
+                                                <div className="flex justify-between items-start gap-4 mb-2">
+                                                    <div>
+                                                        <h5 className="font-semibold text-gray-900 dark:text-white text-base flex items-center gap-2">
+                                                            <span className="w-5 h-5 flex items-center justify-center rounded-full bg-teal-100 text-teal-700 text-xs">{idx + 1}</span>
+                                                            {detail.brand_name || detail.drug_name || "Thuốc không tên"}
+                                                        </h5>
+                                                        <p className="text-xs text-gray-500 mt-0.5">{detail.active_ingredients || "—"}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="inline-flex items-center justify-center px-2.5 py-1 font-bold text-teal-700 bg-teal-50 rounded-lg whitespace-nowrap">
+                                                            {detail.quantity} {detail.dispensing_unit || detail.unit || "viên"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2 mt-3 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm">
+                                                    <div>
+                                                        <span className="text-gray-500 block text-xs">Liều dùng</span>
+                                                        <span className="font-medium text-gray-900 dark:text-gray-100">{detail.dosage || "—"}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-500 block text-xs">Tần suất</span>
+                                                        <span className="font-medium text-gray-900 dark:text-gray-100">{detail.frequency || "—"}</span>
+                                                    </div>
+                                                    <div className="col-span-2">
+                                                        <span className="text-gray-500 block text-xs">Cách dùng</span>
+                                                        <span className="font-medium text-gray-900 dark:text-gray-100">{detail.usage_instruction || detail.route_of_administration || detail.notes || "—"}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        {/* Footer */}
+                        <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex justify-end shrink-0">
+                            <button 
+                                onClick={() => { setSelectedPrescription(null); setPrescriptionDetails([]); }}
+                                className="px-5 py-2.5 text-sm font-medium rounded-xl text-gray-700 bg-gray-100 hover:bg-gray-200 dark:text-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -1005,8 +1347,8 @@ const inputCls = "w-full py-2 px-3 text-sm bg-gray-50 dark:bg-gray-800 border bo
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
     return (
         <div className="flex items-start gap-2">
-            <span className="text-sm text-[#687582] w-36 flex-shrink-0">{label}:</span>
-            <span className="text-sm font-medium text-[#121417] dark:text-white">{value || "—"}</span>
+            <span className="text-[13px] text-[#687582] w-32 flex-shrink-0">{label}:</span>
+            <span className="text-[13px] font-medium text-[#121417] dark:text-white break-words w-full">{value || "—"}</span>
         </div>
     );
 }
