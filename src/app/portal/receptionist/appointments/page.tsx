@@ -8,14 +8,18 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { PageHeader, EmptyState, StatCard } from "@/components/shared/layout";
+import { toast } from "react-hot-toast";
 import {
     getAppointments,
     rescheduleAppointment,
     appointmentConfirmationService,
     cancelAppointment,
+    doctorAvailabilityService,
+    markNoShow
 } from "@/services/appointmentService";
+import { DropdownMenu } from "@/components/ui/dropdown-menu";
 
-type TabKey = "today" | "need_confirm" | "upcoming" | "done" | "all";
+type TabKey = "today" | "need_confirm" | "upcoming" | "done" | "cancelled" | "all";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
     PENDING: { label: "Chờ xác nhận", cls: "bg-amber-100 text-amber-700" },
@@ -36,6 +40,7 @@ interface Row {
     patientName: string;
     patientId?: string;
     phone?: string;
+    doctorId?: string;
     doctorName?: string;
     serviceName?: string;
     room?: string;
@@ -52,6 +57,7 @@ function normalize(a: any): Row {
         patientName: a.patient_name ?? a.patientName ?? "(chưa có)",
         patientId: a.patient_id ?? a.patientId,
         phone: a.patient_phone ?? a.phone,
+        doctorId: a.doctor_id ?? a.doctorId,
         doctorName: a.doctor_name ?? a.doctorName,
         serviceName: a.service_name ?? a.serviceName,
         room: a.room_name ?? a.room,
@@ -68,9 +74,15 @@ export default function ReceptionistAppointmentsPage() {
     const [tab, setTab] = useState<TabKey>("today");
     const [filterDate, setFilterDate] = useState("");
     const [filterStatus, setFilterStatus] = useState("ALL");
+    const [filterDoctor, setFilterDoctor] = useState("ALL");
+    const [filterService, setFilterService] = useState("ALL");
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState<Row | null>(null);
     const [rescheduleDate, setRescheduleDate] = useState("");
+    const [rescheduleSlots, setRescheduleSlots] = useState<any[]>([]);
+    const [rescheduleSlotId, setRescheduleSlotId] = useState("");
+    const [loadingSlots, setLoadingSlots] = useState(false);
+    const [showRescheduleForm, setShowRescheduleForm] = useState(false);
     const [busy, setBusy] = useState(false);
 
     const load = useCallback(async () => {
@@ -85,51 +97,110 @@ export default function ReceptionistAppointmentsPage() {
 
     const today = new Date().toISOString().slice(0, 10);
 
+    const doctors = useMemo(() => Array.from(new Set(items.map(r => r.doctorName).filter(Boolean))), [items]);
+    const services = useMemo(() => Array.from(new Set(items.map(r => r.serviceName).filter(Boolean))), [items]);
+
     const filtered = useMemo(() => items.filter(r => {
         if (tab === "today" && r.date?.slice(0, 10) !== today) return false;
         if (tab === "need_confirm" && r.status !== "PENDING") return false;
         if (tab === "upcoming" && !["PENDING", "CONFIRMED", "CHECKED_IN"].includes(r.status)) return false;
-        if (tab === "done" && !["COMPLETED", "CANCELLED", "NO_SHOW"].includes(r.status)) return false;
+        if (tab === "done" && r.status !== "COMPLETED") return false;
+        if (tab === "cancelled" && !["CANCELLED", "NO_SHOW"].includes(r.status)) return false;
         if (filterDate && r.date?.slice(0, 10) !== filterDate) return false;
         if (filterStatus !== "ALL" && r.status !== filterStatus) return false;
+        if (filterDoctor !== "ALL" && r.doctorName !== filterDoctor) return false;
+        if (filterService !== "ALL" && r.serviceName !== filterService) return false;
         if (search) {
             const q = search.toLowerCase();
-            return r.patientName.toLowerCase().includes(q) || r.code.toLowerCase().includes(q) || (r.phone ?? "").includes(q);
+            return r.patientName.toLowerCase().includes(q) || r.code.toLowerCase().includes(q) || (r.phone ?? "").includes(q) || (r.patientId ?? "").toLowerCase().includes(q);
         }
         return true;
-    }), [items, tab, today, filterDate, filterStatus, search]);
+    }), [items, tab, today, filterDate, filterStatus, filterDoctor, filterService, search]);
+
+    useEffect(() => {
+        if (showRescheduleForm && selected?.doctorId && rescheduleDate) {
+            setLoadingSlots(true);
+            doctorAvailabilityService.getSlots({ doctorId: selected.doctorId, date: rescheduleDate })
+                .then(slots => { setRescheduleSlots(slots); setRescheduleSlotId(""); })
+                .catch(() => setRescheduleSlots([]))
+                .finally(() => setLoadingSlots(false));
+        } else {
+            setRescheduleSlots([]);
+            setRescheduleSlotId("");
+        }
+    }, [rescheduleDate, showRescheduleForm, selected?.doctorId]);
+
+    const clearFilters = () => {
+        setFilterDate("");
+        setFilterStatus("ALL");
+        setFilterDoctor("ALL");
+        setFilterService("ALL");
+        setSearch("");
+        setTab("all");
+    };
 
     const counts = {
         today: items.filter(r => r.date?.slice(0, 10) === today).length,
         need_confirm: items.filter(r => r.status === "PENDING").length,
         upcoming: items.filter(r => ["PENDING", "CONFIRMED", "CHECKED_IN"].includes(r.status)).length,
-        done: items.filter(r => ["COMPLETED", "CANCELLED", "NO_SHOW"].includes(r.status)).length,
+        done: items.filter(r => r.status === "COMPLETED").length,
+        cancelled: items.filter(r => ["CANCELLED", "NO_SHOW"].includes(r.status)).length,
     };
 
     const onConfirm = async (id: string) => {
-        try { await appointmentConfirmationService.confirm(id); await load(); }
-        catch (e: any) { alert(e?.message ?? "Xác nhận thất bại"); }
+        try { await appointmentConfirmationService.confirm(id); await load(); toast.success("Đã xác nhận lịch hẹn"); }
+        catch (e: any) { toast.error(e?.message ?? "Xác nhận thất bại"); }
+    };
+
+    const onCheckIn = async (id: string) => {
+        try { 
+            const res = await appointmentConfirmationService.checkIn(id); 
+            await load(); 
+            toast.success(`Check-in thành công. Số thứ tự: ${res?.queueNumber ?? res?.queue_number ?? "Đã cấp"}`); 
+        }
+        catch (e: any) { toast.error(e?.message ?? "Check-in thất bại"); }
     };
 
     const onResend = async (id: string) => {
-        try { await appointmentConfirmationService.sendReminder(id); alert("Đã gửi lại nhắc lịch."); }
-        catch (e: any) { alert(e?.message ?? "Gửi thất bại"); }
+        try { await appointmentConfirmationService.sendReminder(id); toast.success("Đã gửi lại nhắc lịch."); }
+        catch (e: any) { toast.error(e?.message ?? "Gửi thất bại"); }
     };
 
     const onCancel = async (id: string) => {
-        if (!confirm("Huỷ lịch hẹn này?")) return;
-        try { await cancelAppointment(id); setSelected(null); await load(); }
-        catch (e: any) { alert(e?.message ?? "Huỷ thất bại"); }
+        const reason = prompt("Nhập lý do huỷ lịch hẹn này:");
+        if (reason === null) return;
+        if (!reason.trim()) {
+            toast.error("Vui lòng nhập lý do huỷ.");
+            return;
+        }
+        try { await cancelAppointment(id, reason.trim()); setSelected(null); await load(); toast.success("Đã huỷ lịch hẹn"); }
+        catch (e: any) { toast.error(e?.message ?? "Huỷ thất bại"); }
+    };
+
+    const onNoShow = async (id: string) => {
+        if (!confirm("Xác nhận bệnh nhân không đến (No-Show)?")) return;
+        try {
+            await markNoShow(id);
+            await load();
+            toast.success("Đã cập nhật trạng thái Không đến");
+        } catch (e: any) {
+            toast.error(e?.message ?? "Cập nhật thất bại");
+        }
     };
 
     const onReschedule = async () => {
-        if (!selected || !rescheduleDate) return;
+        if (!selected || !rescheduleDate || !rescheduleSlotId) {
+            toast.error("Vui lòng chọn ngày và giờ mới.");
+            return;
+        }
         setBusy(true);
         try {
-            await rescheduleAppointment(selected.id, { newDate: rescheduleDate });
+            await rescheduleAppointment(selected.id, { newDate: rescheduleDate, newSlotId: rescheduleSlotId });
             setSelected(null);
+            setShowRescheduleForm(false);
             await load();
-        } catch (e: any) { alert(e?.message ?? "Dời lịch thất bại"); }
+            toast.success("Dời lịch thành công");
+        } catch (e: any) { toast.error(e?.message ?? "Dời lịch thất bại"); }
         finally { setBusy(false); }
     };
 
@@ -164,6 +235,7 @@ export default function ReceptionistAppointmentsPage() {
                     { key: "need_confirm", label: `Cần xác nhận (${counts.need_confirm})` },
                     { key: "upcoming", label: `Sắp tới (${counts.upcoming})` },
                     { key: "done", label: `Đã xong (${counts.done})` },
+                    { key: "cancelled", label: `Đã huỷ/Bỏ hẹn (${counts.cancelled})` },
                     { key: "all", label: `Tất cả (${items.length})` },
                 ] as { key: TabKey; label: string }[]).map(t => (
                     <button key={t.key} onClick={() => setTab(t.key)} className={`px-3 py-1.5 text-sm rounded-lg border ${tab === t.key ? "bg-[#3C81C6] text-white border-[#3C81C6]" : "bg-white dark:bg-[#1e242b] border-[#e5e7eb] dark:border-[#2d353e]"}`}>
@@ -172,13 +244,27 @@ export default function ReceptionistAppointmentsPage() {
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-3">
-                <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]" />
-                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]">
+            <div className="flex flex-col md:flex-row gap-3 mb-4 bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-3 items-center">
+                <input type="date" value={filterDate} onChange={e => {
+                    setFilterDate(e.target.value);
+                    if (e.target.value && tab === "today") setTab("all");
+                }} className="flex-1 px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] w-full" />
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="flex-1 px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] w-full">
                     <option value="ALL">Mọi trạng thái</option>
                     {Object.entries(STATUS_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm BN / mã / SĐT…" className="px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]" />
+                <select value={filterDoctor} onChange={e => setFilterDoctor(e.target.value)} className="flex-1 px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] w-full">
+                    <option value="ALL">Mọi bác sĩ</option>
+                    {doctors.map(d => <option key={d as string} value={d as string}>{d as string}</option>)}
+                </select>
+                <select value={filterService} onChange={e => setFilterService(e.target.value)} className="flex-1 px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] w-full">
+                    <option value="ALL">Mọi dịch vụ</option>
+                    {services.map(s => <option key={s as string} value={s as string}>{s as string}</option>)}
+                </select>
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm BN / mã / SĐT…" className="flex-1 px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417] w-full" />
+                <button onClick={clearFilters} className="px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] hover:bg-gray-50 dark:hover:bg-gray-800 shrink-0 flex items-center justify-center" title="Xoá bộ lọc">
+                    <span className="material-symbols-outlined text-[18px]">filter_alt_off</span>
+                </button>
             </div>
 
             <div className="bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl overflow-hidden">
@@ -206,18 +292,30 @@ export default function ReceptionistAppointmentsPage() {
                                 return (
                                     <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                         <td className="px-4 py-3 font-mono text-xs">{r.code}</td>
-                                        <td className="px-4 py-3 font-medium">{r.patientName}</td>
+                                        <td className="px-4 py-3 font-medium">
+                                            {r.patientName}
+                                            {r.patientId && <span className="block text-[11px] text-[#687582] font-mono mt-0.5">{r.patientId}</span>}
+                                        </td>
                                         <td className="px-4 py-3">{fmt(r.date)}</td>
                                         <td className="px-4 py-3">{fmtTime(r.slot)}</td>
                                         <td className="px-4 py-3">{r.doctorName ?? "—"}</td>
                                         <td className="px-4 py-3">{r.room ?? "—"}</td>
-                                        <td className="px-4 py-3"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${meta.cls}`}>{meta.label}</span></td>
+                                        <td className="px-4 py-3"><span title={`Trạng thái: ${meta.label}`} className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${meta.cls}`}>{meta.label}</span></td>
                                         <td className="px-4 py-3 text-right">
-                                            <div className="inline-flex gap-1">
-                                                {r.status === "PENDING" && <button onClick={() => onConfirm(r.id)} className="px-2 py-1 text-xs rounded bg-blue-50 text-blue-700">Xác nhận</button>}
-                                                <button onClick={() => onResend(r.id)} className="px-2 py-1 text-xs rounded bg-amber-50 text-amber-700">Nhắc</button>
-                                                <button onClick={() => { setSelected(r); setRescheduleDate(r.date?.slice(0, 10) ?? ""); }} className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-800">Chi tiết</button>
-                                            </div>
+                                            <DropdownMenu 
+                                                items={[
+                                                    { 
+                                                        label: "Chi tiết", 
+                                                        icon: "visibility", 
+                                                        onClick: () => { setSelected(r); setRescheduleDate(r.date?.slice(0, 10) ?? ""); setShowRescheduleForm(false); } 
+                                                    },
+                                                    ...(r.status === "PENDING" ? [{ label: "Xác nhận", icon: "check_circle", onClick: () => onConfirm(r.id) }] : []),
+                                                    ...(r.status === "CONFIRMED" ? [{ label: "Check-in", icon: "how_to_reg", onClick: () => onCheckIn(r.id) }] : []),
+                                                    ...(["PENDING", "CONFIRMED", "CHECKED_IN"].includes(r.status) ? [{ label: "Gửi nhắc nhở", icon: "notifications", onClick: () => onResend(r.id) }] : []),
+                                                    ...(["CONFIRMED"].includes(r.status) ? [{ label: "Không đến (No-Show)", icon: "event_busy", variant: "danger" as const, onClick: () => onNoShow(r.id) }] : []),
+                                                    ...(["PENDING", "CONFIRMED"].includes(r.status) ? [{ label: "Huỷ lịch", icon: "cancel", variant: "danger" as const, onClick: () => onCancel(r.id) }] : []),
+                                                ]}
+                                            />
                                         </td>
                                     </tr>
                                 );
@@ -246,14 +344,49 @@ export default function ReceptionistAppointmentsPage() {
                                 <div><p className="text-xs text-[#687582]">Ngày</p><p>{fmt(selected.date)}</p></div>
                                 <div><p className="text-xs text-[#687582]">Giờ</p><p>{fmtTime(selected.slot)}</p></div>
                             </div>
+                            <div><p className="text-xs text-[#687582]">Dịch vụ</p><p className="font-medium">{selected.serviceName ?? "—"}</p></div>
                             <div><p className="text-xs text-[#687582]">Bác sĩ / Phòng</p><p>{selected.doctorName ?? "—"} · {selected.room ?? "—"}</p></div>
                             {selected.reason && <div><p className="text-xs text-[#687582]">Lý do</p><p>{selected.reason}</p></div>}
-                            <div className="border-t border-[#e5e7eb] dark:border-[#2d353e] pt-3">
-                                <p className="text-xs text-[#687582] mb-1">Dời lịch sang ngày</p>
-                                <div className="flex gap-2">
-                                    <input type="date" value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)} className="flex-1 px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]" />
-                                    <button onClick={onReschedule} disabled={busy} className="px-3 py-2 text-sm rounded-lg bg-[#3C81C6] text-white disabled:opacity-50">Dời</button>
-                                </div>
+                            <div className="border-t border-[#e5e7eb] dark:border-[#2d353e] pt-4">
+                                {!showRescheduleForm ? (
+                                    <button onClick={() => setShowRescheduleForm(true)} className="text-sm font-medium text-[#3C81C6] hover:underline flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[16px]">edit_calendar</span>
+                                        Dời lịch khám
+                                    </button>
+                                ) : (
+                                    <div className="bg-gray-50 dark:bg-[#121417] p-3 rounded-lg border border-[#e5e7eb] dark:border-[#2d353e]">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <p className="text-sm font-medium">Chọn lịch mới</p>
+                                            <button onClick={() => setShowRescheduleForm(false)} className="text-[#687582] hover:text-gray-900 dark:hover:text-white">
+                                                <span className="material-symbols-outlined text-[18px]">close</span>
+                                            </button>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-xs text-[#687582] mb-1">Ngày dời sang</label>
+                                                <input type="date" min={new Date().toISOString().slice(0,10)} value={rescheduleDate} onChange={e => setRescheduleDate(e.target.value)} className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#1e242b]" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#687582] mb-1">Giờ khám ({rescheduleSlots.length} slot)</label>
+                                                {loadingSlots ? (
+                                                    <p className="text-xs text-[#687582] py-2">Đang tải khung giờ...</p>
+                                                ) : rescheduleSlots.length > 0 ? (
+                                                    <select value={rescheduleSlotId} onChange={e => setRescheduleSlotId(e.target.value)} className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#1e242b]">
+                                                        <option value="">-- Chọn khung giờ --</option>
+                                                        {rescheduleSlots.map(s => (
+                                                            <option key={s.id || s.slot_id} value={s.id || s.slot_id}>
+                                                                {s.startTime?.slice(0,5) || s.start_time?.slice(0,5)} - {s.endTime?.slice(0,5) || s.end_time?.slice(0,5)}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <p className="text-xs text-rose-500 py-2">Không có slot trống cho ngày này.</p>
+                                                )}
+                                            </div>
+                                            <button onClick={onReschedule} disabled={busy || !rescheduleSlotId} className="w-full px-3 py-2 text-sm rounded-lg bg-[#3C81C6] text-white disabled:opacity-50 font-medium">Xác nhận dời lịch</button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <Link href={`/portal/receptionist/change-history?appointmentId=${selected.id}`} className="text-xs text-[#3C81C6] hover:underline block">
                                 Xem lịch sử thay đổi →

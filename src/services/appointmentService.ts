@@ -260,6 +260,17 @@ export const cancelAppointment = async (id: string, reason?: string): Promise<vo
 };
 
 // ============================================
+// Đánh dấu Không đến (No-Show)
+// ============================================
+export const markNoShow = async (id: string): Promise<void> => {
+    try {
+        await axiosClient.post(APPOINTMENT_STATUS_ENDPOINTS.NO_SHOW(id));
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Đánh dấu Không đến thất bại');
+    }
+};
+
+// ============================================
 // Tạo mã QR check-in cho lịch hẹn
 // ============================================
 export const generateAppointmentQr = async (id: string): Promise<{ qr_token: string; expires_at: string }> => {
