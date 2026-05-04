@@ -405,7 +405,7 @@ export const preBookAppointment = async (data: PreBookRequest): Promise<PreBookR
     };
     if (data.patientId) payload.patient_id = data.patientId;
     if (data.branchId) payload.branch_id = data.branchId;
-    if (data.facilityId) payload.facility_id = data.facilityId;
+    // NOTE: facility_id không có trong BE CreateAppointmentInput, chỉ cần branch_id
     if (data.slotId) payload.slot_id = data.slotId;
     if (data.shiftId) payload.shift_id = data.shiftId;
     if (data.doctorId) payload.doctor_id = data.doctorId;

@@ -19,7 +19,7 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
 };
 
 const fmt = (v?: string) => { if (!v) return "—"; try { return new Date(v).toLocaleDateString("vi-VN"); } catch { return v; } };
-const fmtMoney = (v?: number) => v == null ? "—" : `${v.toLocaleString("vi-VN")} ₫`;
+const fmtMoney = (v?: number) => v == null ? "—" : `${Math.round(Number(v)).toLocaleString("vi-VN", { maximumFractionDigits: 0 })} ₫`;
 
 export default function ReceptionistBillingPage() {
     const [items, setItems] = useState<any[]>([]);
@@ -135,11 +135,11 @@ export default function ReceptionistBillingPage() {
                                 <tr><td colSpan={6} className="px-4 py-12 text-center text-[#687582]">Đang tải…</td></tr>
                             ) : filtered.length === 0 ? (
                                 <tr><td colSpan={6}><EmptyState icon="receipt" title="Không có hoá đơn" /></td></tr>
-                            ) : filtered.map((inv: any) => {
+                            ) : filtered.map((inv: any, idx: number) => {
                                 const status = (inv.status ?? "PENDING").toUpperCase();
                                 const meta = STATUS_META[status] ?? { label: status, cls: "bg-gray-100 text-gray-700" };
                                 return (
-                                    <tr key={inv.id}>
+                                    <tr key={inv.id ?? inv.invoice_code ?? idx}>
                                         <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">{inv.invoice_code ?? `#${(inv.id ?? "").toString().slice(0, 8)}`}</td>
                                         <td className="px-4 py-3 font-medium">{inv.patient_name ?? "—"}</td>
                                         <td className="px-4 py-3 text-right font-bold">{fmtMoney(inv.total ?? inv.total_amount)}</td>

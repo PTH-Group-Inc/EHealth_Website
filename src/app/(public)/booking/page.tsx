@@ -13,6 +13,7 @@ import { getSpecialties, getSpecialtiesByFacility, type Specialty } from "@/serv
 import { doctorService, type Doctor } from "@/services/doctorService";
 import { createAppointment, confirmAppointment, generateAppointmentQr, getAvailableSlots, getAvailableSlotsByDepartment, preBookAppointment } from "@/services/appointmentService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
 import { MOCK_SPECIALTIES, filterMockDoctors, getMockDoctorById } from "@/data/patient-mock";
 import { MOCK_MEDICAL_SERVICES, getServicesBySpecialtyId, getSpecialtyIdsByServiceId, SERVICE_CATEGORIES, type MedicalServiceItem } from "@/data/medical-services-mock";
 import { MOCK_PATIENT_PROFILES, getProfilesByUserId, type PatientProfile } from "@/data/patient-profiles-mock";
@@ -54,6 +55,7 @@ function BookingPageInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user, isAuthenticated } = useAuth();
+    const { error, warning } = useToast();
 
     const initDoctorId = searchParams.get("doctorId") || "";
     const initDoctorName = searchParams.get("doctorName") || "";
@@ -131,6 +133,7 @@ function BookingPageInner() {
     const [bookingCode, setBookingCode] = useState("");
     const [qrToken, setQrToken] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [isDoctorLoading, setIsDoctorLoading] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState<"paid" | "pending" | "not_required">("not_required");
     const [selectedProfileId, setSelectedProfileId] = useState<string>("");
     const [serviceFilter, setServiceFilter] = useState("all");
@@ -154,29 +157,24 @@ function BookingPageInner() {
     const [isClientSessionReady, setIsClientSessionReady] = useState(false);
 
     useEffect(() => {
-        // Only load from sessionStorage if step is in URL (meaning they are continuing a flow or reloaded)
-        if (!searchParams.has("step")) {
-            sessionStorage.removeItem("ehealth_booking_state");
-        } else {
-            const stored = sessionStorage.getItem("ehealth_booking_state");
-            if (stored) {
-                try {
-                    const data = JSON.parse(stored);
-                    if (data.bookingType) setBookingType(data.bookingType);
-                    if (data.consultType) setConsultType(data.consultType);
-                    if (data.selectedFacility) setSelectedFacility(data.selectedFacility);
-                    if (data.selectedBranch) setSelectedBranch(data.selectedBranch);
-                    if (data.selectedSpecialty) setSelectedSpecialty(data.selectedSpecialty);
-                    if (data.selectedDoctor) setSelectedDoctor(data.selectedDoctor);
-                    if (data.selectedService) setSelectedService(data.selectedService);
-                    if (data.selectedDate) setSelectedDate(data.selectedDate);
-                    if (data.selectedTime) setSelectedTime(data.selectedTime);
-                    if (data.selectedSlotId) setSelectedSlotId(data.selectedSlotId);
-                    if (data.form) setForm(data.form);
-                    if (data.agreedTerms !== undefined) setAgreedTerms(data.agreedTerms);
-                    if (data.selectedProfileId) setSelectedProfileId(data.selectedProfileId);
-                } catch (err) {}
-            }
+        const stored = sessionStorage.getItem("ehealth_booking_state");
+        if (stored) {
+            try {
+                const data = JSON.parse(stored);
+                if (data.bookingType) setBookingType(data.bookingType);
+                if (data.consultType) setConsultType(data.consultType);
+                if (data.selectedFacility) setSelectedFacility(data.selectedFacility);
+                if (data.selectedBranch) setSelectedBranch(data.selectedBranch);
+                if (data.selectedSpecialty) setSelectedSpecialty(data.selectedSpecialty);
+                if (data.selectedDoctor) setSelectedDoctor(data.selectedDoctor);
+                if (data.selectedService) setSelectedService(data.selectedService);
+                if (data.selectedDate) setSelectedDate(data.selectedDate);
+                if (data.selectedTime) setSelectedTime(data.selectedTime);
+                if (data.selectedSlotId) setSelectedSlotId(data.selectedSlotId);
+                if (data.form) setForm(data.form);
+                if (data.agreedTerms !== undefined) setAgreedTerms(data.agreedTerms);
+                if (data.selectedProfileId) setSelectedProfileId(data.selectedProfileId);
+            } catch (err) {}
         }
         setIsClientSessionReady(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -581,7 +579,8 @@ function BookingPageInner() {
 
     useEffect(() => {
         if (selectedDoctor && !selectedDoctorObj) {
-            loadSelectedDoctor(selectedDoctor);
+            setIsDoctorLoading(true);
+            loadSelectedDoctor(selectedDoctor).finally(() => setIsDoctorLoading(false));
         }
     }, [selectedDoctor, selectedDoctorObj]);
 
@@ -627,12 +626,19 @@ function BookingPageInner() {
                     const matchInState = specList.find((sp: any) => specialties.some(s => s.id === sp.specialty_id));
                     setSelectedSpecialty(matchInState?.specialty_id || specList[0].specialty_id);
                 } else {
+                    error('Không thể xác định chuyên khoa cho dịch vụ này. Vui lòng chọn dịch vụ khác.');
+                    setSelectedService("");
                     setSelectedSpecialty("");
                 }
-            } catch {
+            } catch (err) {
+                console.warn('[Booking] Không thể reverse lookup specialty cho service', svcId, err);
+                error('Đã có lỗi xảy ra khi xác định chuyên khoa. Vui lòng thử lại sau.');
+                setSelectedService("");
                 setSelectedSpecialty("");
             }
         } else {
+            error('Không thể xác định chuyên khoa cho dịch vụ này. Vui lòng chọn dịch vụ khác.');
+            setSelectedService("");
             setSelectedSpecialty("");
         }
     };
@@ -667,7 +673,8 @@ function BookingPageInner() {
     const canProceedStep2 = selectedDate && selectedTime && validateAppointmentDate(selectedDate).valid;
     const canProceedStep3 = isAuthenticated && form.fullName && form.phone && form.gender
         && validateName(form.fullName).valid && validatePhone(form.phone).valid;
-    const canProceedStep4 = agreedTerms;
+    // ★ Chặn submit khi đang load thông tin bác sĩ (race condition guard)
+    const canProceedStep4 = agreedTerms && !isDoctorLoading;
 
     const handleSubmit = async () => {
         setSubmitting(true);
@@ -704,6 +711,16 @@ function BookingPageInner() {
                 try {
                     const finalBranchId = selectedBranch || selectedDoctorObj?.branchId || selectedDoctorObj?.facilities?.[0]?.branch_id || undefined;
                     const finalFacilityId = selectedFacility || selectedDoctorObj?.facilities?.[0]?.facility_id || undefined;
+
+                    // ★ Safety: nếu đặt theo dịch vụ nhưng chưa resolve được specialty → cảnh báo
+                    if (bookingType === 'service' && selectedService && !selectedSpecialty) {
+                        console.warn('[Booking] Service-first flow nhưng specialty chưa được resolve. Service:', selectedService);
+                    }
+
+                    console.log('[Booking] Pre-book payload:', {
+                        patientId, doctorId: selectedDoctorObj?.doctorId, branchId: finalBranchId,
+                        specialtyId: selectedSpecialty, serviceId: selectedService, slotId: resolvedSlotId,
+                    });
 
                     const pre = await preBookAppointment({
                         patientId,
@@ -1486,7 +1503,9 @@ function BookingPageInner() {
                             ) : (
                                 <button type="button" onClick={handleSubmit} disabled={!canProceedStep4 || submitting}
                                     className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-md shadow-green-500/20 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.97] flex items-center gap-1.5">
-                                    {submitting ? (
+                                    {isDoctorLoading ? (
+                                        <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Đang tải...</>
+                                    ) : submitting ? (
                                         <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Đang xử lý...</>
                                     ) : (
                                         <>Xác nhận đặt lịch <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>check</span></>
