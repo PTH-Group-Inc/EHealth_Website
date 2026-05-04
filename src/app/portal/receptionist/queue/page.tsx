@@ -270,7 +270,7 @@ export default function ReceptionistQueuePage() {
                             ) : filtered.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="px-5 py-8">
-                                        <EmptyState icon="groups" title="Không có bệnh nhân" subtitle="Hàng đợi hiện tại đang trống" variant="default" />
+                                        <EmptyState icon="groups" title="Không có bệnh nhân" description="Hàng đợi hiện tại đang trống" variant="default" />
                                     </td>
                                 </tr>
                             ) : filtered.map(q => {
