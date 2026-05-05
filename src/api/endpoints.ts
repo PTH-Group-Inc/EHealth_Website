@@ -715,6 +715,7 @@ export const APPOINTMENT_STATUS_ENDPOINTS = {
     DASHBOARD_TODAY: '/api/appointment-status/dashboard/today',
     DASHBOARD_DATE: (date: string) => `/api/appointment-status/dashboard/${date}`,
     ROOM_STATUS: '/api/appointment-status/room-status',
+    FORCE_RELEASE: (id: string) => `/api/appointment-status/rooms/${id}/release`,
     SETTINGS: '/api/appointment-status/settings',
     CHECK_IN: (id: string) => `/api/appointment-status/${id}/check-in`,
     START_EXAM: (id: string) => `/api/appointment-status/${id}/start-exam`,
