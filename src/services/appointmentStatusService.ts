@@ -33,6 +33,12 @@ export const appointmentStatusService = {
         axiosClient.get(APPOINTMENT_STATUS_ENDPOINTS.ROOM_STATUS).then(r => r.data),
 
     /**
+     * PATCH /api/appointment-status/rooms/{id}/release — Giải phóng phòng
+     */
+    forceReleaseRoom: (roomId: string) =>
+        axiosClient.patch(APPOINTMENT_STATUS_ENDPOINTS.FORCE_RELEASE(roomId), {}).then(r => r.data),
+
+    /**
      * GET /api/appointment-status/settings — Cài đặt hàng đợi
      */
     getSettings: () =>
