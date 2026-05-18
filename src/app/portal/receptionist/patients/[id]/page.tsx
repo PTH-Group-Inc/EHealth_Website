@@ -300,8 +300,7 @@ export default function PatientDetailPage() {
         try {
             const details = await prescriptionService.getDetails(rx.prescriptions_id || rx.id);
             setPrescriptionDetails(Array.isArray(details) ? details : []);
-        } catch (e) {
-            console.error("Failed to load prescription details", e);
+        } catch {
             toast.error("Không thể tải chi tiết đơn thuốc");
         } finally {
             setLoadingPrescriptionDetails(false);

@@ -253,7 +253,6 @@ export default function UsersPage() {
             setSelectedUserIds(new Set());
             alert(`Đã vô hiệu hóa thành công ${selectedUserIds.size} người dùng.`);
         } catch (err: any) {
-            console.error('Vô hiệu hóa hàng loạt thất bại:', err);
             alert(err?.message || 'Vô hiệu hóa hàng loạt thất bại. Vui lòng thử lại.');
         }
     };
@@ -383,8 +382,7 @@ export default function UsersPage() {
         try {
             await userService.deleteUser(userId);
             setUsers((prev) => prev.filter((u) => u.id !== userId));
-        } catch (err) {
-            console.error('Xóa người dùng thất bại:', err);
+        } catch {
             alert('Xóa người dùng thất bại. Vui lòng thử lại.');
         }
     };
@@ -404,7 +402,6 @@ export default function UsersPage() {
                 prev.map((u) => u.id === userId ? { ...u, status: newStatus } : u)
             );
         } catch (err: any) {
-            console.error('Cập nhật trạng thái thất bại:', err);
             alert(err?.message || 'Cập nhật trạng thái thất bại. Vui lòng thử lại.');
         }
     };
@@ -486,8 +483,7 @@ export default function UsersPage() {
             }
 
             await loadUsers();
-        } catch (err) {
-            console.error('Lưu người dùng thất bại:', err);
+        } catch {
             alert('Lưu người dùng thất bại. Vui lòng thử lại.');
         }
     };

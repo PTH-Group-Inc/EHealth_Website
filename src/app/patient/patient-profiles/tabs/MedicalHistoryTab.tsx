@@ -101,8 +101,7 @@ export default function MedicalHistoryTab({ profile }: TabProps) {
 
             setAllergies(rawAllergies.map(normalizeAllergy));
             setHistories(rawHistory.map(normalizeHistory));
-        } catch (error) {
-            console.error(error);
+        } catch {
             showToast("Không thể tải tiền sử y tế của bệnh nhân.", "error");
         } finally {
             setLoading(false);

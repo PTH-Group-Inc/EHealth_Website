@@ -153,8 +153,7 @@ function SignoffDetail({ encounterId, onBack }: { encounterId: string; onBack: (
                 try {
                     await billingService.generateInvoice(encounterId);
                     toast.success("Hóa đơn đã được tự động tạo và chuyển đến Lễ tân/Thu ngân.");
-                } catch (err) {
-                    console.error("Lỗi tự động tạo hóa đơn:", err);
+                } catch {
                     toast.error("Không thể tự động tạo hóa đơn. Vui lòng báo Thu ngân kiểm tra lại.");
                 }
             }

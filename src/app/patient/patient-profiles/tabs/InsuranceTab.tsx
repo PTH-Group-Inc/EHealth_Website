@@ -54,8 +54,7 @@ export default function InsuranceTab({ profile, onInsuranceChanged }: TabProps) 
 
             setInsurances(Array.isArray(listRes.data) ? listRes.data : []);
             setProviders(Array.isArray(providerRes.data) ? providerRes.data.filter((item) => item?.is_active !== false) : []);
-        } catch (error) {
-            console.error("Error fetching insurances:", error);
+        } catch {
             setInsurances([]);
             showToast("Không thể tải danh sách bảo hiểm.", "error");
         } finally {

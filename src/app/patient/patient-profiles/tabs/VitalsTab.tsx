@@ -109,8 +109,7 @@ export default function VitalsTab({ profile }: TabProps) {
             });
 
             setLatestVitals(latest);
-        } catch (error) {
-            console.error(error);
+        } catch {
             showToast("Không thể tải chỉ số sinh tồn.", "error");
         } finally {
             setLoading(false);

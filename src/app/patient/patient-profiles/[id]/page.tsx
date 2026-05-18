@@ -32,8 +32,7 @@ export default function PatientProfileDetailPage() {
             );
 
             setProfile(mappedProfile);
-        } catch (error) {
-            console.error(error);
+        } catch {
             showToast("Không tìm thấy hồ sơ bệnh nhân.", "error");
             router.push("/patient/patient-profiles");
         } finally {

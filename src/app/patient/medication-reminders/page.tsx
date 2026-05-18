@@ -247,8 +247,7 @@ export default function MedicationRemindersPage() {
                     const exists = mapped.some((profile) => profile.id === cachedId);
                     setSelectedProfileId(exists ? cachedId || mapped[0].id : mapped[0].id);
                 }
-            } catch (error) {
-                console.error("Failed to fetch profiles", error);
+            } catch {
                 showToast("Không tải được hồ sơ bệnh nhân", "error");
             }
         };
@@ -278,8 +277,7 @@ export default function MedicationRemindersPage() {
 
                 setReminders(currentMedications.map((item, index) => buildMedicationReminder(item, selectedProfileId, index)));
                 setLogs(adherence.records.map((record) => buildMedicationLog(record, selectedProfileId)));
-            } catch (error) {
-                console.error("Failed to load medication reminders", error);
+            } catch {
                 setReminders([]);
                 setLogs([]);
                 showToast("Không tải được dữ liệu nhắc thuốc", "error");
@@ -382,8 +380,7 @@ export default function MedicationRemindersPage() {
 
             setLogs((prev) => [...prev, buildMedicationLog(created, selectedProfileId)]);
             showToast(taken ? "Đã ghi nhận uống thuốc hôm nay" : "Đã ghi nhận bỏ qua hôm nay", "success");
-        } catch (error) {
-            console.error("Failed to save adherence", error);
+        } catch {
             showToast("Không thể lưu ghi nhận dùng thuốc", "error");
         } finally {
             setSubmittingId(null);

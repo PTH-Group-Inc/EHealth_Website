@@ -118,7 +118,6 @@ export default function ManageSlotsPage() {
                 }
             }
         } catch (err: any) {
-            console.error("Save slots failed:", err);
             alert(err?.response?.data?.message ?? err?.message ?? "Lưu khung giờ thất bại. Vui lòng thử lại.");
         }
         setSaving(false);

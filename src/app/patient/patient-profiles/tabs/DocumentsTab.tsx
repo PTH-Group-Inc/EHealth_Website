@@ -75,8 +75,7 @@ export default function DocumentsTab({ profile }: TabProps) {
             await axiosClient.delete(DOCUMENT_ENDPOINTS.DELETE(patientId.toString(), docId));
             showToast("Đã xóa tài liệu thành công.", "success");
             fetchDocuments();
-        } catch (error) {
-            console.error("Lỗi xóa tài liệu:", error);
+        } catch {
             showToast("Có lỗi xảy ra khi xóa tài liệu.", "error");
         }
     };
@@ -126,8 +125,7 @@ export default function DocumentsTab({ profile }: TabProps) {
             setIsAddModalOpen(false);
 
             await fetchDocuments();
-        } catch (error) {
-            console.error("Lỗi upload tài liệu:", error);
+        } catch {
             showToast("Có lỗi xảy ra, vui lòng thử lại sau.", "error");
         } finally {
             setSubmitting(false);

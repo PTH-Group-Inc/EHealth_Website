@@ -238,7 +238,6 @@ export default function NewPatientPage() {
 
             router.push(`/portal/receptionist/patients/${patientId}`);
         } catch (error: any) {
-            console.error(error);
             showToast(error?.message || extractErrorMessage(error) || "Tiếp nhận bệnh nhân thất bại.", "error");
         } finally {
             setSaving(false);

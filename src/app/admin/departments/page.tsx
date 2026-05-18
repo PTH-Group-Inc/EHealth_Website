@@ -165,8 +165,7 @@ export default function DepartmentsPage() {
         try {
             await departmentService.deleteDepartment(departmentId);
             setDepartments((prev) => prev.filter((d) => d.id !== departmentId));
-        } catch (err) {
-            console.error('Xóa khoa thất bại:', err);
+        } catch {
             alert('Xóa khoa thất bại. Vui lòng thử lại.');
         }
     };
@@ -182,8 +181,7 @@ export default function DepartmentsPage() {
                 const created = await departmentService.createDepartment(deptData as any);
                 setDepartments((prev) => [created as unknown as Department, ...prev]);
             }
-        } catch (err) {
-            console.error('Lưu khoa thất bại:', err);
+        } catch {
             alert('Lưu khoa thất bại. Vui lòng thử lại.');
         }
     };

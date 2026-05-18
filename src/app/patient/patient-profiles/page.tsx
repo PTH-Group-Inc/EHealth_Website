@@ -108,8 +108,7 @@ export default function PatientProfilesPage() {
             });
 
             setProfiles(hydratedProfiles);
-        } catch (error) {
-            console.error(error);
+        } catch {
             showToast("Không thể tải danh sách hồ sơ bệnh nhân.", "error");
             setProfiles([]);
         } finally {

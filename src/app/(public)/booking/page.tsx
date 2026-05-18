@@ -714,11 +714,6 @@ function BookingPageInner() {
                         console.warn('[Booking] Service-first flow nhưng specialty chưa được resolve. Service:', selectedService);
                     }
 
-                    console.log('[Booking] Pre-book payload:', {
-                        patientId, doctorId: selectedDoctorObj?.doctorId, branchId: finalBranchId,
-                        specialtyId: selectedSpecialty, serviceId: selectedService, slotId: resolvedSlotId,
-                    });
-
                     const pre = await preBookAppointment({
                         patientId,
                         doctorId: selectedDoctorObj?.doctorId || undefined,

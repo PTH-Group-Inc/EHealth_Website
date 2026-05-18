@@ -441,8 +441,7 @@ export default function ExaminationPage() {
                 try {
                     await billingService.generateInvoice(eid);
                     toast.success("Hóa đơn đã được tự động tạo và chuyển đến Lễ tân/Thu ngân.");
-                } catch (err) {
-                    console.error("Lỗi khi tự động tạo hóa đơn:", err);
+                } catch {
                     toast.error("Không thể tự động tạo hóa đơn. Vui lòng báo Thu ngân kiểm tra lại.");
                 }
             } else {
