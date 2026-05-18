@@ -42,7 +42,6 @@ interface Facility { id: string; name: string; }
 
 interface MasterFormState {
     id?: string;
-    code: string;
     name: string;
     group: string;
     category: string;
@@ -59,7 +58,7 @@ interface FacilityFormState {
     duration: string;
 }
 
-const EMPTY_MASTER: MasterFormState = { code: "", name: "", group: "", category: "", price: "", duration: "30", description: "" };
+const EMPTY_MASTER: MasterFormState = { name: "", group: "", category: "", price: "", duration: "30", description: "" };
 const EMPTY_FACILITY: FacilityFormState = { facilityId: "", serviceId: "", price: "", duration: "30" };
 
 function normalizeStatus(s: any): ServiceStatus {
@@ -219,7 +218,6 @@ export default function ServicesAdminPage() {
     const openEditMaster = (s: MasterService) => {
         setMasterForm({
             id: s.id,
-            code: s.code,
             name: s.name,
             group: s.group ?? "",
             category: s.category ?? "",
@@ -231,14 +229,13 @@ export default function ServicesAdminPage() {
     };
 
     const handleSaveMaster = async () => {
-        if (!masterForm.code.trim() || !masterForm.name.trim()) {
-            toast.warning("Vui lòng nhập mã và tên dịch vụ.");
+        if (!masterForm.name.trim()) {
+            toast.warning("Vui lòng nhập tên dịch vụ.");
             return;
         }
         setSavingMaster(true);
         try {
             const payload: any = {
-                code: masterForm.code.trim(),
                 name: masterForm.name.trim(),
                 service_group: masterForm.group.trim() || undefined,
                 category_name: masterForm.category.trim() || undefined,
@@ -611,15 +608,9 @@ export default function ServicesAdminPage() {
                             {masterForm.id ? "Sửa dịch vụ" : "Tạo dịch vụ mới"}
                         </h3>
                         <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Mã *</label>
-                                    <input value={masterForm.code} onChange={(e) => setMasterForm({ ...masterForm, code: e.target.value })} placeholder="VD: XN-CBC" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên dịch vụ *</label>
-                                    <input value={masterForm.name} onChange={(e) => setMasterForm({ ...masterForm, name: e.target.value })} placeholder="VD: Công thức máu" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên dịch vụ *</label>
+                                <input value={masterForm.name} onChange={(e) => setMasterForm({ ...masterForm, name: e.target.value })} placeholder="VD: Công thức máu" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>

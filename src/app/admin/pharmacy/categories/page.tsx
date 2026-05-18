@@ -19,12 +19,11 @@ interface DrugCategory {
 
 interface FormState {
     id?: string;
-    code: string;
     name: string;
     description: string;
 }
 
-const EMPTY_FORM: FormState = { code: "", name: "", description: "" };
+const EMPTY_FORM: FormState = { name: "", description: "" };
 
 function mapCategory(r: any): DrugCategory {
     return {
@@ -78,16 +77,15 @@ export default function PharmacyCategoriesPage() {
 
     const openCreate = () => { setForm(EMPTY_FORM); setShowModal(true); };
     const openEdit = (c: DrugCategory) => {
-        setForm({ id: c.id, code: c.code, name: c.name, description: c.description ?? "" });
+        setForm({ id: c.id, name: c.name, description: c.description ?? "" });
         setShowModal(true);
     };
 
     const handleSave = async () => {
-        if (!form.code.trim() || !form.name.trim()) { toast.warning("Nhập mã và tên nhóm thuốc."); return; }
+        if (!form.name.trim()) { toast.warning("Vui lòng nhập tên nhóm thuốc."); return; }
         setSaving(true);
         try {
             const payload = {
-                code: form.code.trim(),
                 name: form.name.trim(),
                 description: form.description.trim() || undefined,
             };
@@ -194,12 +192,6 @@ export default function PharmacyCategoriesPage() {
                             {form.id ? "Sửa nhóm thuốc" : "Thêm nhóm thuốc"}
                         </h3>
                         <div className="space-y-3">
-                            <div>
-                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Mã *</label>
-                                <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })}
-                                    placeholder="VD: ANTIBIOTIC"
-                                    className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm font-mono dark:text-white" />
-                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên nhóm *</label>
                                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}

@@ -24,7 +24,6 @@ interface Warehouse {
 
 interface FormState {
     id?: string;
-    code: string;
     name: string;
     address: string;
     manager: string;
@@ -33,7 +32,7 @@ interface FormState {
     note: string;
 }
 
-const EMPTY_FORM: FormState = { code: "", name: "", address: "", manager: "", phone: "", type: "MAIN", note: "" };
+const EMPTY_FORM: FormState = { name: "", address: "", manager: "", phone: "", type: "MAIN", note: "" };
 
 const TYPE_META: Record<string, { labelKey: "main" | "pharmacy" | "equipment" | "consumable" | "other"; icon: string }> = {
     MAIN: { labelKey: "main", icon: "warehouse" },
@@ -108,7 +107,7 @@ export default function WarehousesPage() {
     const openCreate = () => { setForm(EMPTY_FORM); setShowModal(true); };
     const openEdit = (w: Warehouse) => {
         setForm({
-            id: w.id, code: w.code, name: w.name,
+            id: w.id, name: w.name,
             address: w.address ?? "", manager: w.manager ?? "",
             phone: w.phone ?? "", type: w.type ?? "MAIN", note: w.note ?? "",
         });
@@ -116,11 +115,10 @@ export default function WarehousesPage() {
     };
 
     const handleSave = async () => {
-        if (!form.code.trim() || !form.name.trim()) { toast.warning(t("toast.requiredCodeName")); return; }
+        if (!form.name.trim()) { toast.warning("Vui lòng nhập tên kho."); return; }
         setSaving(true);
         try {
             const payload = {
-                code: form.code.trim(),
                 name: form.name.trim(),
                 address: form.address.trim() || undefined,
                 manager_name: form.manager.trim() || undefined,
@@ -264,21 +262,15 @@ export default function WarehousesPage() {
                             {form.id ? t("modal.titleEdit") : t("modal.titleCreate")}
                         </h3>
                         <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.code")} *</label>
-                                    <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.type")}</label>
-                                    <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white">
-                                        {Object.entries(TYPE_META).map(([k, v]) => <option key={k} value={k}>{t(`type.${v.labelKey}`)}</option>)}
-                                    </select>
-                                </div>
-                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.name")} *</label>
                                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.type")}</label>
+                                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white">
+                                    {Object.entries(TYPE_META).map(([k, v]) => <option key={k} value={k}>{t(`type.${v.labelKey}`)}</option>)}
+                                </select>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>

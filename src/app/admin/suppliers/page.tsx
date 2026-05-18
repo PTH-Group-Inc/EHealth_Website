@@ -24,7 +24,6 @@ interface Supplier {
 
 interface FormState {
     id?: string;
-    code: string;
     name: string;
     taxCode: string;
     phone: string;
@@ -34,7 +33,7 @@ interface FormState {
     note: string;
 }
 
-const EMPTY_FORM: FormState = { code: "", name: "", taxCode: "", phone: "", email: "", address: "", contactPerson: "", note: "" };
+const EMPTY_FORM: FormState = { name: "", taxCode: "", phone: "", email: "", address: "", contactPerson: "", note: "" };
 
 function mapSupplier(r: any): Supplier {
     return {
@@ -101,7 +100,7 @@ export default function SuppliersPage() {
     const openCreate = () => { setForm(EMPTY_FORM); setShowModal(true); };
     const openEdit = (s: Supplier) => {
         setForm({
-            id: s.id, code: s.code, name: s.name,
+            id: s.id, name: s.name,
             taxCode: s.taxCode ?? "", phone: s.phone ?? "", email: s.email ?? "",
             address: s.address ?? "", contactPerson: s.contactPerson ?? "", note: s.note ?? "",
         });
@@ -109,11 +108,10 @@ export default function SuppliersPage() {
     };
 
     const handleSave = async () => {
-        if (!form.code.trim() || !form.name.trim()) { toast.warning(t("toast.requiredCodeName")); return; }
+        if (!form.name.trim()) { toast.warning("Vui lòng nhập tên nhà cung cấp."); return; }
         setSaving(true);
         try {
             const payload = {
-                code: form.code.trim(),
                 name: form.name.trim(),
                 tax_code: form.taxCode.trim() || undefined,
                 phone: form.phone.trim() || undefined,
@@ -253,11 +251,8 @@ export default function SuppliersPage() {
                             {form.id ? t("modal.titleEdit") : t("modal.titleCreate")}
                         </h3>
                         <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormInput label={`${t("modal.code")} *`} value={form.code} onChange={(v) => setForm({ ...form, code: v })} placeholder={t("modal.codePlaceholder")} />
-                                <FormInput label={t("modal.taxCode")} value={form.taxCode} onChange={(v) => setForm({ ...form, taxCode: v })} />
-                            </div>
                             <FormInput label={`${t("modal.name")} *`} value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+                            <FormInput label={t("modal.taxCode")} value={form.taxCode} onChange={(v) => setForm({ ...form, taxCode: v })} />
                             <div className="grid grid-cols-2 gap-3">
                                 <FormInput label={t("modal.contactPerson")} value={form.contactPerson} onChange={(v) => setForm({ ...form, contactPerson: v })} />
                                 <FormInput label={t("modal.phone")} value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />

@@ -22,13 +22,12 @@ interface Specialty {
 
 interface FormState {
     id?: string;
-    code: string;
     name: string;
     description: string;
     icon: string;
 }
 
-const EMPTY_FORM: FormState = { code: "", name: "", description: "", icon: "local_hospital" };
+const EMPTY_FORM: FormState = { name: "", description: "", icon: "local_hospital" };
 
 const SPECIALTY_ICONS = [
     "local_hospital", "stethoscope", "cardiology", "neurology", "pediatrics", "dermatology",
@@ -90,16 +89,15 @@ export default function SpecialtiesPage() {
 
     const openCreate = () => { setForm(EMPTY_FORM); setShowModal(true); };
     const openEdit = (s: Specialty) => {
-        setForm({ id: s.id, code: s.code, name: s.name, description: s.description ?? "", icon: s.icon ?? "local_hospital" });
+        setForm({ id: s.id, name: s.name, description: s.description ?? "", icon: s.icon ?? "local_hospital" });
         setShowModal(true);
     };
 
     const handleSave = async () => {
-        if (!form.code.trim() || !form.name.trim()) { toast.warning(t("toast.requiredCodeName")); return; }
+        if (!form.name.trim()) { toast.warning("Vui lòng nhập tên chuyên khoa."); return; }
         setSaving(true);
         try {
             const payload = {
-                code: form.code.trim(),
                 name: form.name.trim(),
                 description: form.description.trim() || undefined,
                 icon: form.icon,
@@ -209,24 +207,17 @@ export default function SpecialtiesPage() {
                             {form.id ? t("modal.titleEdit") : t("modal.titleCreate")}
                         </h3>
                         <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.code")} *</label>
-                                    <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm font-mono dark:text-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.icon")}</label>
-                                    <select value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white">
-                                        {SPECIALTY_ICONS.map((i) => <option key={i} value={i}>{i}</option>)}
-                                    </select>
-                                </div>
-                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.name")} *</label>
                                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
                                     className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.icon")}</label>
+                                <select value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white">
+                                    {SPECIALTY_ICONS.map((i) => <option key={i} value={i}>{i}</option>)}
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.description")}</label>
