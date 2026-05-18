@@ -7,7 +7,6 @@ import { UI_TEXT } from "@/constants/ui-text";
 import { DOCTOR_STATUS } from "@/constants/status";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { DoctorFormModal } from "@/features/doctors/components/doctor-form-modal";
-import { TimeSlotModal } from "@/features/doctors/components/time-slot-modal";
 import { staffService, unwrapStaffList } from "@/services/staffService";
 import { getDepartments, unwrapDepartments } from "@/services/departmentService";
 import type { Doctor } from "@/types";
@@ -26,7 +25,6 @@ export default function DoctorsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [departmentFilter, setDepartmentFilter] = useState<string>("all");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isTimeSlotOpen, setIsTimeSlotOpen] = useState(false);
     const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
     const [sortField, setSortField] = useState<SortField>("fullName");
     const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
@@ -205,13 +203,6 @@ export default function DoctorsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => setIsTimeSlotOpen(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] text-[#121417] dark:text-white rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-[20px]">calendar_month</span>
-                        {UI_TEXT.ADMIN.DOCTORS.CONFIGURE_SLOTS}
-                    </button>
-                    <button
                         onClick={() => router.push("/admin/doctors/new")}
                         className="flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform hover:-translate-y-0.5"
                     >
@@ -365,7 +356,6 @@ export default function DoctorsPage() {
                                         status={doctor.status}
                                         onView={() => router.push(`/admin/doctors/${doctor.id}`)}
                                         onEdit={() => handleEditDoctor(doctor)}
-                                        onSchedule={() => setIsTimeSlotOpen(true)}
                                     />
                                 ))}
                             </div>
@@ -513,12 +503,6 @@ export default function DoctorsPage() {
                 onSubmit={handleSubmitDoctor}
                 initialData={editingDoctor || undefined}
                 mode={editingDoctor ? "edit" : "create"}
-            />
-
-            {/* Time Slot Modal */}
-            <TimeSlotModal
-                isOpen={isTimeSlotOpen}
-                onClose={() => setIsTimeSlotOpen(false)}
             />
         </>
     );

@@ -168,6 +168,7 @@ export const sendAdminBroadcast = async (data: {
     title: string;
     content: string;
     targetRoles?: string[];
+    channels?: string[];
 }): Promise<any> => {
     try {
         const response = await axiosClient.post(NOTIFICATION_ENDPOINTS.ADMIN_BROADCAST, data);

@@ -17,9 +17,12 @@ import {
     NotificationTemplate,
 } from "@/services/notificationService";
 import { useToast } from "@/contexts/ToastContext";
+import { getRoles } from "@/services/permissionService";
 
 
 type ActiveTab = "categories" | "templates" | "roleconfigs" | "broadcast";
+
+type RoleOption = { id: string; code: string; label: string };
 
 export default function AdminNotifications() {
     const toast = useToast();
@@ -47,10 +50,54 @@ export default function AdminNotifications() {
     const [bcForm, setBcForm] = useState({ title: "", content: "", roles: [] as string[], channels: [] as string[] });
     const [sendingBc, setSendingBc] = useState(false);
 
-    const ALL_ROLES = ["admin", "doctor", "receptionist", "pharmacist"];
+    // Roles loaded từ BE
+    const [allRolesList, setAllRolesList] = useState<RoleOption[]>([]);
+
     const ALL_CHANNELS = ["in_app", "email", "sms"];
     const CHANNEL_LABELS: Record<string, string> = { in_app: "In-App", email: "Email", sms: "SMS" };
-    const ROLE_LABELS: Record<string, string> = { admin: "Admin", doctor: "Bác sĩ", receptionist: "Lễ tân", pharmacist: "Dược sĩ" };
+
+    // Fallback labels khi BE chưa trả về displayName
+    const ROLE_LABEL_FALLBACK: Record<string, string> = {
+        ADMIN: "Quản trị viên", admin: "Quản trị viên",
+        DOCTOR: "Bác sĩ", doctor: "Bác sĩ",
+        NURSE: "Y tá / Điều dưỡng", nurse: "Y tá / Điều dưỡng",
+        PHARMACIST: "Dược sĩ", pharmacist: "Dược sĩ",
+        STAFF: "Nhân viên", staff: "Nhân viên",
+        RECEPTIONIST: "Lễ tân", receptionist: "Lễ tân",
+        CASHIER: "Thu ngân", cashier: "Thu ngân",
+        PATIENT: "Bệnh nhân", patient: "Bệnh nhân",
+    };
+
+    const labelForRole = (key: string): string => {
+        if (!key) return "—";
+        const role = allRolesList.find((r) => r.id === key || r.code === key);
+        if (role?.label) return role.label;
+        return ROLE_LABEL_FALLBACK[key] ?? ROLE_LABEL_FALLBACK[String(key).toUpperCase()] ?? key;
+    };
+
+    const ALL_ROLES = allRolesList.length > 0
+        ? allRolesList.map((r) => r.code || r.id)
+        : Object.keys(ROLE_LABEL_FALLBACK).filter((k) => k === k.toLowerCase());
+    const ROLE_LABELS = new Proxy({} as Record<string, string>, {
+        get: (_t, key: string) => labelForRole(key),
+    });
+
+    // Load roles thật từ BE để dùng cho cấu hình + broadcast
+    useEffect(() => {
+        getRoles()
+            .then((data) => {
+                if (Array.isArray(data) && data.length > 0) {
+                    setAllRolesList(
+                        data.map((r: any) => ({
+                            id: String(r.id ?? r.name ?? ""),
+                            code: String(r.code ?? r.name ?? ""),
+                            label: r.displayName ?? r.name ?? r.code ?? "",
+                        })),
+                    );
+                }
+            })
+            .catch(() => setAllRolesList([]));
+    }, []);
 
     useEffect(() => {
         getNotificationCategories()
@@ -199,13 +246,19 @@ export default function AdminNotifications() {
     const handleBroadcast = async () => {
         if (!bcForm.title || !bcForm.content) { toast.error("Vui lòng điền tiêu đề và nội dung!"); return; }
         if (bcForm.roles.length === 0) { toast.error("Chọn ít nhất một nhóm nhận!"); return; }
+        if (bcForm.channels.length === 0) { toast.error("Chọn ít nhất một kênh gửi!"); return; }
         setSendingBc(true);
         try {
-            await sendAdminBroadcast({ title: bcForm.title, content: bcForm.content, targetRoles: bcForm.roles });
-            toast.success("Đã gửi thông báo thành công!");
+            await sendAdminBroadcast({
+                title: bcForm.title,
+                content: bcForm.content,
+                targetRoles: bcForm.roles,
+                channels: bcForm.channels,
+            });
+            toast.success(`Đã gửi thông báo tới ${bcForm.roles.length} nhóm qua ${bcForm.channels.length} kênh.`);
             setBcForm({ title: "", content: "", roles: [], channels: [] });
-        } catch {
-            toast.error("Gửi thông báo thất bại!");
+        } catch (err: any) {
+            toast.error(err?.message || "Gửi thông báo thất bại!");
         } finally { setSendingBc(false); }
     };
 
@@ -366,39 +419,44 @@ export default function AdminNotifications() {
                         </div>
                         {loadingRc ? (
                             <div className="p-8 text-center text-sm text-[#687582]">Đang tải...</div>
-                        ) : roleConfigs.length === 0 ? (
+                        ) : allRolesList.length === 0 && roleConfigs.length === 0 ? (
                             <div className="p-8 text-center">
                                 <span className="material-symbols-outlined text-4xl text-[#b0b8c1] block mb-3">manage_accounts</span>
-                                <p className="text-sm text-[#687582]">Chưa có cấu hình role. Backend sẽ trả về dữ liệu sau khi kết nối.</p>
-                                <div className="mt-4 overflow-x-auto">
-                                    <table className="mx-auto border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-xs">
-                                        <thead>
-                                            <tr className="bg-gray-50 dark:bg-gray-800">
-                                                <th className="px-4 py-2 text-left text-[#687582]">Vai trò</th>
-                                                {categories.slice(0, 4).map(c => (
-                                                    <th key={c.id} className="px-4 py-2 text-center text-[#687582]">{c.name}</th>
+                                <p className="text-sm text-[#687582]">Không tải được danh sách vai trò. Kiểm tra kết nối tới <code className="text-xs">/api/roles</code>.</p>
+                            </div>
+                        ) : roleConfigs.length === 0 ? (
+                            <div className="overflow-x-auto p-4">
+                                <p className="text-xs text-[#687582] mb-3">Chưa có cấu hình. Bật toggle để khởi tạo cấu hình cho từng vai trò.</p>
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="bg-gray-50 dark:bg-gray-800">
+                                            <th className="px-4 py-2 text-left text-[#687582] text-xs font-semibold">Vai trò</th>
+                                            {categories.map(c => (
+                                                <th key={c.id} className="px-4 py-2 text-center text-[#687582] text-xs font-semibold">{c.name}</th>
+                                            ))}
+                                            {categories.length === 0 && (
+                                                <th className="px-4 py-2 text-center text-[#687582] text-xs font-semibold">(Chưa có loại thông báo)</th>
+                                            )}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {ALL_ROLES.map(role => (
+                                            <tr key={role} className="border-t border-[#dde0e4] dark:border-[#2d353e]">
+                                                <td className="px-4 py-3 font-medium text-[#121417] dark:text-white">{labelForRole(role)}</td>
+                                                {categories.map(c => (
+                                                    <td key={c.id} className="px-4 py-3 text-center">
+                                                        <button
+                                                            onClick={() => handleToggleRoleConfig(role, c.id, false)}
+                                                            className="w-10 h-6 rounded-full bg-gray-200 dark:bg-gray-700 relative transition-colors hover:bg-[#3C81C6]/50"
+                                                            title="Click để bật">
+                                                            <span className="absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform" />
+                                                        </button>
+                                                    </td>
                                                 ))}
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {ALL_ROLES.map(role => (
-                                                <tr key={role} className="border-t border-[#dde0e4] dark:border-[#2d353e]">
-                                                    <td className="px-4 py-2 font-medium text-[#121417] dark:text-white">{ROLE_LABELS[role]}</td>
-                                                    {categories.slice(0, 4).map(c => (
-                                                        <td key={c.id} className="px-4 py-2 text-center">
-                                                            <button
-                                                                onClick={() => handleToggleRoleConfig(role, c.id, false)}
-                                                                className="w-8 h-5 rounded-full bg-gray-200 dark:bg-gray-700 relative transition-colors hover:bg-[#3C81C6]/50"
-                                                                title="Click để bật">
-                                                                <span className="absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" />
-                                                            </button>
-                                                        </td>
-                                                    ))}
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         ) : (
                             <div className="overflow-x-auto p-4">
@@ -482,7 +540,7 @@ export default function AdminNotifications() {
                                     <p className="text-xs text-amber-700 dark:text-amber-400">Thông báo sẽ được gửi ngay lập tức đến <strong>tất cả người dùng</strong> thuộc nhóm được chọn. Hành động này không thể hoàn tác.</p>
                                 </div>
                                 <div className="flex justify-end">
-                                    <button onClick={handleBroadcast} disabled={sendingBc || !bcForm.title || !bcForm.content || bcForm.roles.length === 0}
+                                    <button onClick={handleBroadcast} disabled={sendingBc || !bcForm.title || !bcForm.content || bcForm.roles.length === 0 || bcForm.channels.length === 0}
                                         className="flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white text-sm font-bold rounded-xl transition-colors disabled:opacity-40 shadow-md shadow-blue-200 dark:shadow-none">
                                         <span className="material-symbols-outlined text-[18px]">{sendingBc ? "hourglass_top" : "send"}</span>
                                         {sendingBc ? "Đang gửi..." : "Gửi thông báo"}

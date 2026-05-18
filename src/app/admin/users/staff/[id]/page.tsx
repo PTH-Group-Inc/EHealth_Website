@@ -1382,88 +1382,28 @@ function ScheduleTab({ userId }: { userId: string }) {
                 )}
             </div>
 
-            {/* Day list */}
+            {/* Day timeline view */}
             <div className="bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-[#121417] dark:text-white mb-6 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#3C81C6]">view_agenda</span>
-                        Danh sách ca trực theo ngày {parseYMDLocal(selectedDate).toLocaleDateString("vi-VN")}
-                    </h2>
+                <h2 className="text-lg font-bold text-[#121417] dark:text-white mb-6 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#3C81C6]">calendar_view_day</span>
+                    Lịch trực ngày {parseYMDLocal(selectedDate).toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" })}
+                </h2>
 
                 {loading ? (
                     <div className="flex items-center justify-center py-12">
                         <div className="w-8 h-8 border-4 border-[#3C81C6] border-t-transparent rounded-full animate-spin"></div>
                     </div>
                 ) : daySchedules.length > 0 ? (
-                    <div className="space-y-3">
-                        {daySchedules.map((schedule) => {
-                            const shiftName = (schedule as any).shiftName ?? (schedule as any).shift_name ?? "Ca trực";
-                            const startTime = (schedule as any).startTime ?? (schedule as any).start_time ?? "";
-                            const endTime = (schedule as any).endTime ?? (schedule as any).end_time ?? "";
-                            const status = String((schedule as any).status ?? "").toUpperCase();
-                            const suspended = status === "SUSPENDED";
-                            return (
-                                <div
-                                    key={schedule.id}
-                                    className="flex items-center justify-between p-4 border border-[#dde0e4] dark:border-[#2d353e] rounded-xl bg-gray-50/50 dark:bg-gray-800/30 hover:border-[#3C81C6] transition-colors"
-                                >
-                                    <div className="flex-1">
-                                        <p className="text-sm font-bold text-[#121417] dark:text-white">{shiftName}</p>
-                                        <p className="text-xs text-[#687582] dark:text-gray-400">
-                                            {startTime && endTime ? `${startTime} - ${endTime}` : "—"}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                                suspended
-                                                    ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
-                                                    : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                                            }`}
-                                        >
-                                            {suspended ? "Suspended" : "Active"}
-                                        </span>
-                                        {isAdmin ? (
-                                            <div className="flex items-center gap-1">
-                                                <button
-                                                    onClick={() => openEdit(schedule)}
-                                                    className="p-2 text-[#687582] hover:text-[#3C81C6] hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                                    title="Sửa"
-                                                >
-                                                    <span className="material-symbols-outlined text-[18px]">edit</span>
-                                                </button>
-                                                {suspended ? (
-                                                    <button
-                                                        onClick={() => handleResume(schedule.id)}
-                                                        className="p-2 text-[#687582] hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                                                        title="Resume"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[18px]">play_circle</span>
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handleSuspend(schedule.id)}
-                                                        className="p-2 text-[#687582] hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
-                                                        title="Suspend"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[18px]">pause_circle</span>
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={() => handleDelete(schedule.id)}
-                                                    className="p-2 text-[#687582] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                    title="Xóa"
-                                                >
-                                                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                                                </button>
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <DayTimeline
+                        schedules={daySchedules}
+                        isAdmin={isAdmin}
+                        onEdit={openEdit}
+                        onSuspend={handleSuspend}
+                        onResume={handleResume}
+                        onDelete={handleDelete}
+                    />
                 ) : (
-                    <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-gray-50/50 dark:bg-gray-800/30 rounded-xl border border-[#dde0e4] dark:border-[#2d353e]">
+                    <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-gray-50/50 dark:bg-gray-800/30 rounded-xl border border-dashed border-[#dde0e4] dark:border-[#2d353e]">
                         <span className="material-symbols-outlined text-4xl text-gray-300 mb-3">calendar_today</span>
                         <p className="text-sm text-[#687582]">Không có ca trực nào trong ngày này</p>
                     </div>
@@ -1593,6 +1533,166 @@ function MonthCalendar({
                         </button>
                     );
                 })}
+            </div>
+        </div>
+    );
+}
+
+/* ─── Day timeline: hiển thị các ca theo giờ trong ngày ─── */
+function DayTimeline({
+    schedules,
+    isAdmin,
+    onEdit,
+    onSuspend,
+    onResume,
+    onDelete,
+}: {
+    schedules: StaffSchedule[];
+    isAdmin: boolean;
+    onEdit: (s: StaffSchedule) => void;
+    onSuspend: (id: string) => void;
+    onResume: (id: string) => void;
+    onDelete: (id: string) => void;
+}) {
+    const HOUR_START = 6;
+    const HOUR_END = 22;
+    const totalHours = HOUR_END - HOUR_START;
+    const hours = Array.from({ length: totalHours + 1 }, (_, i) => HOUR_START + i);
+
+    const parseHourMinute = (value?: string): number | null => {
+        if (!value) return null;
+        const [h, m] = String(value).split(":");
+        const hour = Number(h);
+        const minute = Number(m ?? 0);
+        if (Number.isNaN(hour) || Number.isNaN(minute)) return null;
+        return hour + minute / 60;
+    };
+
+    const getShiftKind = (startHour: number): "morning" | "afternoon" | "night" => {
+        if (startHour < 12) return "morning";
+        if (startHour < 18) return "afternoon";
+        return "night";
+    };
+
+    const KIND_STYLE: Record<string, { bg: string; border: string; text: string; dot: string; icon: string; label: string }> = {
+        morning: { bg: "bg-amber-100 dark:bg-amber-900/30", border: "border-amber-300 dark:border-amber-700", text: "text-amber-800 dark:text-amber-200", dot: "bg-amber-500", icon: "wb_sunny", label: "Ca sáng" },
+        afternoon: { bg: "bg-sky-100 dark:bg-sky-900/30", border: "border-sky-300 dark:border-sky-700", text: "text-sky-800 dark:text-sky-200", dot: "bg-sky-500", icon: "wb_twilight", label: "Ca chiều" },
+        night: { bg: "bg-violet-100 dark:bg-violet-900/30", border: "border-violet-300 dark:border-violet-700", text: "text-violet-800 dark:text-violet-200", dot: "bg-violet-500", icon: "bedtime", label: "Ca tối" },
+    };
+
+    return (
+        <div className="space-y-4">
+            {/* Legend */}
+            <div className="flex items-center gap-4 text-xs">
+                {Object.entries(KIND_STYLE).map(([key, s]) => (
+                    <div key={key} className="flex items-center gap-1.5">
+                        <span className={`w-2.5 h-2.5 rounded-full ${s.dot}`} />
+                        <span className="text-[#687582] dark:text-gray-400">{s.label}</span>
+                    </div>
+                ))}
+            </div>
+
+            {/* Timeline */}
+            <div className="relative border border-[#dde0e4] dark:border-[#2d353e] rounded-xl bg-gray-50/30 dark:bg-gray-800/20 overflow-hidden">
+                {/* Hour grid */}
+                <div className="relative h-12 border-b border-[#dde0e4] dark:border-[#2d353e] bg-white dark:bg-[#1e242b]">
+                    {hours.map((h, idx) => (
+                        <div
+                            key={h}
+                            className="absolute top-0 bottom-0 flex items-center justify-center text-[11px] font-semibold text-[#687582] dark:text-gray-400"
+                            style={{ left: `${(idx / totalHours) * 100}%`, transform: "translateX(-50%)" }}
+                        >
+                            {h}:00
+                        </div>
+                    ))}
+                </div>
+
+                {/* Rows of shifts */}
+                <div className="relative p-3 space-y-2 min-h-[200px]">
+                    {/* Vertical hour lines */}
+                    {hours.map((h, idx) => (
+                        <div
+                            key={`line-${h}`}
+                            className="absolute top-0 bottom-0 w-px bg-[#dde0e4]/50 dark:bg-[#2d353e]/50 pointer-events-none"
+                            style={{ left: `${(idx / totalHours) * 100}%` }}
+                        />
+                    ))}
+
+                    {schedules.map((schedule, idx) => {
+                        const shiftName = (schedule as any).shiftName ?? (schedule as any).shift_name ?? "Ca trực";
+                        const startTime = String((schedule as any).startTime ?? (schedule as any).start_time ?? "").slice(0, 5);
+                        const endTime = String((schedule as any).endTime ?? (schedule as any).end_time ?? "").slice(0, 5);
+                        const status = String((schedule as any).status ?? "").toUpperCase();
+                        const suspended = status === "SUSPENDED";
+
+                        const startVal = parseHourMinute(startTime) ?? HOUR_START;
+                        const endVal = parseHourMinute(endTime) ?? startVal + 1;
+                        const clampedStart = Math.max(HOUR_START, Math.min(HOUR_END, startVal));
+                        const clampedEnd = Math.max(HOUR_START, Math.min(HOUR_END, endVal));
+                        const leftPct = ((clampedStart - HOUR_START) / totalHours) * 100;
+                        const widthPct = Math.max(8, ((clampedEnd - clampedStart) / totalHours) * 100);
+
+                        const kind = getShiftKind(clampedStart);
+                        const style = KIND_STYLE[kind];
+
+                        return (
+                            <div key={schedule.id ?? idx} className="relative h-16">
+                                <div
+                                    className={`absolute top-0 bottom-0 rounded-xl border-2 ${style.bg} ${style.border} px-3 py-2 flex items-center gap-2 shadow-sm transition-all hover:shadow-md ${suspended ? "opacity-60" : ""}`}
+                                    style={{ left: `${leftPct}%`, width: `${widthPct}%`, minWidth: "120px" }}
+                                >
+                                    <span className={`material-symbols-outlined text-[20px] ${style.text} flex-shrink-0`}>{style.icon}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className={`text-xs font-bold ${style.text} truncate`}>{shiftName}</p>
+                                        <p className={`text-[11px] ${style.text} opacity-80 truncate`}>
+                                            {startTime && endTime ? `${startTime} – ${endTime}` : "—"}
+                                        </p>
+                                    </div>
+                                    {suspended ? (
+                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-white/60 dark:bg-black/30 text-orange-700 dark:text-orange-300 flex-shrink-0">
+                                            Tạm dừng
+                                        </span>
+                                    ) : null}
+                                    {isAdmin ? (
+                                        <div className="flex items-center gap-0.5 flex-shrink-0 opacity-70 hover:opacity-100">
+                                            <button
+                                                onClick={() => onEdit(schedule)}
+                                                className="p-1 rounded hover:bg-white/60 dark:hover:bg-black/30 transition-colors"
+                                                title="Sửa"
+                                            >
+                                                <span className={`material-symbols-outlined text-[16px] ${style.text}`}>edit</span>
+                                            </button>
+                                            {suspended ? (
+                                                <button
+                                                    onClick={() => onResume(schedule.id)}
+                                                    className="p-1 rounded hover:bg-white/60 dark:hover:bg-black/30 transition-colors"
+                                                    title="Hoạt động lại"
+                                                >
+                                                    <span className={`material-symbols-outlined text-[16px] ${style.text}`}>play_circle</span>
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => onSuspend(schedule.id)}
+                                                    className="p-1 rounded hover:bg-white/60 dark:hover:bg-black/30 transition-colors"
+                                                    title="Tạm dừng"
+                                                >
+                                                    <span className={`material-symbols-outlined text-[16px] ${style.text}`}>pause_circle</span>
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => onDelete(schedule.id)}
+                                                className="p-1 rounded hover:bg-white/60 dark:hover:bg-black/30 transition-colors"
+                                                title="Xóa"
+                                            >
+                                                <span className={`material-symbols-outlined text-[16px] ${style.text}`}>delete</span>
+                                            </button>
+                                        </div>
+                                    ) : null}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
