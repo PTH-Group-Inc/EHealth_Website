@@ -44,7 +44,7 @@ describe("AISearchBar", () => {
 
         render(<AISearchBar />);
 
-        fireEvent.change(screen.getByPlaceholderText("AI search..."), {
+        fireEvent.change(screen.getByPlaceholderText("Tìm kiếm với AI..."), {
             target: { value: "aspirin" },
         });
 
