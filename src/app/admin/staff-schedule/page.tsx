@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import axiosClient from "@/api/axiosClient";
+import { STAFF_ENDPOINTS, STAFF_SCHEDULE_ENDPOINTS } from "@/api/endpoints";
 import { staffScheduleService, type StaffSchedule } from "@/services/staffScheduleService";
 import { workShiftService, type WorkShift } from "@/services/workShiftService";
 import { useToast } from "@/contexts/ToastContext";
@@ -21,6 +23,16 @@ export default function StaffSchedulePage() {
     const [staffFilter, setStaffFilter] = useState("");
     const [shiftFilter, setShiftFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [showAutoModal, setShowAutoModal] = useState(false);
+    const [autoForm, setAutoForm] = useState({
+        from: new Date().toISOString().slice(0, 10),
+        to: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+        role: "DOCTOR",
+        includeWeekends: false,
+        shiftsPerDay: 2,
+    });
+    const [autoRunning, setAutoRunning] = useState(false);
+    const [autoProgress, setAutoProgress] = useState<{ done: number; total: number; error: number }>({ done: 0, total: 0, error: 0 });
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -91,6 +103,76 @@ export default function StaffSchedulePage() {
     const goNext = () => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
     const goToday = () => { const d = new Date(); setMonth(new Date(d.getFullYear(), d.getMonth(), 1)); };
 
+    const handleAutoAssign = async () => {
+        if (!autoForm.from || !autoForm.to) { toast.warning("Chọn khoảng thời gian."); return; }
+        if (autoForm.from > autoForm.to) { toast.warning("Ngày bắt đầu phải trước ngày kết thúc."); return; }
+        const activeShifts = shifts.filter((s) => s.isActive).slice(0, Math.max(1, autoForm.shiftsPerDay));
+        if (activeShifts.length === 0) { toast.warning("Không có ca làm việc nào hoạt động. Cấu hình ca trước."); return; }
+
+        setAutoRunning(true);
+        setAutoProgress({ done: 0, total: 0, error: 0 });
+
+        try {
+            const staffRes = await axiosClient.get(STAFF_ENDPOINTS.LIST, { params: { limit: 500, role: autoForm.role } });
+            const raw: any[] = staffRes.data?.data?.items ?? staffRes.data?.data ?? staffRes.data?.items ?? staffRes.data ?? [];
+            const staffList = (Array.isArray(raw) ? raw : []).filter((s: any) => {
+                const r = String(s.role ?? s.position ?? "").toUpperCase();
+                return r.includes(autoForm.role.toUpperCase()) || autoForm.role === "ALL";
+            });
+            if (staffList.length === 0) { toast.warning(`Không có nhân sự role=${autoForm.role}.`); setAutoRunning(false); return; }
+
+            const start = new Date(autoForm.from);
+            const end = new Date(autoForm.to);
+            const days: string[] = [];
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const dow = d.getDay();
+                if (!autoForm.includeWeekends && (dow === 0 || dow === 6)) continue;
+                days.push(d.toISOString().slice(0, 10));
+            }
+
+            type Assignment = { workDate: string; staffId: string; shiftId: string };
+            const assignments: Assignment[] = [];
+            let staffIdx = 0;
+            for (const day of days) {
+                for (const shift of activeShifts) {
+                    const staff = staffList[staffIdx % staffList.length];
+                    assignments.push({
+                        workDate: day,
+                        staffId: String(staff.staffs_id ?? staff.staff_id ?? staff.id ?? ""),
+                        shiftId: shift.id,
+                    });
+                    staffIdx += 1;
+                }
+            }
+
+            setAutoProgress({ done: 0, total: assignments.length, error: 0 });
+
+            let done = 0, errors = 0;
+            for (const a of assignments) {
+                try {
+                    await axiosClient.post(STAFF_SCHEDULE_ENDPOINTS.CREATE, {
+                        staff_id: a.staffId,
+                        shift_id: a.shiftId,
+                        work_date: a.workDate,
+                        status: "SCHEDULED",
+                    });
+                    done += 1;
+                } catch {
+                    errors += 1;
+                }
+                setAutoProgress({ done, total: assignments.length, error: errors });
+            }
+
+            toast.success(`Đã tạo ${done}/${assignments.length} lịch (lỗi: ${errors}).`);
+            setShowAutoModal(false);
+            await load();
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message ?? "Lỗi khi auto-assign.");
+        } finally {
+            setAutoRunning(false);
+        }
+    };
+
     return (
         <div className="p-6 space-y-6">
             <PageHeader
@@ -99,17 +181,24 @@ export default function StaffSchedulePage() {
                 icon="calendar_month"
                 breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
-                    <div className="inline-flex bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl p-1">
-                        <button onClick={() => setView("calendar")}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${view === "calendar" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] dark:text-gray-400"}`}>
-                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>calendar_month</span>
-                            Calendar
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setShowAutoModal(true)}
+                            className="inline-flex items-center gap-1 px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-violet-500 to-fuchsia-600 hover:shadow-lg rounded-xl transition-all">
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>auto_awesome</span>
+                            AI tự động phân lịch
                         </button>
-                        <button onClick={() => setView("list")}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${view === "list" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] dark:text-gray-400"}`}>
-                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>list</span>
-                            Danh sách
-                        </button>
+                        <div className="inline-flex bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl p-1">
+                            <button onClick={() => setView("calendar")}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${view === "calendar" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] dark:text-gray-400"}`}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>calendar_month</span>
+                                Calendar
+                            </button>
+                            <button onClick={() => setView("list")}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${view === "list" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] dark:text-gray-400"}`}>
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>list</span>
+                                Danh sách
+                            </button>
+                        </div>
                     </div>
                 }
             />
@@ -195,6 +284,72 @@ export default function StaffSchedulePage() {
                             ))}
                         </tbody>
                     </table>
+                </div>
+            )}
+
+            {showAutoModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => !autoRunning && setShowAutoModal(false)}>
+                    <div className="bg-white dark:bg-[#1e242b] rounded-2xl shadow-xl max-w-lg w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-[#121417] dark:text-white mb-1 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-violet-600">auto_awesome</span>
+                            AI tự động phân lịch
+                        </h3>
+                        <p className="text-xs text-[#687582] mb-4">Phân phối đều nhân sự vào các ca trong khoảng thời gian. Round-robin theo role.</p>
+
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Từ ngày</label>
+                                    <input type="date" value={autoForm.from} onChange={(e) => setAutoForm({ ...autoForm, from: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Đến ngày</label>
+                                    <input type="date" value={autoForm.to} onChange={(e) => setAutoForm({ ...autoForm, to: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Vai trò</label>
+                                <select value={autoForm.role} onChange={(e) => setAutoForm({ ...autoForm, role: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white">
+                                    <option value="DOCTOR">Bác sĩ</option>
+                                    <option value="NURSE">Y tá</option>
+                                    <option value="RECEPTIONIST">Lễ tân</option>
+                                    <option value="PHARMACIST">Dược sĩ</option>
+                                    <option value="ALL">Tất cả nhân sự</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Số ca/ngày (lấy {Math.max(1, autoForm.shiftsPerDay)} ca đầu)</label>
+                                <input type="number" min={1} max={shifts.length || 3} value={autoForm.shiftsPerDay}
+                                    onChange={(e) => setAutoForm({ ...autoForm, shiftsPerDay: Math.max(1, Number(e.target.value) || 1) })}
+                                    className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
+                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" checked={autoForm.includeWeekends} onChange={(e) => setAutoForm({ ...autoForm, includeWeekends: e.target.checked })} className="w-4 h-4" />
+                                <span className="text-sm text-[#121417] dark:text-white">Bao gồm cuối tuần (T7, CN)</span>
+                            </label>
+                            {autoRunning && autoProgress.total > 0 && (
+                                <div className="p-3 rounded-xl bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs font-medium text-violet-700 dark:text-violet-300">Đang tạo lịch...</span>
+                                        <span className="text-xs text-violet-700 dark:text-violet-300">{autoProgress.done}/{autoProgress.total} (lỗi: {autoProgress.error})</span>
+                                    </div>
+                                    <div className="w-full h-2 bg-violet-100 dark:bg-violet-900/40 rounded-full overflow-hidden">
+                                        <div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-600 transition-all" style={{ width: `${(autoProgress.done / autoProgress.total) * 100}%` }} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex items-center justify-end gap-2 mt-5 pt-4 border-t border-[#dde0e4] dark:border-[#2d353e]">
+                            <button onClick={() => setShowAutoModal(false)} disabled={autoRunning} className="px-4 py-2 text-sm text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl disabled:opacity-50">Hủy</button>
+                            <button onClick={handleAutoAssign} disabled={autoRunning} className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-fuchsia-600 rounded-xl shadow-sm hover:shadow-md disabled:opacity-50 inline-flex items-center gap-1">
+                                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>auto_awesome</span>
+                                {autoRunning ? "Đang chạy..." : "Bắt đầu phân lịch"}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
