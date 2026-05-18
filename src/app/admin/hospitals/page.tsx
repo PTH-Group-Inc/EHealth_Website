@@ -24,6 +24,7 @@ export default function HospitalsPage() {
     const tc = useTranslations("common");
     const [hospitals, setHospitals] = useState<Hospital[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
 
     useEffect(() => {
         facilityService.getList({ limit: 100 })
@@ -113,7 +114,7 @@ export default function HospitalsPage() {
                 {/* Hospital Cards */}
                 <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {filtered.map((hospital) => (
-                        <div key={hospital.id} className="p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all">
+                        <div key={hospital.id} onClick={() => setSelectedHospital(hospital)} className="p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-[#3C81C6] cursor-pointer transition-all">
                             <div className="flex items-start justify-between mb-3">
                                 <div>
                                     <h3 className="text-base font-bold text-[#121417] dark:text-white">{hospital.name}</h3>
@@ -145,6 +146,64 @@ export default function HospitalsPage() {
                     ))}
                 </div>
             </div>
+
+            {selectedHospital && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4" onClick={() => setSelectedHospital(null)}>
+                    <div className="w-full max-w-2xl bg-white dark:bg-[#1e242b] rounded-2xl shadow-xl border border-[#dde0e4] dark:border-[#2d353e] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="px-6 py-4 border-b border-[#dde0e4] dark:border-[#2d353e] flex items-center justify-between">
+                            <h3 className="text-base font-bold text-[#121417] dark:text-white flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#3C81C6]">domain</span>
+                                {selectedHospital.name}
+                            </h3>
+                            <button onClick={() => setSelectedHospital(null)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                <span className="material-symbols-outlined text-[20px] text-[#687582]">close</span>
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-5">
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm text-[#687582] dark:text-gray-400">{selectedHospital.code} • {selectedHospital.type}</p>
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${selectedHospital.status === "active" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"}`}>
+                                    {selectedHospital.status === "active" ? t("statusLabel.active") : t("statusLabel.inactive")}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+                                    <p className="text-xs text-[#687582] dark:text-gray-400 mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">call</span>Số điện thoại</p>
+                                    <p className="text-sm font-semibold text-[#121417] dark:text-white">{selectedHospital.phone || "—"}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+                                    <p className="text-xs text-[#687582] dark:text-gray-400 mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">mail</span>Email</p>
+                                    <p className="text-sm font-semibold text-[#121417] dark:text-white">{selectedHospital.email || "—"}</p>
+                                </div>
+                                <div className="sm:col-span-2 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+                                    <p className="text-xs text-[#687582] dark:text-gray-400 mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">location_on</span>Địa chỉ</p>
+                                    <p className="text-sm font-semibold text-[#121417] dark:text-white">{selectedHospital.address || "—"}</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
+                                    <p className="text-xs text-blue-700 dark:text-blue-400 mb-1">{t("units.doctors")}</p>
+                                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-200">{selectedHospital.doctorCount}</p>
+                                </div>
+                                <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800">
+                                    <p className="text-xs text-purple-700 dark:text-purple-400 mb-1">{t("units.departments")}</p>
+                                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">{selectedHospital.departmentCount}</p>
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2 pt-2">
+                                <Link href={`/admin/branches?facilityId=${selectedHospital.id}`} className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-semibold transition-all">
+                                    <span className="material-symbols-outlined text-[18px]">apartment</span>
+                                    Xem chi nhánh
+                                </Link>
+                                <Link href={`/admin/departments?facilityId=${selectedHospital.id}`} className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-[#dde0e4] dark:border-[#2d353e] text-[#121417] dark:text-white rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                                    <span className="material-symbols-outlined text-[18px]">workspaces</span>
+                                    Xem khoa phòng
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
