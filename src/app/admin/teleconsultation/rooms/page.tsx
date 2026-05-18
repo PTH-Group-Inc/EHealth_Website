@@ -86,7 +86,7 @@ export default function TeleRoomsPage() {
                 actions={
                     <button onClick={load} className="px-4 py-2 text-sm font-semibold text-[#3C81C6] border border-[#3C81C6]/40 hover:bg-[#3C81C6]/10 rounded-xl inline-flex items-center gap-1">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>refresh</span>
-                        Refresh
+                        Làm mới
                     </button>
                 }
             />

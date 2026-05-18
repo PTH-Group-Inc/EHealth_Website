@@ -71,7 +71,7 @@ export default function TeleQualityPage() {
                 title={tr("title")}
                 subtitle={tr("subtitle")}
                 icon="star_rate"
-                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: "Telemedicine" }, { label: tr("title") }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: "Khám từ xa" }, { label: tr("title") }]}
             />
 
             <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm p-1.5 inline-flex gap-1">
@@ -133,7 +133,7 @@ function OverviewTab() {
                     <h3 className="font-bold text-[#121417] dark:text-white mb-3 flex items-center gap-2"><span className="material-symbols-outlined text-amber-600">star_rate</span>Đánh giá</h3>
                     <div className="space-y-2 text-sm">
                         <div className="flex items-center justify-between"><span className="text-[#687582]">Điểm TB</span><span className="font-mono font-semibold">{overview.average_rating ?? 0}/5</span></div>
-                        <div className="flex items-center justify-between"><span className="text-[#687582]">Tổng review</span><span className="font-mono font-semibold">{overview.total_reviews ?? 0}</span></div>
+                        <div className="flex items-center justify-between"><span className="text-[#687582]">Tổng đánh giá</span><span className="font-mono font-semibold">{overview.total_reviews ?? 0}</span></div>
                         <div className="flex items-center justify-between"><span className="text-[#687582]">Tỉ lệ 5 sao</span><span className="font-mono font-semibold text-emerald-600">{overview.five_star_percentage ?? 0}%</span></div>
                     </div>
                 </div>

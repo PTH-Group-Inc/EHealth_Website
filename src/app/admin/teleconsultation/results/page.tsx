@@ -104,7 +104,7 @@ export default function TeleResultsPage() {
                 <StatCard label="Tổng kết quả" value={stats.total} icon="medical_information" color="blue" loading={loading} />
                 <StatCard label="Đã ký" value={stats.signed} icon="check_circle" color="emerald" loading={loading} />
                 <StatCard label="Chờ ký" value={stats.unsigned} icon="hourglass_top" color="amber" loading={loading} />
-                <StatCard label="Cần follow-up" value={stats.followUp} icon="event_repeat" color="violet" loading={loading} />
+                <StatCard label="Cần tái khám" value={stats.followUp} icon="event_repeat" color="violet" loading={loading} />
             </div>
 
             <FilterBar
@@ -116,7 +116,7 @@ export default function TeleResultsPage() {
                     options: [
                         { value: "all", label: "Tất cả" },
                         { value: "unsigned", label: "Chưa ký" },
-                        { value: "follow-up", label: "Cần follow-up" },
+                        { value: "follow-up", label: "Cần tái khám" },
                     ],
                 }]}
                 onReset={() => { setSearch(""); setFilter("all"); }}
@@ -155,7 +155,7 @@ export default function TeleResultsPage() {
                                                 <div className={`inline-flex text-[10px] font-bold px-2 py-1 rounded-md w-fit ${r.isSigned ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                                                     {r.isSigned ? "Đã ký" : "Chưa ký"}
                                                 </div>
-                                                {r.needsFollowUp && <div className="inline-flex text-[10px] font-bold px-2 py-0.5 rounded-md bg-violet-100 text-violet-700 w-fit">Follow-up</div>}
+                                                {r.needsFollowUp && <div className="inline-flex text-[10px] font-bold px-2 py-0.5 rounded-md bg-violet-100 text-violet-700 w-fit">Tái khám</div>}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-xs text-[#687582]">{formatDT(r.completedAt)}</td>

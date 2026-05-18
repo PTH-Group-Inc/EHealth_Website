@@ -74,7 +74,7 @@ export default function TeleFollowUpsPage() {
             const { data } = unwrapList<any>(res);
             setItems(data.map(mapPlan));
         } catch {
-            setError("Không tải được kế hoạch follow-up.");
+            setError("Không tải được kế hoạch tái khám.");
             setItems([]);
         } finally { setLoading(false); }
     }, [filter]);
@@ -95,7 +95,7 @@ export default function TeleFollowUpsPage() {
     }), [items]);
 
     const handleComplete = async (p: FollowUpPlan) => {
-        if (!confirm(`Hoàn tất plan của ${p.patientName}?`)) return;
+        if (!confirm(`Hoàn tất kế hoạch của ${p.patientName}?`)) return;
         try {
             await axiosClient.put(TELE_FOLLOWUP_ENDPOINTS.COMPLETE_PLAN(p.id));
             toast.success("Đã hoàn tất."); await load();
@@ -115,12 +115,12 @@ export default function TeleFollowUpsPage() {
                 title={t("title")}
                 subtitle={t("subtitle")}
                 icon="event_repeat"
-                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: "Telemedicine" }, { label: t("title") }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: "Khám từ xa" }, { label: t("title") }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Tổng plan" value={stats.total} icon="event_repeat" color="blue" loading={loading} />
-                <StatCard label="Đã lên KH" value={stats.planned} icon="event_note" color="amber" loading={loading} />
+                <StatCard label="Tổng kế hoạch" value={stats.total} icon="event_repeat" color="blue" loading={loading} />
+                <StatCard label="Đã lên kế hoạch" value={stats.planned} icon="event_note" color="amber" loading={loading} />
                 <StatCard label="Hoàn tất" value={stats.completed} icon="check_circle" color="emerald" loading={loading} />
                 <StatCard label="Cần chú ý" value={stats.attention} icon="warning" color="red" loading={loading} />
             </div>
@@ -145,7 +145,7 @@ export default function TeleFollowUpsPage() {
             {loading ? (
                 <div className="space-y-3">{[0, 1, 2, 3].map((i) => <div key={i} className="h-16 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />)}</div>
             ) : filtered.length === 0 ? (
-                <EmptyState icon="event_repeat" title="Chưa có kế hoạch follow-up" description={items.length === 0 ? "Chưa có plan follow-up nào." : "Không khớp bộ lọc."} />
+                <EmptyState icon="event_repeat" title="Chưa có kế hoạch tái khám" description={items.length === 0 ? "Chưa có kế hoạch tái khám nào." : "Không khớp bộ lọc."} />
             ) : (
                 <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
@@ -157,7 +157,7 @@ export default function TeleFollowUpsPage() {
                                     <th className="text-left px-4 py-3 font-semibold text-[#687582]">Loại</th>
                                     <th className="text-left px-4 py-3 font-semibold text-[#687582]">Ngày hẹn</th>
                                     <th className="text-left px-4 py-3 font-semibold text-[#687582]">Trạng thái</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-[#687582]">Update</th>
+                                    <th className="text-right px-4 py-3 font-semibold text-[#687582]">Cập nhật</th>
                                     <th className="text-right px-4 py-3 font-semibold text-[#687582]">Thao tác</th>
                                 </tr>
                             </thead>

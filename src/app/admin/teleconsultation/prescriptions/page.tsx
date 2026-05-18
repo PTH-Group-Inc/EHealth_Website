@@ -108,7 +108,7 @@ export default function TelePrescriptionsPage() {
                 title={t("title")}
                 subtitle={t("subtitle")}
                 icon="medication"
-                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: "Telemedicine" }, { label: t("title") }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: "Khám từ xa" }, { label: t("title") }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
