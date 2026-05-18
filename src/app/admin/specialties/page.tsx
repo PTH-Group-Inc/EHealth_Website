@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
-import { SPECIALTY_ENDPOINTS } from "@/api/endpoints";
+import { SPECIALTY_ENDPOINTS, SPECIALTY_SERVICE_ENDPOINTS, STAFF_ENDPOINTS, MEDICAL_SERVICE_MANAGEMENT_ENDPOINTS } from "@/api/endpoints";
 import { unwrapList } from "@/api/response";
 import { useToast } from "@/contexts/ToastContext";
 import { PageHeader, FilterBar, EmptyState, StatCard } from "@/components/shared/layout";
@@ -59,13 +59,60 @@ export default function SpecialtiesPage() {
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState<FormState>(EMPTY_FORM);
     const [saving, setSaving] = useState(false);
+    const [assignFor, setAssignFor] = useState<Specialty | null>(null);
+    const [allServices, setAllServices] = useState<{ id: string; name: string; code?: string }[]>([]);
+    const [assignedIds, setAssignedIds] = useState<Set<string>>(new Set());
+    const [initialAssignedIds, setInitialAssignedIds] = useState<Set<string>>(new Set());
+    const [assignSaving, setAssignSaving] = useState(false);
+    const [assignSearch, setAssignSearch] = useState("");
 
     const load = useCallback(async () => {
         setLoading(true); setError(null);
         try {
-            const res = await axiosClient.get(SPECIALTY_ENDPOINTS.LIST, { params: { limit: 200 } });
-            const { data } = unwrapList<any>(res);
-            setItems(data.map(mapSpecialty));
+            const [specRes, staffRes] = await Promise.allSettled([
+                axiosClient.get(SPECIALTY_ENDPOINTS.LIST, { params: { limit: 200 } }),
+                axiosClient.get(STAFF_ENDPOINTS.LIST, { params: { limit: 500 } }),
+            ]);
+
+            if (specRes.status !== "fulfilled") {
+                setError(t("toast.loadError"));
+                setItems([]);
+                return;
+            }
+            const { data } = unwrapList<any>(specRes.value);
+            const baseItems = data.map(mapSpecialty);
+
+            const staffData: any[] = staffRes.status === "fulfilled"
+                ? (staffRes.value.data?.data?.items ?? staffRes.value.data?.data ?? staffRes.value.data?.items ?? staffRes.value.data ?? [])
+                : [];
+            const doctorBySpec = new Map<string, number>();
+            for (const s of (Array.isArray(staffData) ? staffData : [])) {
+                const sid = String(s.specialty_id ?? s.specialtyId ?? s.specialties_id ?? "");
+                const role = String(s.role ?? s.position ?? "").toUpperCase();
+                if (!sid) continue;
+                if (role.includes("DOCTOR") || role.includes("BAC_SI") || role === "BS") {
+                    doctorBySpec.set(sid, (doctorBySpec.get(sid) ?? 0) + 1);
+                }
+            }
+
+            const withDoctors = baseItems.map((s) => ({
+                ...s,
+                doctorCount: s.doctorCount && s.doctorCount > 0 ? s.doctorCount : (doctorBySpec.get(s.id) ?? 0),
+            }));
+
+            const svcCounts = await Promise.allSettled(
+                withDoctors.map((s) => axiosClient.get(SPECIALTY_SERVICE_ENDPOINTS.SERVICES_BY_SPECIALTY(s.id)))
+            );
+            const finalItems = withDoctors.map((s, idx) => {
+                const r = svcCounts[idx];
+                if (r.status === "fulfilled") {
+                    const raw = r.value.data?.data ?? r.value.data?.items ?? r.value.data ?? [];
+                    const arr = Array.isArray(raw) ? raw : (raw?.data ?? raw?.items ?? []);
+                    return { ...s, serviceCount: Array.isArray(arr) ? arr.length : (s.serviceCount ?? 0) };
+                }
+                return s;
+            });
+            setItems(finalItems);
         } catch {
             setError(t("toast.loadError"));
             setItems([]);
@@ -86,6 +133,66 @@ export default function SpecialtiesPage() {
         doctors: items.reduce((s, x) => s + (x.doctorCount ?? 0), 0),
         services: items.reduce((s, x) => s + (x.serviceCount ?? 0), 0),
     }), [items]);
+
+    const openAssign = async (s: Specialty) => {
+        setAssignFor(s);
+        setAssignSearch("");
+        try {
+            const [allRes, ownRes] = await Promise.allSettled([
+                axiosClient.get(MEDICAL_SERVICE_MANAGEMENT_ENDPOINTS.MASTER_LIST, { params: { limit: 500 } }),
+                axiosClient.get(SPECIALTY_SERVICE_ENDPOINTS.SERVICES_BY_SPECIALTY(s.id)),
+            ]);
+            const allRaw: any[] = allRes.status === "fulfilled"
+                ? (allRes.value.data?.data?.items ?? allRes.value.data?.data ?? allRes.value.data?.items ?? allRes.value.data ?? [])
+                : [];
+            setAllServices((Array.isArray(allRaw) ? allRaw : []).map((x: any) => ({
+                id: String(x.services_id ?? x.service_id ?? x.id ?? ""),
+                name: x.name ?? x.service_name ?? "",
+                code: x.code ?? x.service_code ?? "",
+            })).filter((x) => x.id));
+            const ownRaw: any[] = ownRes.status === "fulfilled"
+                ? (ownRes.value.data?.data?.items ?? ownRes.value.data?.data ?? ownRes.value.data?.items ?? ownRes.value.data ?? [])
+                : [];
+            const ids = new Set<string>(
+                (Array.isArray(ownRaw) ? ownRaw : []).map((x: any) => String(x.services_id ?? x.service_id ?? x.id ?? "")).filter(Boolean)
+            );
+            setAssignedIds(new Set(ids));
+            setInitialAssignedIds(new Set(ids));
+        } catch {
+            setAllServices([]);
+            setAssignedIds(new Set());
+            setInitialAssignedIds(new Set());
+        }
+    };
+
+    const handleAssignSave = async () => {
+        if (!assignFor) return;
+        setAssignSaving(true);
+        try {
+            const toAdd = Array.from(assignedIds).filter((id) => !initialAssignedIds.has(id));
+            const toRemove = Array.from(initialAssignedIds).filter((id) => !assignedIds.has(id));
+            await Promise.all([
+                ...toAdd.map((sid) =>
+                    axiosClient.post(SPECIALTY_SERVICE_ENDPOINTS.ASSIGN_SERVICES(assignFor.id), { service_id: sid })
+                ),
+                ...toRemove.map((sid) =>
+                    axiosClient.delete(SPECIALTY_SERVICE_ENDPOINTS.REMOVE_SERVICE(assignFor.id, sid))
+                ),
+            ]);
+            toast.success(`Đã cập nhật ${toAdd.length + toRemove.length} dịch vụ.`);
+            setAssignFor(null);
+            await load();
+        } catch (err: any) {
+            toast.error(translateError(err, tErr));
+        } finally { setAssignSaving(false); }
+    };
+
+    const toggleAssign = (id: string) => {
+        const next = new Set(assignedIds);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        setAssignedIds(next);
+    };
 
     const openCreate = () => { setForm(EMPTY_FORM); setShowModal(true); };
     const openEdit = (s: Specialty) => {
@@ -185,13 +292,19 @@ export default function SpecialtiesPage() {
                                         <div className="text-[10px] text-[#687582]">{t("units.services")}</div>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-end gap-1 pt-3 border-t border-gray-50 dark:border-gray-800 mt-3">
-                                    <button onClick={() => openEdit(s)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/[0.1] rounded-md" title={tc("table.editTitle")}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
+                                <div className="flex items-center justify-between gap-1 pt-3 border-t border-gray-50 dark:border-gray-800 mt-3">
+                                    <button onClick={() => openAssign(s)} className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded-md" title="Gắn dịch vụ vào chuyên khoa">
+                                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>link</span>
+                                        Gắn dịch vụ
                                     </button>
-                                    <button onClick={() => handleDelete(s)} className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md" title={tc("table.deleteTitle")}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>delete</span>
-                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        <button onClick={() => openEdit(s)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/[0.1] rounded-md" title={tc("table.editTitle")}>
+                                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
+                                        </button>
+                                        <button onClick={() => handleDelete(s)} className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md" title={tc("table.deleteTitle")}>
+                                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>delete</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -236,6 +349,45 @@ export default function SpecialtiesPage() {
                             <button onClick={handleSave} disabled={saving} className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md disabled:opacity-50">
                                 {saving ? tc("form.saving") : tc("actions.save")}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {assignFor && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setAssignFor(null)}>
+                    <div className="bg-white dark:bg-[#1e242b] rounded-2xl shadow-xl max-w-2xl w-full p-5 max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-[#121417] dark:text-white mb-1 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-violet-600">link</span>
+                            Gắn dịch vụ vào {assignFor.name}
+                        </h3>
+                        <p className="text-xs text-[#687582] mb-3">Chọn các dịch vụ thuộc chuyên khoa này.</p>
+                        <input value={assignSearch} onChange={(e) => setAssignSearch(e.target.value)} placeholder="Tìm dịch vụ..."
+                            className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white mb-3" />
+                        <div className="flex-1 overflow-y-auto border border-[#dde0e4] dark:border-[#2d353e] rounded-xl p-2 space-y-1 min-h-[200px]">
+                            {allServices
+                                .filter((s) => !assignSearch.trim() || `${s.code ?? ""} ${s.name}`.toLowerCase().includes(assignSearch.toLowerCase()))
+                                .map((s) => (
+                                    <label key={s.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg cursor-pointer">
+                                        <input type="checkbox" checked={assignedIds.has(s.id)} onChange={() => toggleAssign(s.id)} className="w-4 h-4 rounded border-[#dde0e4] text-[#3C81C6]" />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="text-sm font-medium text-[#121417] dark:text-white truncate">{s.name}</div>
+                                            {s.code && <div className="text-[10px] font-mono text-[#687582]">{s.code}</div>}
+                                        </div>
+                                    </label>
+                                ))}
+                            {allServices.length === 0 && (
+                                <p className="text-sm text-[#687582] text-center py-8">Không tải được danh sách dịch vụ.</p>
+                            )}
+                        </div>
+                        <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-[#dde0e4] dark:border-[#2d353e]">
+                            <span className="text-xs text-[#687582]">Đã chọn: <b className="text-[#121417] dark:text-white">{assignedIds.size}</b></span>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setAssignFor(null)} disabled={assignSaving} className="px-4 py-2 text-sm text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl">{tc("actions.cancel")}</button>
+                                <button onClick={handleAssignSave} disabled={assignSaving} className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-violet-700 rounded-xl shadow-sm hover:shadow-md disabled:opacity-50">
+                                    {assignSaving ? tc("form.saving") : "Lưu thay đổi"}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
