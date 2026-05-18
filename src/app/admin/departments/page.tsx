@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { UI_TEXT } from "@/constants/ui-text";
+import axiosClient from "@/api/axiosClient";
+import { STAFF_ENDPOINTS, APPOINTMENT_ENDPOINTS } from "@/api/endpoints";
 import * as departmentService from "@/services/departmentService";
 import { DEPARTMENT_STATUS } from "@/constants/status";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
@@ -26,26 +28,63 @@ export default function DepartmentsPage() {
         const fetchDepts = async () => {
             try {
                 setIsDataLoading(true);
-                const res: any = await departmentService.getDepartments({ limit: 100 });
-                const items = res?.data?.items ?? res?.items ?? res?.data?.data ?? res?.data ?? res ?? [];
+                const today = new Date().toISOString().slice(0, 10);
+                const [deptRes, staffRes, apptRes] = await Promise.allSettled([
+                    departmentService.getDepartments({ limit: 100 }),
+                    axiosClient.get(STAFF_ENDPOINTS.LIST, { params: { limit: 500 } }),
+                    axiosClient.get(APPOINTMENT_ENDPOINTS.LIST, { params: { limit: 500, date: today, from: today, to: today } }),
+                ]);
+
+                const deptRaw: any = deptRes.status === "fulfilled" ? deptRes.value : null;
+                const items = deptRaw?.data?.items ?? deptRaw?.items ?? deptRaw?.data?.data ?? deptRaw?.data ?? deptRaw ?? [];
+
+                const staffData: any[] = staffRes.status === "fulfilled"
+                    ? (staffRes.value.data?.data?.items ?? staffRes.value.data?.data ?? staffRes.value.data?.items ?? staffRes.value.data ?? [])
+                    : [];
+                const apptData: any[] = apptRes.status === "fulfilled"
+                    ? (apptRes.value.data?.data?.items ?? apptRes.value.data?.data ?? apptRes.value.data?.items ?? apptRes.value.data ?? [])
+                    : [];
+
+                const doctorByDept = new Map<string, number>();
+                const patientByDept = new Map<string, number>();
+                for (const s of (Array.isArray(staffData) ? staffData : [])) {
+                    const deptId = String(s.department_id ?? s.departmentId ?? s.departments_id ?? "");
+                    const role = String(s.role ?? s.position ?? s.staff_role ?? "").toUpperCase();
+                    if (!deptId) continue;
+                    if (role.includes("DOCTOR") || role.includes("BAC_SI") || role === "BS") {
+                        doctorByDept.set(deptId, (doctorByDept.get(deptId) ?? 0) + 1);
+                    }
+                }
+                for (const a of (Array.isArray(apptData) ? apptData : [])) {
+                    const deptId = String(a.department_id ?? a.departmentId ?? a.departments_id ?? "");
+                    if (!deptId) continue;
+                    patientByDept.set(deptId, (patientByDept.get(deptId) ?? 0) + 1);
+                }
+
                 if (Array.isArray(items)) {
-                    setDepartments(items.map((item: Record<string, unknown>) => ({
-                        id: (item.departments_id ?? item.id ?? "") as string,
-                        code: (item.code ?? "") as string,
-                        name: (item.name ?? "") as string,
-                        nameEn: (item.name_en ?? item.nameEn ?? "") as string,
-                        description: (item.description ?? "") as string,
-                        icon: (item.icon ?? "") as string,
-                        color: (item.color ?? "") as string,
-                        location: (item.location ?? "") as string,
-                        capacity: (item.capacity ?? 0) as number,
-                        doctorCount: (item.doctor_count ?? item.doctorCount ?? 0) as number,
-                        patientCount: (item.patient_count ?? item.patientCount ?? 0) as number,
-                        appointmentToday: (item.appointment_today ?? item.appointmentToday ?? 0) as number,
-                        status: (item.status ?? "ACTIVE") as string,
-                        createdAt: (item.created_at ?? item.createdAt ?? "") as string,
-                        updatedAt: (item.updated_at ?? item.updatedAt ?? "") as string,
-                    } as Department)));
+                    setDepartments(items.map((item: Record<string, unknown>) => {
+                        const id = (item.departments_id ?? item.id ?? "") as string;
+                        const beDoc = (item.doctor_count ?? item.doctorCount) as number | undefined;
+                        const bePat = (item.patient_count ?? item.patientCount) as number | undefined;
+                        const beAppt = (item.appointment_today ?? item.appointmentToday) as number | undefined;
+                        return {
+                            id,
+                            code: (item.code ?? "") as string,
+                            name: (item.name ?? "") as string,
+                            nameEn: (item.name_en ?? item.nameEn ?? "") as string,
+                            description: (item.description ?? "") as string,
+                            icon: (item.icon ?? "") as string,
+                            color: (item.color ?? "") as string,
+                            location: (item.location ?? "") as string,
+                            capacity: (item.capacity ?? 0) as number,
+                            doctorCount: beDoc != null && beDoc > 0 ? beDoc : (doctorByDept.get(id) ?? 0),
+                            patientCount: bePat != null && bePat > 0 ? bePat : (patientByDept.get(id) ?? 0),
+                            appointmentToday: beAppt != null && beAppt > 0 ? beAppt : (patientByDept.get(id) ?? 0),
+                            status: (item.status ?? "ACTIVE") as string,
+                            createdAt: (item.created_at ?? item.createdAt ?? "") as string,
+                            updatedAt: (item.updated_at ?? item.updatedAt ?? "") as string,
+                        } as Department;
+                    }));
                 }
             } catch (err) {
                 console.error('Lỗi tải danh sách khoa:', err);
