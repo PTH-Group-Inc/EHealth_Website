@@ -3,17 +3,20 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { scheduleService } from "@/services/scheduleService";
+import axiosClient from "@/api/axiosClient";
+import { STAFF_SCHEDULE_ENDPOINTS } from "@/api/endpoints";
 import { staffService, unwrapStaffList } from "@/services/staffService";
+import { workShiftService, type WorkShift } from "@/services/workShiftService";
 import { getDepartments, unwrapDepartments } from "@/services/departmentService";
 
 export default function NewSchedulePage() {
     const router = useRouter();
     const [saving, setSaving] = useState(false);
     const [doctorList, setDoctorList] = useState<{ id: string; name: string }[]>([]);
-    const [deptList, setDeptList] = useState<string[]>([]);
+    const [deptList, setDeptList] = useState<{ id: string; name: string }[]>([]);
+    const [shiftList, setShiftList] = useState<WorkShift[]>([]);
     const [formData, setFormData] = useState({
-        doctorId: "", department: "", shift: "MORNING",
+        doctorId: "", departmentId: "", shiftId: "",
         dateStart: new Date().toISOString().split("T")[0],
         dateEnd: "", repeat: "none", note: "",
     });
@@ -24,17 +27,29 @@ export default function NewSchedulePage() {
                 const items = unwrapStaffList(res);
                 setDoctorList(items.map(d => ({ id: d.id, name: d.fullName })));
             })
-            .catch(() => {
-                // API không khả dụng, hiển thị trống
-            });
+            .catch(() => { });
         getDepartments({ limit: 100 })
             .then((res: any) => {
                 const items = unwrapDepartments(res);
-                setDeptList(items.map(d => d.name));
+                setDeptList(items.map((d: any) => ({ id: String(d.id ?? d.departments_id ?? ""), name: d.name })));
             })
-            .catch(() => {
-                // API không khả dụng, hiển thị trống
-            });
+            .catch(() => { });
+        workShiftService.getList()
+            .then((res: any) => {
+                const raw: any[] = Array.isArray(res?.data) ? res.data : [];
+                const mapped: WorkShift[] = raw.map((s: any) => ({
+                    id: String(s.id ?? s.shifts_id ?? s.shift_id ?? ""),
+                    name: s.name ?? "",
+                    startTime: (s.startTime ?? s.start_time ?? "").slice(0, 5),
+                    endTime: (s.endTime ?? s.end_time ?? "").slice(0, 5),
+                    type: (s.type ?? s.code ?? "MORNING") as WorkShift["type"],
+                    description: s.description ?? "",
+                    isActive: typeof s.isActive === "boolean" ? s.isActive : String(s.status ?? "").toUpperCase() !== "INACTIVE",
+                }));
+                setShiftList(mapped.filter((s) => s.isActive && s.id));
+                if (mapped[0]) setFormData((p) => ({ ...p, shiftId: mapped[0].id }));
+            })
+            .catch(() => { });
     }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -42,20 +57,49 @@ export default function NewSchedulePage() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    const buildDateRange = (): string[] => {
+        const days: string[] = [];
+        const start = new Date(formData.dateStart);
+        const end = formData.dateEnd ? new Date(formData.dateEnd) : start;
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            if (formData.repeat === "weekly" && d.getTime() !== start.getTime() && (d.getTime() - start.getTime()) % (7 * 86400000) !== 0) continue;
+            if (formData.repeat === "biweekly" && (d.getTime() - start.getTime()) % (14 * 86400000) !== 0) continue;
+            days.push(d.toISOString().slice(0, 10));
+            if (formData.repeat === "none") break;
+        }
+        return days;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.doctorId) { alert("Vui lòng chọn bác sĩ"); return; }
+        if (!formData.shiftId) { alert("Vui lòng chọn ca trực"); return; }
         setSaving(true);
         try {
-            await scheduleService.create({
-                doctorId: formData.doctorId,
-                department: formData.department,
-                shift: formData.shift as any,
-                date: formData.dateStart,
-            } as any);
-            router.push("/admin/schedules");
-        } catch {
-            alert("Thêm lịch trực thất bại. Vui lòng thử lại.");
+            const days = buildDateRange();
+            let success = 0, fail = 0;
+            for (const day of days) {
+                try {
+                    await axiosClient.post(STAFF_SCHEDULE_ENDPOINTS.CREATE, {
+                        staff_id: formData.doctorId,
+                        shift_id: formData.shiftId,
+                        work_date: day,
+                        department_id: formData.departmentId || undefined,
+                        note: formData.note || undefined,
+                        status: "SCHEDULED",
+                    });
+                    success += 1;
+                } catch {
+                    fail += 1;
+                }
+            }
+            if (success > 0) {
+                router.push("/admin/schedules");
+            } else {
+                alert(`Thêm lịch trực thất bại (${fail}/${days.length}). Vui lòng kiểm tra ca và quyền.`);
+            }
+        } catch (err: any) {
+            alert(err?.response?.data?.message ?? "Thêm lịch trực thất bại. Vui lòng thử lại.");
         } finally {
             setSaving(false);
         }
@@ -93,26 +137,35 @@ export default function NewSchedulePage() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Khoa</label>
-                            <select name="department" value={formData.department} onChange={handleChange} className="w-full py-2.5 px-4 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white">
+                            <select name="departmentId" value={formData.departmentId} onChange={handleChange} className="w-full py-2.5 px-4 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white">
                                 <option value="">-- Chọn khoa --</option>
-                                {deptList.filter(d => d).map((d, idx) => <option key={`dept-${idx}-${d}`} value={d}>{d}</option>)}
+                                {deptList.filter((d) => d.id && d.name).map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                             </select>
                         </div>
-                        <div>
+                        <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Ca trực *</label>
-                            <div className="grid grid-cols-3 gap-2">
-                                {[
-                                    { value: "MORNING", label: "Ca sáng", time: "7:00-12:00", color: "text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-700" },
-                                    { value: "AFTERNOON", label: "Ca chiều", time: "13:00-18:00", color: "text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700" },
-                                    { value: "NIGHT", label: "Ca đêm", time: "19:00-7:00", color: "text-purple-600 bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-700" },
-                                ].map((s) => (
-                                    <button key={s.value} type="button" onClick={() => setFormData((prev) => ({ ...prev, shift: s.value }))}
-                                        className={`p-3 rounded-xl border text-center transition-all ${formData.shift === s.value ? s.color + " ring-2 ring-current/20" : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"}`}>
-                                        <p className="text-sm font-bold">{s.label}</p>
-                                        <p className="text-xs opacity-70">{s.time}</p>
-                                    </button>
-                                ))}
-                            </div>
+                            {shiftList.length === 0 ? (
+                                <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-sm text-amber-700 dark:text-amber-300">
+                                    Chưa có ca làm việc hoạt động. <Link href="/admin/shifts" className="underline font-semibold">Cấu hình ca</Link> trước khi thêm lịch trực.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                    {shiftList.map((s) => {
+                                        const color = s.type === "AFTERNOON" || (s.startTime && parseInt(s.startTime, 10) >= 12 && parseInt(s.startTime, 10) < 18)
+                                            ? "text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700"
+                                            : s.type === "NIGHT" || (s.startTime && parseInt(s.startTime, 10) >= 18)
+                                                ? "text-purple-600 bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-700"
+                                                : "text-yellow-600 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-700";
+                                        return (
+                                            <button key={s.id} type="button" onClick={() => setFormData((prev) => ({ ...prev, shiftId: s.id }))}
+                                                className={`p-3 rounded-xl border text-center transition-all ${formData.shiftId === s.id ? color + " ring-2 ring-current/20" : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"}`}>
+                                                <p className="text-sm font-bold">{s.name}</p>
+                                                <p className="text-xs opacity-70">{s.startTime}–{s.endTime}</p>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Lặp lại</label>
