@@ -49,14 +49,25 @@ interface BulkState {
     doctorId: string;
     startDate: string;
     endDate: string;
-    startTime: string;
-    endTime: string;
+    morningStart: string;
+    morningEnd: string;
+    afternoonStart: string;
+    afternoonEnd: string;
     slotDuration: number;
     capacity: number;
+    includeMorning: boolean;
+    includeAfternoon: boolean;
 }
 
-const EMPTY_FORM: FormState = { doctorId: "", departmentId: "", date: "", startTime: "08:00", endTime: "08:30", capacity: 1 };
-const EMPTY_BULK: BulkState = { doctorId: "", startDate: "", endDate: "", startTime: "08:00", endTime: "17:00", slotDuration: 30, capacity: 1 };
+const EMPTY_FORM: FormState = { doctorId: "", departmentId: "", date: "", startTime: "07:00", endTime: "07:45", capacity: 1 };
+const DEFAULT_BULK: BulkState = {
+    doctorId: "", startDate: "", endDate: "",
+    morningStart: "07:00", morningEnd: "11:00",
+    afternoonStart: "13:00", afternoonEnd: "16:30",
+    slotDuration: 45, capacity: 1,
+    includeMorning: true, includeAfternoon: true,
+};
+const EMPTY_BULK: BulkState = { ...DEFAULT_BULK };
 
 const STATUS_META: Record<SlotStatus, { label: string; color: string; icon: string }> = {
     AVAILABLE: { label: "Sẵn sàng", color: "emerald", icon: "event_available" },
@@ -246,6 +257,10 @@ export default function SlotsConfigPage() {
             toast.warning("Thời lượng slot tối thiểu 5 phút.");
             return;
         }
+        if (!bulk.includeMorning && !bulk.includeAfternoon) {
+            toast.warning("Chọn ít nhất 1 ca (sáng hoặc chiều).");
+            return;
+        }
         setSaving(true);
         try {
             const dates: string[] = [];
@@ -254,18 +269,34 @@ export default function SlotsConfigPage() {
             for (let dt = new Date(d0); dt <= d1; dt.setDate(dt.getDate() + 1)) {
                 dates.push(dt.toISOString().slice(0, 10));
             }
-            await axiosClient.post("/api/slots/bulk", {
-                doctor_id: bulk.doctorId,
-                dates,
-                start_time: bulk.startTime,
-                end_time: bulk.endTime,
-                slot_duration: bulk.slotDuration,
-                capacity: bulk.capacity,
-            });
-            toast.success(`Đã tạo slot cho ${dates.length} ngày.`);
-            setShowBulk(false);
-            setBulk(EMPTY_BULK);
-            await load();
+            const sessions: Array<{ start: string; end: string }> = [];
+            if (bulk.includeMorning) sessions.push({ start: bulk.morningStart, end: bulk.morningEnd });
+            if (bulk.includeAfternoon) sessions.push({ start: bulk.afternoonStart, end: bulk.afternoonEnd });
+
+            let totalCreated = 0;
+            for (const session of sessions) {
+                try {
+                    await axiosClient.post("/api/slots/bulk", {
+                        doctor_id: bulk.doctorId,
+                        dates,
+                        start_time: session.start,
+                        end_time: session.end,
+                        slot_duration: bulk.slotDuration,
+                        capacity: bulk.capacity,
+                    });
+                    totalCreated += 1;
+                } catch (innerErr: any) {
+                    toast.warning(`Ca ${session.start}-${session.end}: ${innerErr?.response?.data?.message ?? "lỗi"}`);
+                }
+            }
+            if (totalCreated > 0) {
+                toast.success(`Đã tạo slot cho ${dates.length} ngày × ${totalCreated} ca.`);
+                setShowBulk(false);
+                setBulk(DEFAULT_BULK);
+                await load();
+            } else {
+                toast.error("Không tạo được slot nào.");
+            }
         } catch (err: any) {
             toast.error(err?.response?.data?.message ?? "Không tạo bulk được (có thể BE chưa hỗ trợ).");
         } finally {
@@ -506,16 +537,35 @@ export default function SlotsConfigPage() {
                                         className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Giờ bắt đầu</label>
-                                    <input type="time" value={bulk.startTime} onChange={(e) => setBulk({ ...bulk, startTime: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" checked={bulk.includeMorning} onChange={(e) => setBulk({ ...bulk, includeMorning: e.target.checked })} className="w-4 h-4" />
+                                        <span className="text-sm font-medium text-[#121417] dark:text-white">Ca sáng</span>
+                                    </label>
+                                    <button type="button" onClick={() => setBulk({ ...bulk, ...DEFAULT_BULK, doctorId: bulk.doctorId, startDate: bulk.startDate, endDate: bulk.endDate })}
+                                        className="text-xs text-[#3C81C6] hover:underline font-semibold inline-flex items-center gap-1">
+                                        <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>restart_alt</span>
+                                        Reset mặc định 7-11h / 13-16h30 / 45p
+                                    </button>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Giờ kết thúc</label>
-                                    <input type="time" value={bulk.endTime} onChange={(e) => setBulk({ ...bulk, endTime: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
+                                <div className={`grid grid-cols-2 gap-3 ${bulk.includeMorning ? "" : "opacity-50"}`}>
+                                    <input type="time" disabled={!bulk.includeMorning} value={bulk.morningStart} onChange={(e) => setBulk({ ...bulk, morningStart: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
+                                    <input type="time" disabled={!bulk.includeMorning} value={bulk.morningEnd} onChange={(e) => setBulk({ ...bulk, morningEnd: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={bulk.includeAfternoon} onChange={(e) => setBulk({ ...bulk, includeAfternoon: e.target.checked })} className="w-4 h-4" />
+                                    <span className="text-sm font-medium text-[#121417] dark:text-white">Ca chiều</span>
+                                </label>
+                                <div className={`grid grid-cols-2 gap-3 ${bulk.includeAfternoon ? "" : "opacity-50"}`}>
+                                    <input type="time" disabled={!bulk.includeAfternoon} value={bulk.afternoonStart} onChange={(e) => setBulk({ ...bulk, afternoonStart: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
+                                    <input type="time" disabled={!bulk.includeAfternoon} value={bulk.afternoonEnd} onChange={(e) => setBulk({ ...bulk, afternoonEnd: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">

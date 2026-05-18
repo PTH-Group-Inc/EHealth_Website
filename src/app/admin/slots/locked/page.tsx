@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { LOCKED_SLOT_ENDPOINTS, SHIFT_ENDPOINTS, STAFF_ENDPOINTS } from "@/api/endpoints";
-import { unwrapList } from "@/api/response";
 import { useToast } from "@/contexts/ToastContext";
 import { PageHeader, FilterBar, EmptyState, StatCard } from "@/components/shared/layout";
 
@@ -87,10 +86,23 @@ export default function LockedSlotsPage() {
         setError(null);
         try {
             const res = await axiosClient.get(LOCKED_SLOT_ENDPOINTS.LOCKED, { params: { limit: 500 } });
-            const { data } = unwrapList<any>(res);
-            setLocks(data.map(mapLocked));
-        } catch {
-            setError("Không tải được slot bị khoá.");
+            const raw: any = res.data;
+            const arr: any[] =
+                Array.isArray(raw?.data?.items) ? raw.data.items :
+                Array.isArray(raw?.data?.data) ? raw.data.data :
+                Array.isArray(raw?.data) ? raw.data :
+                Array.isArray(raw?.items) ? raw.items :
+                Array.isArray(raw) ? raw : [];
+            setLocks(arr.map(mapLocked));
+        } catch (err: any) {
+            const code = err?.response?.status;
+            if (code === 404) {
+                setError("Endpoint /api/locked-slots/locked không tồn tại trên BE hoặc chưa có dữ liệu.");
+            } else if (code === 403 || code === 401) {
+                setError("Không đủ quyền xem danh sách slot bị khoá.");
+            } else {
+                setError(err?.response?.data?.message ?? "Không tải được slot bị khoá.");
+            }
             setLocks([]);
         } finally {
             setLoading(false);
