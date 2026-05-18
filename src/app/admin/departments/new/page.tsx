@@ -9,7 +9,7 @@ export default function NewDepartmentPage() {
     const router = useRouter();
     const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState({
-        name: "", code: "", head: "", phone: "", email: "",
+        name: "", head: "", phone: "", email: "",
         floor: "", roomCount: "", bedCount: "", maxCapacity: "",
         description: "", status: "active",
     });
@@ -24,7 +24,6 @@ export default function NewDepartmentPage() {
     const validate = () => {
         const newErrors: Record<string, string> = {};
         if (!formData.name.trim()) newErrors.name = "Vui lòng nhập tên chuyên khoa";
-        if (!formData.code.trim()) newErrors.code = "Vui lòng nhập mã khoa";
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -36,7 +35,6 @@ export default function NewDepartmentPage() {
         try {
             await createDepartment({
                 name: formData.name,
-                code: formData.code,
                 description: formData.description || undefined,
                 floor: formData.floor || undefined,
                 roomCount: formData.roomCount ? parseInt(formData.roomCount) : undefined,
@@ -74,7 +72,6 @@ export default function NewDepartmentPage() {
                 <form onSubmit={handleSubmit} className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <Field label="Tên chuyên khoa *" name="name" value={formData.name} onChange={handleChange} error={errors.name} placeholder="VD: Khoa Nội Tổng Quát" icon="domain" />
-                        <Field label="Mã khoa *" name="code" value={formData.code} onChange={handleChange} error={errors.code} placeholder="VD: NOI-TQ" icon="tag" />
                         <Field label="Trưởng khoa" name="head" value={formData.head} onChange={handleChange} placeholder="BS. Nguyễn Văn A" icon="person" />
                         <Field label="Số điện thoại" name="phone" value={formData.phone} onChange={handleChange} placeholder="028 1234 5678" icon="phone" />
                         <Field label="Email" name="email" value={formData.email} onChange={handleChange} placeholder="khoa@ehealth.vn" icon="email" />

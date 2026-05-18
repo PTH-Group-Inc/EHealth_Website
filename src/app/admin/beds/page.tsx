@@ -7,6 +7,7 @@ import { BED_ENDPOINTS, MEDICAL_ROOM_MANAGEMENT_ENDPOINTS } from "@/api/endpoint
 import { unwrapList } from "@/api/response";
 import { useToast } from "@/contexts/ToastContext";
 import { PageHeader, FilterBar, EmptyState, StatCard } from "@/components/shared/layout";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 type BedStatus = "AVAILABLE" | "OCCUPIED" | "MAINTENANCE" | "RESERVED";
 
@@ -30,14 +31,13 @@ interface RoomLite {
 
 interface FormState {
     id?: string;
-    code: string;
     name: string;
     roomId: string;
     bedType: string;
     note: string;
 }
 
-const EMPTY_FORM: FormState = { code: "", name: "", roomId: "", bedType: "STANDARD", note: "" };
+const EMPTY_FORM: FormState = { name: "", roomId: "", bedType: "STANDARD", note: "" };
 
 const STATUS_META: Record<string, { labelKey: string; color: string; icon: string; bg: string }> = {
     AVAILABLE: { labelKey: "available", color: "emerald", icon: "bed", bg: "from-emerald-500 to-teal-500" },
@@ -154,7 +154,6 @@ export default function BedsAdminPage() {
     const openEdit = (b: Bed) => {
         setForm({
             id: b.id,
-            code: b.code,
             name: b.name,
             roomId: b.roomId ?? "",
             bedType: b.bedType ?? "STANDARD",
@@ -164,19 +163,22 @@ export default function BedsAdminPage() {
     };
 
     const handleSave = async () => {
-        if (!form.code.trim() || !form.name.trim()) {
-            toast.warning("Vui lòng nhập mã và tên giường.");
+        if (!form.name.trim()) {
+            toast.warning("Vui lòng nhập tên giường.");
+            return;
+        }
+        if (!form.roomId) {
+            toast.warning("Vui lòng chọn phòng.");
             return;
         }
         setSaving(true);
         try {
             const payload: any = {
-                code: form.code.trim(),
                 name: form.name.trim(),
+                room_id: form.roomId,
                 bed_type: form.bedType,
                 note: form.note.trim() || undefined,
             };
-            if (form.roomId) payload.room_id = form.roomId;
 
             if (form.id) {
                 await axiosClient.put(BED_ENDPOINTS.UPDATE(form.id), payload);
@@ -377,27 +379,20 @@ export default function BedsAdminPage() {
                             {form.id ? "Sửa giường bệnh" : "Tạo giường bệnh mới"}
                         </h3>
                         <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Mã giường *</label>
-                                    <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="VD: BED-A101"
-                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên giường *</label>
-                                    <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="VD: Giường 1A"
-                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên giường *</label>
+                                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="VD: Giường 1A"
+                                    className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Phòng</label>
-                                <select value={form.roomId} onChange={(e) => setForm({ ...form, roomId: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white">
-                                    <option value="">— Chọn phòng —</option>
-                                    {rooms.map((r) => (
-                                        <option key={r.id} value={r.id}>{r.name}</option>
-                                    ))}
-                                </select>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Phòng *</label>
+                                <CustomSelect
+                                    options={rooms.map((r) => ({ id: r.id, name: r.name }))}
+                                    value={form.roomId}
+                                    onChange={(value) => setForm({ ...form, roomId: String(value) })}
+                                    placeholder="— Chọn phòng —"
+                                    icon="meeting_room"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Loại giường</label>

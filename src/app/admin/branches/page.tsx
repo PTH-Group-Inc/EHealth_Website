@@ -7,6 +7,7 @@ import { BRANCH_MANAGEMENT_ENDPOINTS, FACILITY_MANAGEMENT_ENDPOINTS } from "@/ap
 import { unwrapList } from "@/api/response";
 import { useToast } from "@/contexts/ToastContext";
 import { PageHeader, FilterBar, EmptyState, StatCard } from "@/components/shared/layout";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface Branch {
     id: string;
@@ -29,7 +30,6 @@ interface FacilityLite {
 
 interface FormState {
     id?: string;
-    code: string;
     name: string;
     facilityId: string;
     address: string;
@@ -37,7 +37,7 @@ interface FormState {
     email: string;
 }
 
-const EMPTY_FORM: FormState = { code: "", name: "", facilityId: "", address: "", phone: "", email: "" };
+const EMPTY_FORM: FormState = { name: "", facilityId: "", address: "", phone: "", email: "" };
 
 function mapBranch(b: any): Branch {
     const rawStatus = String(b.status ?? "").toUpperCase();
@@ -136,7 +136,6 @@ export default function BranchesAdminPage() {
     const openEdit = (b: Branch) => {
         setForm({
             id: b.id,
-            code: b.code,
             name: b.name,
             facilityId: b.facilityId ?? "",
             address: b.address ?? "",
@@ -147,20 +146,23 @@ export default function BranchesAdminPage() {
     };
 
     const handleSave = async () => {
-        if (!form.code.trim() || !form.name.trim()) {
-            toast.warning("Vui lòng nhập mã và tên chi nhánh.");
+        if (!form.name.trim()) {
+            toast.warning("Vui lòng nhập tên chi nhánh.");
+            return;
+        }
+        if (!form.facilityId) {
+            toast.warning("Vui lòng chọn cơ sở y tế.");
             return;
         }
         setSaving(true);
         try {
             const payload: any = {
-                code: form.code.trim(),
                 name: form.name.trim(),
+                facility_id: form.facilityId,
                 address: form.address.trim() || undefined,
                 phone: form.phone.trim() || undefined,
                 email: form.email.trim() || undefined,
             };
-            if (form.facilityId) payload.facility_id = form.facilityId;
 
             if (form.id) {
                 await axiosClient.put(BRANCH_MANAGEMENT_ENDPOINTS.UPDATE(form.id), payload);
@@ -381,38 +383,24 @@ export default function BranchesAdminPage() {
                             {form.id ? "Sửa chi nhánh" : "Tạo chi nhánh mới"}
                         </h3>
                         <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Mã chi nhánh *</label>
-                                    <input
-                                        value={form.code}
-                                        onChange={(e) => setForm({ ...form, code: e.target.value })}
-                                        placeholder="VD: BR-HN-01"
-                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên chi nhánh *</label>
-                                    <input
-                                        value={form.name}
-                                        onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                        placeholder="VD: Chi nhánh Hà Nội"
-                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white"
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên chi nhánh *</label>
+                                <input
+                                    value={form.name}
+                                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                    placeholder="VD: Chi nhánh Hà Nội"
+                                    className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white"
+                                />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Cơ sở y tế</label>
-                                <select
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Cơ sở y tế *</label>
+                                <CustomSelect
+                                    options={facilities.map((f) => ({ id: f.id, name: f.name }))}
                                     value={form.facilityId}
-                                    onChange={(e) => setForm({ ...form, facilityId: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white"
-                                >
-                                    <option value="">— Chọn cơ sở —</option>
-                                    {facilities.map((f) => (
-                                        <option key={f.id} value={f.id}>{f.name}</option>
-                                    ))}
-                                </select>
+                                    onChange={(value) => setForm({ ...form, facilityId: String(value) })}
+                                    placeholder="— Chọn cơ sở —"
+                                    icon="business"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Địa chỉ</label>
