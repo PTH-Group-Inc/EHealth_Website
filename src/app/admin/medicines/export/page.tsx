@@ -122,7 +122,7 @@ export default function MedicineExportPage() {
         <>
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div className="space-y-1">
-                    <h1 className="text-3xl font-black tracking-tight text-[#121417] dark:text-white">Xuat kho</h1>
+                    <h1 className="text-3xl font-black tracking-tight text-[#121417] dark:text-white">Xuất kho</h1>
                     <p className="text-[#687582] dark:text-gray-400">Quan ly phieu xuat kho, cap phat va huy thuoc</p>
                 </div>
                 <button
@@ -183,13 +183,13 @@ export default function MedicineExportPage() {
                     <table className="w-full text-left">
                         <thead className="border-b border-[#dde0e4] bg-gray-50/50 dark:border-[#2d353e] dark:bg-gray-800/50">
                             <tr>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ma phieu</th>
+                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Mã phiếu</th>
                                 <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Kho xuat</th>
                                 <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Noi nhan</th>
                                 <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ly do</th>
                                 <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">So luong</th>
                                 <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ngay tao</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Trang thai</th>
+                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#dde0e4] dark:divide-[#2d353e]">
@@ -197,7 +197,7 @@ export default function MedicineExportPage() {
                                 <tr>
                                     <td colSpan={7} className="py-12 text-center text-[#687582] dark:text-gray-400">
                                         <span className="material-symbols-outlined mb-2 block text-4xl">inbox</span>
-                                        Chua co du lieu
+                                        Chưa có dữ liệu
                                     </td>
                                 </tr>
                             ) : filtered.map((record) => {

@@ -51,13 +51,13 @@ export default function MedicineStockPage() {
     const getStockStyle = (level: string) => {
         switch (level) {
             case "HIGH":
-                return { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", label: "Du tru cao", bar: "bg-blue-500" };
+                return { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", label: "Dự trữ cao", bar: "bg-blue-500" };
             case "NORMAL":
-                return { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", label: "Binh thuong", bar: "bg-green-500" };
+                return { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", label: "Bình thường", bar: "bg-green-500" };
             case "LOW":
-                return { bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400", label: "Sap het", bar: "bg-orange-500" };
+                return { bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400", label: "Sắp hết", bar: "bg-orange-500" };
             case "OUT":
-                return { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", label: "Het hang", bar: "bg-red-500" };
+                return { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", label: "Hết hàng", bar: "bg-red-500" };
             default:
                 return { bg: "bg-gray-100", text: "text-gray-600", label: level, bar: "bg-gray-400" };
         }
@@ -67,12 +67,12 @@ export default function MedicineStockPage() {
         <>
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div className="space-y-1">
-                    <h1 className="text-3xl font-black tracking-tight text-[#121417] dark:text-white">Ton kho</h1>
-                    <p className="text-[#687582] dark:text-gray-400">Theo doi so luong ton kho thuoc va vat tu y te</p>
+                    <h1 className="text-3xl font-black tracking-tight text-[#121417] dark:text-white">Tồn kho</h1>
+                    <p className="text-[#687582] dark:text-gray-400">Theo dõi số lượng tồn kho thuốc và vật tư y tế</p>
                 </div>
                 <button className="flex items-center gap-2 rounded-xl border border-[#dde0e4] bg-white px-5 py-2.5 text-sm font-bold text-[#121417] shadow-sm transition-colors hover:bg-gray-50 dark:border-[#2d353e] dark:bg-[#1e242b] dark:text-white dark:hover:bg-gray-800">
                     <span className="material-symbols-outlined text-[20px]">download</span>
-                    Xuat bao cao
+                    Xuất báo cáo
                 </button>
             </div>
 
@@ -80,28 +80,28 @@ export default function MedicineStockPage() {
                 <div className="flex items-center gap-4 rounded-xl border border-[#dde0e4] bg-white p-4 shadow-sm dark:border-[#2d353e] dark:bg-[#1e242b]">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-900/20"><span className="material-symbols-outlined">inventory_2</span></div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Tong mat hang</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Tổng mặt hàng</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{stock.length}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4 rounded-xl border border-[#dde0e4] bg-white p-4 shadow-sm dark:border-[#2d353e] dark:bg-[#1e242b]">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50 text-green-600 dark:bg-green-900/20"><span className="material-symbols-outlined">check_circle</span></div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Du hang</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Đủ hàng</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{stock.filter((item) => item.stockLevel === "NORMAL" || item.stockLevel === "HIGH").length}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4 rounded-xl border border-[#dde0e4] bg-white p-4 shadow-sm dark:border-[#2d353e] dark:bg-[#1e242b]">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-50 text-orange-600 dark:bg-orange-900/20"><span className="material-symbols-outlined">warning</span></div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Sap het</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Sắp hết</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{stock.filter((item) => item.stockLevel === "LOW").length}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4 rounded-xl border border-[#dde0e4] bg-white p-4 shadow-sm dark:border-[#2d353e] dark:bg-[#1e242b]">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-50 text-red-600 dark:bg-red-900/20"><span className="material-symbols-outlined">report</span></div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Het hang</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Hết hàng</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{stock.filter((item) => item.stockLevel === "OUT").length}</p>
                     </div>
                 </div>
@@ -116,7 +116,7 @@ export default function MedicineStockPage() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm transition-all placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                            placeholder="Tim theo ma, ten thuoc..."
+                            placeholder="Tìm theo mã, tên thuốc..."
                         />
                     </div>
                     <select
@@ -124,17 +124,17 @@ export default function MedicineStockPage() {
                         onChange={(e) => setLevelFilter(e.target.value)}
                         className="cursor-pointer rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-3 pr-10 text-sm text-[#687582] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
                     >
-                        <option value="all">Tat ca muc ton</option>
-                        <option value="HIGH">Du tru cao</option>
-                        <option value="NORMAL">Binh thuong</option>
-                        <option value="LOW">Sap het</option>
-                        <option value="OUT">Het hang</option>
+                        <option value="all">Tất cả mức tồn</option>
+                        <option value="HIGH">Dự trữ cao</option>
+                        <option value="NORMAL">Bình thường</option>
+                        <option value="LOW">Sắp hết</option>
+                        <option value="OUT">Hết hàng</option>
                     </select>
                 </div>
                 {filtered.length === 0 ? (
                     <div className="py-12 text-center text-[#687582] dark:text-gray-400">
                         <span className="material-symbols-outlined mb-2 block text-4xl">inbox</span>
-                        Chua co du lieu
+                        Chưa có dữ liệu
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -157,7 +157,7 @@ export default function MedicineStockPage() {
                                     <div className="space-y-2">
                                         <div className="flex items-end justify-between">
                                             <div>
-                                                <p className="text-[10px] text-[#687582] uppercase tracking-wider">Ton kho</p>
+                                                <p className="text-[10px] text-[#687582] uppercase tracking-wider">Tồn kho</p>
                                                 <p className="text-2xl font-black text-[#121417] dark:text-white leading-tight">
                                                     {(item.currentStock ?? 0).toLocaleString("vi-VN")}
                                                     <span className="text-xs text-[#687582] font-normal"> / {(item.maxStock ?? 0).toLocaleString("vi-VN")}</span>
