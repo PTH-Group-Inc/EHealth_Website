@@ -79,6 +79,7 @@ export default function ShiftSwapsAdminPage() {
     const [staffList, setStaffList] = useState<StaffLite[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [tab, setTab] = useState<"pending" | "history">("pending");
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [detail, setDetail] = useState<ShiftSwap | null>(null);
@@ -125,11 +126,13 @@ export default function ShiftSwapsAdminPage() {
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
         return swaps.filter((s) => {
+            if (tab === "pending" && s.status !== "PENDING") return false;
+            if (tab === "history" && s.status === "PENDING") return false;
             if (statusFilter !== "all" && s.status !== statusFilter) return false;
             if (q && !`${s.requesterName} ${s.targetStaffName} ${s.reason ?? ""}`.toLowerCase().includes(q)) return false;
             return true;
         });
-    }, [swaps, search, statusFilter]);
+    }, [swaps, search, statusFilter, tab]);
 
     const stats = useMemo(
         () => ({
@@ -189,6 +192,21 @@ export default function ShiftSwapsAdminPage() {
                 <StatCard label="Chờ duyệt" value={stats.pending} icon="hourglass_top" color="amber" loading={loading} />
                 <StatCard label="Đã duyệt" value={stats.approved} icon="check_circle" color="emerald" loading={loading} />
                 <StatCard label="Từ chối" value={stats.rejected} icon="cancel" color="red" loading={loading} />
+            </div>
+
+            <div className="inline-flex bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl p-1">
+                <button onClick={() => setTab("pending")}
+                    className={`px-4 py-2 text-sm font-semibold rounded-lg inline-flex items-center gap-2 transition-colors ${tab === "pending" ? "bg-white dark:bg-[#1e242b] text-amber-600 shadow-sm" : "text-[#687582] dark:text-gray-400"}`}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>hourglass_top</span>
+                    Duyệt đổi ca
+                    {stats.pending > 0 && <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tab === "pending" ? "bg-amber-100 text-amber-700" : "bg-gray-200 text-gray-600"}`}>{stats.pending}</span>}
+                </button>
+                <button onClick={() => setTab("history")}
+                    className={`px-4 py-2 text-sm font-semibold rounded-lg inline-flex items-center gap-2 transition-colors ${tab === "history" ? "bg-white dark:bg-[#1e242b] text-emerald-600 shadow-sm" : "text-[#687582] dark:text-gray-400"}`}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>history</span>
+                    Lịch sử đổi ca
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tab === "history" ? "bg-emerald-100 text-emerald-700" : "bg-gray-200 text-gray-600"}`}>{stats.approved + stats.rejected}</span>
+                </button>
             </div>
 
             <FilterBar
