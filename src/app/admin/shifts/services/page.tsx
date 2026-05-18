@@ -28,13 +28,13 @@ interface FacilityLite { id: string; name: string; }
 
 function mapShiftService(r: any): ShiftService {
     return {
-        id: String(r.shift_services_id ?? r.shift_service_id ?? r.id ?? ""),
-        shiftId: String(r.shift_id ?? r.shiftId ?? r.shifts_id ?? ""),
-        facilityServiceId: String(r.facility_service_id ?? r.facilityServiceId ?? r.facility_services_id ?? ""),
-        shiftName: r.shift_name ?? r.shiftName ?? "",
-        serviceName: r.service_name ?? r.serviceName ?? "",
-        isActive: Boolean(r.is_active ?? r.isActive ?? true),
-        createdAt: r.created_at ?? r.createdAt ?? "",
+        id: String(r.shift_service_id ?? r.id ?? ""),
+        shiftId: String(r.shift_id ?? ""),
+        facilityServiceId: String(r.facility_service_id ?? ""),
+        shiftName: r.shift_name ?? "",
+        serviceName: r.service_name ?? "",
+        isActive: Boolean(r.is_active ?? true),
+        createdAt: r.created_at ?? "",
     };
 }
 
@@ -73,13 +73,13 @@ export default function ShiftServicesPage() {
             const sRaw: any[] = Array.isArray(sRes.data?.data) ? sRes.data.data : Array.isArray(sRes.data) ? sRes.data : [];
             const svRaw: any[] = Array.isArray(svRes.data?.data) ? svRes.data.data : Array.isArray(svRes.data) ? svRes.data : [];
             setShifts(sRaw.map((s: any) => ({
-                id: String(s.shifts_id ?? s.shift_id ?? s.id ?? ""),
+                id: String(s.shift_id ?? s.id ?? ""),
                 name: s.name ?? s.shift_name ?? "",
-                startTime: (s.start_time ?? s.startTime ?? "").slice(0, 5),
-                endTime: (s.end_time ?? s.endTime ?? "").slice(0, 5),
+                startTime: (s.start_time ?? "").slice(0, 5),
+                endTime: (s.end_time ?? "").slice(0, 5),
             })).filter((s) => s.id));
             setServices(svRaw.map((s: any) => ({
-                id: String(s.facility_services_id ?? s.facility_service_id ?? s.id ?? ""),
+                id: String(s.facility_service_id ?? s.id ?? ""),
                 name: s.name ?? s.service_name ?? "",
             })).filter((s) => s.id));
         } catch {

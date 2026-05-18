@@ -37,7 +37,7 @@ export const facilityService = {
         axiosClient.get(FACILITY_ENDPOINTS.LIST, { params }).then(r => {
             const result = r.data;
             if (result && Array.isArray(result.data)) {
-                result.data = result.data.map((f: any) => ({ ...f, id: f.facilities_id || f.id }));
+                result.data = result.data.map((f: any) => ({ ...f, id: f.facility_id || f.id }));
             }
             return result;
         }),

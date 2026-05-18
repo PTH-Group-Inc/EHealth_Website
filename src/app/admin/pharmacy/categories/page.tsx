@@ -31,8 +31,8 @@ function mapCategory(r: any): DrugCategory {
         code: r.code ?? r.category_code ?? "",
         name: r.name ?? r.category_name ?? "",
         description: r.description ?? "",
-        drugCount: Number(r.drug_count ?? r.drugCount ?? 0),
-        isActive: Boolean(r.is_active ?? r.isActive ?? true),
+        drugCount: Number(r.drug_count ?? 0),
+        isActive: Boolean(r.is_active ?? true),
     };
 }
 

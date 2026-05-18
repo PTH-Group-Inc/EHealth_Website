@@ -77,7 +77,7 @@ function parsePrice(...candidates: any[]): number | undefined {
 
 function mapMaster(s: any): MasterService {
     return {
-        id: String(s.services_id ?? s.service_id ?? s.id ?? ""),
+        id: String(s.service_id ?? s.id ?? ""),
         code: s.code ?? s.service_code ?? "",
         name: s.name ?? s.service_name ?? "",
         group: s.service_group ?? s.group ?? "",
@@ -91,11 +91,11 @@ function mapMaster(s: any): MasterService {
 
 function mapFacilityService(s: any): FacilityService {
     return {
-        id: String(s.facility_services_id ?? s.facility_service_id ?? s.id ?? ""),
-        serviceId: String(s.services_id ?? s.service_id ?? ""),
+        id: String(s.facility_service_id ?? s.id ?? ""),
+        serviceId: String(s.service_id ?? ""),
         serviceName: s.service_name ?? s.name ?? "",
         serviceCode: s.service_code ?? s.code ?? "",
-        facilityId: String(s.facilities_id ?? s.facility_id ?? ""),
+        facilityId: String(s.facility_id ?? ""),
         facilityName: s.facility_name ?? "",
         price: parsePrice(s.price, s.unit_price, s.base_price, s.facility_price),
         duration: typeof s.duration_minutes === "number" ? s.duration_minutes : typeof s.duration === "number" ? s.duration : undefined,

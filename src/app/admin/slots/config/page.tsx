@@ -86,17 +86,17 @@ function normalizeStatus(raw: any): SlotStatus {
 
 function mapSlot(r: any): Slot {
     return {
-        id: String(r.slots_id ?? r.slot_id ?? r.id ?? ""),
-        doctorId: String(r.doctor_id ?? r.doctorId ?? r.users_id ?? ""),
-        doctorName: r.doctor_name ?? r.doctorName ?? r.full_name ?? "",
-        departmentId: String(r.department_id ?? r.departmentId ?? ""),
-        departmentName: r.department_name ?? r.departmentName ?? "",
-        roomId: String(r.room_id ?? r.roomId ?? ""),
+        id: String(r.slot_id ?? r.id ?? ""),
+        doctorId: String(r.doctor_id ?? r.user_id ?? r.users_id ?? ""),
+        doctorName: r.doctor_name ?? r.full_name ?? "",
+        departmentId: String(r.department_id ?? ""),
+        departmentName: r.department_name ?? "",
+        roomId: String(r.room_id ?? ""),
         date: r.date ?? r.slot_date ?? "",
-        startTime: (r.start_time ?? r.startTime ?? "").slice(0, 5),
-        endTime: (r.end_time ?? r.endTime ?? "").slice(0, 5),
+        startTime: (r.start_time ?? "").slice(0, 5),
+        endTime: (r.end_time ?? "").slice(0, 5),
         capacity: Number(r.capacity ?? r.max_patients ?? 1),
-        bookedCount: Number(r.booked_count ?? r.bookedCount ?? r.current_bookings ?? 0),
+        bookedCount: Number(r.booked_count ?? r.current_bookings ?? 0),
         status: normalizeStatus(r.status),
     };
 }
@@ -134,8 +134,8 @@ export default function SlotsConfigPage() {
             ]);
             const docRaw: any[] = Array.isArray(dRes.data?.data) ? dRes.data.data : Array.isArray(dRes.data) ? dRes.data : [];
             const depRaw: any[] = Array.isArray(depRes.data?.data) ? depRes.data.data : Array.isArray(depRes.data) ? depRes.data : [];
-            setDoctors(docRaw.map((d: any) => ({ id: String(d.users_id ?? d.id ?? ""), fullName: d.full_name ?? d.fullName ?? d.name ?? "" })).filter((d) => d.id));
-            setDepartments(depRaw.map((d: any) => ({ id: String(d.departments_id ?? d.department_id ?? d.id ?? ""), name: d.name ?? d.department_name ?? "" })).filter((d) => d.id));
+            setDoctors(docRaw.map((d: any) => ({ id: String(d.user_id ?? d.users_id ?? d.id ?? ""), fullName: d.full_name ?? d.name ?? "" })).filter((d) => d.id));
+            setDepartments(depRaw.map((d: any) => ({ id: String(d.department_id ?? d.id ?? ""), name: d.name ?? d.department_name ?? "" })).filter((d) => d.id));
         } catch {
             setDoctors([]);
             setDepartments([]);

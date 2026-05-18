@@ -83,8 +83,8 @@ export default function StockInDetailPage() {
                     id: order.stock_in_order_id ?? order.id ?? orderId,
                     code: order.order_code ?? order.code ?? `NK-${orderId}`,
                     status: normalizeStatus(order.status),
-                    createdAt: formatDate(order.created_at ?? order.createdAt),
-                    createdBy: order.created_by_name ?? order.createdBy ?? "-",
+                    createdAt: formatDate(order.created_at),
+                    createdBy: order.created_by_name ?? "-",
                     supplier: order.supplier_name ?? order.supplier?.name ?? "-",
                     warehouseName: order.warehouse_name ?? order.warehouse?.name ?? "-",
                     note: order.notes ?? order.note ?? "",
@@ -92,12 +92,12 @@ export default function StockInDetailPage() {
                     totalAmount: Number(order.total_amount ?? 0),
                     receivedBy: order.received_by_name ?? "-",
                     receivedAt: formatDate(order.received_at),
-                    cancelReason: order.cancelled_reason ?? order.cancelReason ?? "",
+                    cancelReason: order.cancelled_reason ?? "",
                 });
 
                 setItems(details.map((item: any, index: number) => ({
                     id: item.stock_in_detail_id ?? item.id ?? String(index + 1),
-                    drugName: item.brand_name ?? item.drug_name ?? item.drugName ?? "-",
+                    drugName: item.brand_name ?? item.drug_name ?? "-",
                     quantity: Number(item.quantity ?? 0),
                     unit: item.dispensing_unit ?? item.unit ?? "Đơn vị",
                     unitPrice: Number(item.unit_cost ?? item.unit_price ?? 0),

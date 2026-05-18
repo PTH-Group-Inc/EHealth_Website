@@ -46,27 +46,27 @@ interface DoctorLite { id: string; fullName: string; departmentName?: string; }
 
 function mapAvailability(d: any): DoctorAvailability {
     return {
-        doctorId: String(d.doctor_id ?? d.doctorId ?? d.users_id ?? ""),
-        doctorName: d.doctor_name ?? d.doctorName ?? d.full_name ?? "—",
-        departmentName: d.department_name ?? d.departmentName ?? "",
+        doctorId: String(d.doctor_id ?? d.user_id ?? d.users_id ?? ""),
+        doctorName: d.doctor_name ?? d.full_name ?? "—",
+        departmentName: d.department_name ?? "",
         date: d.date ?? "",
-        totalSlots: Number(d.total_slots ?? d.totalSlots ?? 0),
-        availableSlots: Number(d.available_slots ?? d.availableSlots ?? 0),
-        bookedSlots: Number(d.booked_slots ?? d.bookedSlots ?? 0),
+        totalSlots: Number(d.total_slots ?? 0),
+        availableSlots: Number(d.available_slots ?? 0),
+        bookedSlots: Number(d.booked_slots ?? 0),
         conflicts: Number(d.conflicts ?? d.conflict_count ?? 0),
     };
 }
 
 function mapAbsence(r: any): Absence {
     return {
-        id: String(r.doctor_absences_id ?? r.absence_id ?? r.id ?? ""),
-        doctorId: String(r.doctor_id ?? r.doctorId ?? r.users_id ?? ""),
-        doctorName: r.doctor_name ?? r.doctorName ?? r.full_name ?? "—",
-        startDate: r.start_date ?? r.startDate ?? r.from_date ?? "",
-        endDate: r.end_date ?? r.endDate ?? r.to_date ?? "",
+        id: String(r.absence_id ?? r.id ?? ""),
+        doctorId: String(r.doctor_id ?? r.user_id ?? r.users_id ?? ""),
+        doctorName: r.doctor_name ?? r.full_name ?? "—",
+        startDate: r.start_date ?? r.from_date ?? "",
+        endDate: r.end_date ?? r.to_date ?? "",
         reason: r.reason ?? r.note ?? "",
-        affectedAppointments: Number(r.affected_appointments ?? r.affectedAppointments ?? 0),
-        createdAt: r.created_at ?? r.createdAt ?? "",
+        affectedAppointments: Number(r.affected_appointments ?? 0),
+        createdAt: r.created_at ?? "",
     };
 }
 
@@ -74,10 +74,10 @@ function mapAffected(r: any): AffectedAppointment {
     return {
         id: String(r.appointment_id ?? r.id ?? ""),
         appointmentCode: r.appointment_code ?? r.code ?? "",
-        patientName: r.patient_name ?? r.patientName ?? "—",
-        doctorName: r.doctor_name ?? r.doctorName ?? "",
+        patientName: r.patient_name ?? "—",
+        doctorName: r.doctor_name ?? "",
         date: r.date ?? r.appointment_date ?? "",
-        startTime: (r.start_time ?? r.startTime ?? "").slice(0, 5),
+        startTime: (r.start_time ?? "").slice(0, 5),
         status: r.status ?? "",
     };
 }
@@ -257,8 +257,8 @@ function AbsencesTab() {
             const res = await axiosClient.get(STAFF_ENDPOINTS.LIST, { params: { role: "DOCTOR", limit: 500 } });
             const raw: any[] = Array.isArray(res.data?.data) ? res.data.data : Array.isArray(res.data) ? res.data : [];
             setDoctors(raw.map((d: any) => ({
-                id: String(d.users_id ?? d.id ?? ""),
-                fullName: d.full_name ?? d.fullName ?? d.name ?? "",
+                id: String(d.user_id ?? d.users_id ?? d.id ?? ""),
+                fullName: d.full_name ?? d.name ?? "",
                 departmentName: d.department_name ?? d.specialty_name ?? "",
             })).filter((d) => d.id));
         } catch {

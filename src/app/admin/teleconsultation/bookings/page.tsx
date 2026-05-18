@@ -44,14 +44,14 @@ function mapBooking(r: any): TeleBooking {
     return {
         id: String(r.consultation_id ?? r.session_id ?? r.id ?? ""),
         code: r.code ?? r.session_code ?? "",
-        patientName: r.patient_name ?? r.patientName ?? "—",
-        doctorName: r.doctor_name ?? r.doctorName ?? "",
-        typeName: r.type_name ?? r.typeName ?? "",
-        scheduledAt: r.scheduled_at ?? r.scheduledAt ?? r.start_time ?? "",
+        patientName: r.patient_name ?? "—",
+        doctorName: r.doctor_name ?? "",
+        typeName: r.type_name ?? "",
+        scheduledAt: r.scheduled_at ?? r.start_time ?? "",
         duration: Number(r.duration_minutes ?? r.duration ?? 0),
         price: Number(r.price ?? r.amount ?? 0),
         status: normalizeStatus(r.status),
-        paymentStatus: r.payment_status ?? r.paymentStatus ?? "",
+        paymentStatus: r.payment_status ?? "",
     };
 }
 

@@ -36,15 +36,15 @@ const EMPTY_FORM: FormState = { name: "", startTime: "07:00", endTime: "11:00", 
 function mapShift(s: any): WorkShift {
     const status = String(s.status ?? "").toUpperCase();
     return {
-        id: String(s.id ?? s.shifts_id ?? s.shift_id ?? s.code ?? ""),
+        id: String(s.shift_id ?? s.id ?? s.code ?? ""),
         name: s.name ?? "",
-        startTime: (s.startTime ?? s.start_time ?? "").slice(0, 5),
-        endTime: (s.endTime ?? s.end_time ?? "").slice(0, 5),
+        startTime: (s.start_time ?? "").slice(0, 5),
+        endTime: (s.end_time ?? "").slice(0, 5),
         type: (s.type ?? s.code ?? "MORNING") as WorkShift["type"],
         description: s.description ?? "",
         isActive: typeof s.isActive === "boolean" ? s.isActive : status !== "INACTIVE" && status !== "DISABLED",
-        createdAt: s.createdAt ?? s.created_at ?? "",
-        updatedAt: s.updatedAt ?? s.updated_at ?? "",
+        createdAt: s.created_at ?? "",
+        updatedAt: s.updated_at ?? "",
     };
 }
 

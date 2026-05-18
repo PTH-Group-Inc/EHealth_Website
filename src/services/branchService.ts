@@ -16,7 +16,7 @@ export interface Branch {
 
 const normalizeBranch = (b: any): Branch => ({
   ...b,
-  id: b.branches_id || b.branch_id || b.id,
+  id: b.branch_id || b.id,
 });
 
 export const branchService = {

@@ -74,24 +74,24 @@ function diffDays(start: string, end: string): number {
 }
 
 function mapLeave(r: any): Leave {
-    const startDate = r.start_date ?? r.startDate ?? r.from_date ?? r.fromDate ?? "";
-    const endDate = r.end_date ?? r.endDate ?? r.to_date ?? r.toDate ?? "";
+    const startDate = r.start_date ?? r.from_date ?? "";
+    const endDate = r.end_date ?? r.to_date ?? "";
     return {
-        id: String(r.leaves_id ?? r.leave_id ?? r.id ?? ""),
-        staffId: String(r.users_id ?? r.staff_id ?? r.user_id ?? r.staffId ?? ""),
-        staffName: r.staff_name ?? r.full_name ?? r.staffName ?? r.name ?? "—",
-        staffRole: r.role ?? r.staff_role ?? r.roles?.[0] ?? "",
-        departmentName: r.department_name ?? r.departmentName ?? r.specialty_name ?? "",
-        leaveType: normalizeType(r.leave_type ?? r.type ?? r.leaveType),
+        id: String(r.leave_id ?? r.id ?? ""),
+        staffId: String(r.staff_id ?? r.user_id ?? r.users_id ?? ""),
+        staffName: r.staff_name ?? r.full_name ?? r.name ?? "—",
+        staffRole: r.role ?? r.roles?.[0] ?? "",
+        departmentName: r.department_name ?? r.specialty_name ?? "",
+        leaveType: normalizeType(r.leave_type ?? r.type),
         startDate,
         endDate,
-        totalDays: r.total_days ?? r.totalDays ?? diffDays(startDate, endDate),
+        totalDays: r.total_days ?? diffDays(startDate, endDate),
         reason: r.reason ?? r.note ?? r.description ?? "",
         status: normalizeStatus(r.status),
-        rejectReason: r.reject_reason ?? r.rejectReason ?? r.rejection_reason ?? "",
-        approverName: r.approver_name ?? r.approverName ?? r.approved_by_name ?? "",
-        approvedAt: r.approved_at ?? r.approvedAt ?? "",
-        createdAt: r.created_at ?? r.createdAt ?? "",
+        rejectReason: r.reject_reason ?? r.rejection_reason ?? "",
+        approverName: r.approver_name ?? r.approved_by_name ?? "",
+        approvedAt: r.approved_at ?? "",
+        createdAt: r.created_at ?? "",
     };
 }
 
@@ -126,8 +126,8 @@ export default function LeavesAdminPage() {
             setStaffList(
                 raw
                     .map((d: any) => ({
-                        id: String(d.users_id ?? d.id ?? ""),
-                        fullName: d.full_name ?? d.fullName ?? d.name ?? "",
+                        id: String(d.user_id ?? d.users_id ?? d.id ?? ""),
+                        fullName: d.full_name ?? d.name ?? "",
                         role: Array.isArray(d.roles) && d.roles.length > 0 ? d.roles[0] : d.role ?? "",
                     }))
                     .filter((s) => s.id)

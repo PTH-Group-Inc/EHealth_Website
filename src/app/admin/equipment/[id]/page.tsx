@@ -57,7 +57,7 @@ const MAINT_STATUS_LABEL: Record<string, string> = {
 
 function mapDetail(e: any): EquipmentDetail {
     return {
-        id: String(e.equipments_id ?? e.equipment_id ?? e.id ?? ""),
+        id: String(e.equipment_id ?? e.id ?? ""),
         code: e.code ?? "",
         name: e.name ?? "",
         type: e.type ?? e.equipment_type ?? e.category ?? "",
@@ -66,22 +66,22 @@ function mapDetail(e: any): EquipmentDetail {
         roomId: e.room_id ?? e.medical_room_id ?? "",
         roomName: e.room_name ?? e.medical_room_name ?? "",
         status: String(e.status ?? "ACTIVE").toUpperCase(),
-        purchaseDate: e.purchase_date ?? e.purchaseDate ?? "",
-        warrantyUntil: e.warranty_until ?? e.warrantyUntil ?? "",
+        purchaseDate: e.purchase_date ?? "",
+        warrantyUntil: e.warranty_until ?? "",
         note: e.note ?? e.description ?? "",
-        createdAt: e.created_at ?? e.createdAt ?? "",
+        createdAt: e.created_at ?? "",
     };
 }
 
 function mapMaintenance(m: any): MaintenanceLog {
     return {
-        id: String(m.maintenance_id ?? m.maintenances_id ?? m.id ?? Math.random()),
+        id: String(m.maintenance_id ?? m.id ?? Math.random()),
         type: String(m.type ?? m.maintenance_type ?? "INSPECTION").toUpperCase(),
         status: String(m.status ?? "DONE").toUpperCase(),
         title: m.title ?? m.summary ?? m.name ?? "Bảo trì",
         description: m.description ?? m.note ?? "",
-        performedAt: m.performed_at ?? m.performedAt ?? m.completed_at ?? "",
-        plannedAt: m.planned_at ?? m.plannedAt ?? m.scheduled_at ?? "",
+        performedAt: m.performed_at ?? m.completed_at ?? "",
+        plannedAt: m.planned_at ?? m.scheduled_at ?? "",
         performedBy: m.performed_by ?? m.performer_name ?? m.technician ?? "",
         cost: typeof m.cost === "number" ? m.cost : typeof m.amount === "number" ? m.amount : undefined,
     };

@@ -42,22 +42,22 @@ const EMPTY_FORM: FormState = { name: "", facilityId: "", address: "", phone: ""
 function mapBranch(b: any): Branch {
     const rawStatus = String(b.status ?? "").toUpperCase();
     return {
-        id: String(b.branches_id ?? b.branch_id ?? b.id ?? ""),
+        id: String(b.branch_id ?? b.id ?? ""),
         code: b.code ?? b.branch_code ?? "",
         name: b.name ?? b.branch_name ?? "",
-        facilityId: b.facility_id ?? b.facilityId ?? b.facilities_id ?? "",
-        facilityName: b.facility_name ?? b.facilityName ?? "",
+        facilityId: b.facility_id ?? "",
+        facilityName: b.facility_name ?? "",
         address: b.address ?? "",
         phone: b.phone ?? b.phone_number ?? "",
         email: b.email ?? "",
         status: rawStatus === "INACTIVE" || rawStatus === "DISABLED" ? "INACTIVE" : "ACTIVE",
-        createdAt: b.created_at ?? b.createdAt ?? "",
+        createdAt: b.created_at ?? "",
     };
 }
 
 function mapFacility(f: any): FacilityLite {
     return {
-        id: String(f.facilities_id ?? f.facility_id ?? f.id ?? ""),
+        id: String(f.facility_id ?? f.id ?? ""),
         name: f.name ?? f.facility_name ?? "",
         code: f.code ?? f.facility_code ?? "",
     };

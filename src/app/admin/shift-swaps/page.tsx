@@ -48,19 +48,19 @@ function normalizeStatus(raw: any): SwapStatus {
 
 function mapSwap(r: any): ShiftSwap {
     return {
-        id: String(r.shift_swaps_id ?? r.swap_id ?? r.id ?? ""),
-        requesterId: String(r.requester_id ?? r.requesterId ?? r.from_user_id ?? ""),
-        requesterName: r.requester_name ?? r.requesterName ?? r.from_user_name ?? "—",
-        targetStaffId: String(r.target_staff_id ?? r.targetStaffId ?? r.to_user_id ?? ""),
-        targetStaffName: r.target_staff_name ?? r.targetStaffName ?? r.to_user_name ?? "—",
-        fromDate: r.from_date ?? r.fromDate ?? r.original_date ?? "",
-        toDate: r.to_date ?? r.toDate ?? r.target_date ?? "",
-        fromShiftName: r.from_shift_name ?? r.fromShiftName ?? "",
-        toShiftName: r.to_shift_name ?? r.toShiftName ?? "",
+        id: String(r.swap_id ?? r.id ?? ""),
+        requesterId: String(r.requester_id ?? r.from_user_id ?? ""),
+        requesterName: r.requester_name ?? r.from_user_name ?? "—",
+        targetStaffId: String(r.target_staff_id ?? r.to_user_id ?? ""),
+        targetStaffName: r.target_staff_name ?? r.to_user_name ?? "—",
+        fromDate: r.from_date ?? r.original_date ?? "",
+        toDate: r.to_date ?? r.target_date ?? "",
+        fromShiftName: r.from_shift_name ?? "",
+        toShiftName: r.to_shift_name ?? "",
         reason: r.reason ?? r.note ?? "",
         status: normalizeStatus(r.status),
-        rejectReason: r.reject_reason ?? r.rejectReason ?? "",
-        createdAt: r.created_at ?? r.createdAt ?? "",
+        rejectReason: r.reject_reason ?? "",
+        createdAt: r.created_at ?? "",
     };
 }
 
@@ -91,7 +91,7 @@ export default function ShiftSwapsAdminPage() {
         try {
             const res = await axiosClient.get(STAFF_ENDPOINTS.LIST, { params: { limit: 500 } });
             const raw: any[] = Array.isArray(res.data?.data) ? res.data.data : Array.isArray(res.data) ? res.data : [];
-            setStaffList(raw.map((d: any) => ({ id: String(d.users_id ?? d.id ?? ""), fullName: d.full_name ?? d.fullName ?? d.name ?? "" })).filter((s) => s.id));
+            setStaffList(raw.map((d: any) => ({ id: String(d.user_id ?? d.users_id ?? d.id ?? ""), fullName: d.full_name ?? d.name ?? "" })).filter((s) => s.id));
         } catch {
             setStaffList([]);
         }

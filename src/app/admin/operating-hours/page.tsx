@@ -62,34 +62,34 @@ const DAYS_OF_WEEK = [
 // ========== Mappers ==========
 function mapHour(r: any): OperatingHour {
     return {
-        id: String(r.operating_hours_id ?? r.operating_hour_id ?? r.id ?? ""),
-        facilityId: String(r.facility_id ?? r.facilityId ?? ""),
-        branchId: String(r.branch_id ?? r.branchId ?? ""),
-        dayOfWeek: Number(r.day_of_week ?? r.dayOfWeek ?? 0),
-        openTime: (r.open_time ?? r.openTime ?? "").slice(0, 5),
-        closeTime: (r.close_time ?? r.closeTime ?? "").slice(0, 5),
-        isClosed: Boolean(r.is_closed ?? r.isClosed ?? false),
+        id: String(r.operating_hour_id ?? r.id ?? ""),
+        facilityId: String(r.facility_id ?? ""),
+        branchId: String(r.branch_id ?? ""),
+        dayOfWeek: Number(r.day_of_week ?? 0),
+        openTime: (r.open_time ?? "").slice(0, 5),
+        closeTime: (r.close_time ?? "").slice(0, 5),
+        isClosed: Boolean(r.is_closed ?? false),
         note: r.note ?? r.description ?? "",
     };
 }
 
 function mapClosedDay(r: any): ClosedDay {
     return {
-        id: String(r.closed_days_id ?? r.closed_day_id ?? r.id ?? ""),
-        facilityId: String(r.facility_id ?? r.facilityId ?? ""),
-        branchId: String(r.branch_id ?? r.branchId ?? ""),
+        id: String(r.closed_day_id ?? r.id ?? ""),
+        facilityId: String(r.facility_id ?? ""),
+        branchId: String(r.branch_id ?? ""),
         date: r.date ?? r.closed_date ?? "",
         reason: r.reason ?? r.note ?? r.description ?? "",
-        createdAt: r.created_at ?? r.createdAt ?? "",
+        createdAt: r.created_at ?? "",
     };
 }
 
 function mapHoliday(r: any): Holiday {
     return {
-        id: String(r.holidays_id ?? r.holiday_id ?? r.id ?? ""),
+        id: String(r.holiday_id ?? r.id ?? ""),
         name: r.name ?? r.holiday_name ?? "",
         date: r.date ?? r.holiday_date ?? "",
-        isRecurring: Boolean(r.is_recurring ?? r.isRecurring ?? false),
+        isRecurring: Boolean(r.is_recurring ?? false),
         note: r.note ?? r.description ?? "",
     };
 }
@@ -120,11 +120,11 @@ export default function OperatingHoursPage() {
             ]);
             const fRaw: any[] = Array.isArray(fRes.data?.data) ? fRes.data.data : Array.isArray(fRes.data) ? fRes.data : [];
             const bRaw: any[] = Array.isArray(bRes.data?.data) ? bRes.data.data : Array.isArray(bRes.data) ? bRes.data : [];
-            setFacilities(fRaw.map((d: any) => ({ id: String(d.facility_id ?? d.facilities_id ?? d.id ?? ""), name: d.name ?? d.facility_name ?? "" })).filter((f) => f.id));
+            setFacilities(fRaw.map((d: any) => ({ id: String(d.facility_id ?? d.id ?? ""), name: d.name ?? d.facility_name ?? "" })).filter((f) => f.id));
             setBranches(bRaw.map((d: any) => ({
-                id: String(d.branches_id ?? d.branch_id ?? d.id ?? ""),
+                id: String(d.branch_id ?? d.id ?? ""),
                 name: d.name ?? d.branch_name ?? "",
-                facilityId: String(d.facility_id ?? d.facilities_id ?? ""),
+                facilityId: String(d.facility_id ?? ""),
             })).filter((b) => b.id));
         } catch {
             setFacilities([]);

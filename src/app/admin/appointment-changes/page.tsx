@@ -50,17 +50,17 @@ function normalizeKind(raw: any): ChangeKind {
 
 function mapChange(r: any): AppointmentChange {
     return {
-        id: String(r.appointment_changes_id ?? r.change_id ?? r.id ?? ""),
-        appointmentId: String(r.appointment_id ?? r.appointmentId ?? r.appointments_id ?? ""),
-        appointmentCode: r.appointment_code ?? r.appointmentCode ?? "",
-        patientName: r.patient_name ?? r.patientName ?? "—",
-        doctorName: r.doctor_name ?? r.doctorName ?? "",
-        kind: normalizeKind(r.kind ?? r.change_type ?? r.changeType ?? r.type),
-        oldValue: r.old_value ?? r.oldValue ?? r.previous_value ?? "",
-        newValue: r.new_value ?? r.newValue ?? r.next_value ?? "",
+        id: String(r.change_id ?? r.id ?? ""),
+        appointmentId: String(r.appointment_id ?? ""),
+        appointmentCode: r.appointment_code ?? "",
+        patientName: r.patient_name ?? "—",
+        doctorName: r.doctor_name ?? "",
+        kind: normalizeKind(r.kind ?? r.change_type ?? r.type),
+        oldValue: r.old_value ?? r.previous_value ?? "",
+        newValue: r.new_value ?? r.next_value ?? "",
         reason: r.reason ?? r.note ?? "",
-        changedBy: r.changed_by_name ?? r.changedByName ?? r.user_name ?? "",
-        changedAt: r.changed_at ?? r.changedAt ?? r.created_at ?? "",
+        changedBy: r.changed_by_name ?? r.user_name ?? "",
+        changedAt: r.changed_at ?? r.created_at ?? "",
     };
 }
 

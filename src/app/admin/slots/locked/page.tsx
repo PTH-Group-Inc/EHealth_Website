@@ -25,16 +25,16 @@ interface ShiftLite { id: string; name: string; }
 
 function mapLocked(r: any): LockedSlot {
     return {
-        id: String(r.locked_slots_id ?? r.locked_slot_id ?? r.id ?? ""),
-        slotId: String(r.slot_id ?? r.slotId ?? r.slots_id ?? ""),
-        doctorId: String(r.doctor_id ?? r.doctorId ?? r.users_id ?? ""),
-        doctorName: r.doctor_name ?? r.doctorName ?? r.full_name ?? "",
+        id: String(r.locked_slot_id ?? r.id ?? ""),
+        slotId: String(r.slot_id ?? ""),
+        doctorId: String(r.doctor_id ?? r.user_id ?? r.users_id ?? ""),
+        doctorName: r.doctor_name ?? r.full_name ?? "",
         date: r.date ?? r.slot_date ?? r.locked_date ?? "",
-        startTime: (r.start_time ?? r.startTime ?? "").slice(0, 5),
-        endTime: (r.end_time ?? r.endTime ?? "").slice(0, 5),
+        startTime: (r.start_time ?? "").slice(0, 5),
+        endTime: (r.end_time ?? "").slice(0, 5),
         reason: r.reason ?? r.note ?? "",
-        lockedBy: r.locked_by_name ?? r.lockedByName ?? "",
-        lockedAt: r.locked_at ?? r.lockedAt ?? r.created_at ?? "",
+        lockedBy: r.locked_by_name ?? "",
+        lockedAt: r.locked_at ?? r.created_at ?? "",
     };
 }
 
@@ -73,8 +73,8 @@ export default function LockedSlotsPage() {
             ]);
             const dRaw: any[] = Array.isArray(dRes.data?.data) ? dRes.data.data : Array.isArray(dRes.data) ? dRes.data : [];
             const sRaw: any[] = Array.isArray(sRes.data?.data) ? sRes.data.data : Array.isArray(sRes.data) ? sRes.data : [];
-            setDoctors(dRaw.map((d: any) => ({ id: String(d.users_id ?? d.id ?? ""), fullName: d.full_name ?? d.fullName ?? "" })).filter((d) => d.id));
-            setShifts(sRaw.map((s: any) => ({ id: String(s.shifts_id ?? s.shift_id ?? s.id ?? ""), name: s.name ?? s.shift_name ?? "" })).filter((s) => s.id));
+            setDoctors(dRaw.map((d: any) => ({ id: String(d.user_id ?? d.users_id ?? d.id ?? ""), fullName: d.full_name ?? "" })).filter((d) => d.id));
+            setShifts(sRaw.map((s: any) => ({ id: String(s.shift_id ?? s.id ?? ""), name: s.name ?? s.shift_name ?? "" })).filter((s) => s.id));
         } catch {
             setDoctors([]);
             setShifts([]);

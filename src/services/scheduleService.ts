@@ -36,16 +36,16 @@ export function unwrapSchedules(res: any): Schedule[] {
     const raw = res?.data?.data ?? res?.data?.items ?? res?.data ?? res?.items ?? res ?? [];
     if (!Array.isArray(raw)) return [];
     return raw.map((s: any): Schedule => ({
-        id: s.id ?? s.schedule_id ?? '',
-        doctorId: s.doctorId ?? s.doctor_id ?? s.staffId ?? s.staff_id ?? '',
-        doctorName: s.doctorName ?? s.doctor_name ?? s.fullName ?? s.full_name ?? '',
-        departmentId: s.departmentId ?? s.department_id ?? s.department?.id ?? '',
-        department: s.department ?? s.departmentName ?? s.department_name ?? s.department?.name ?? '',
+        id: s.schedule_id ?? s.id ?? '',
+        doctorId: s.doctor_id ?? s.staff_id ?? '',
+        doctorName: s.doctor_name ?? s.full_name ?? '',
+        departmentId: s.department_id ?? s.department?.id ?? '',
+        department: s.department_name ?? s.department?.name ?? '',
         shift: (s.shift ?? 'MORNING') as Schedule['shift'],
-        date: s.date ?? s.workDate ?? s.work_date ?? '',
+        date: s.date ?? s.work_date ?? '',
         status: (s.status ?? 'SCHEDULED') as Schedule['status'],
         avatar: s.avatar ?? s.avatar_url ?? '',
-        createdAt: s.createdAt ?? s.created_at ?? '',
+        createdAt: s.created_at ?? '',
     }));
 }
 

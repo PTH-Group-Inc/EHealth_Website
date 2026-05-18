@@ -31,7 +31,7 @@ function mapCategory(r: any): Category {
         code: r.code ?? r.category_code ?? "",
         name: r.name ?? r.category_name ?? "",
         description: r.description ?? "",
-        itemCount: Number(r.item_count ?? r.itemCount ?? 0),
+        itemCount: Number(r.item_count ?? 0),
     };
 }
 
@@ -40,10 +40,10 @@ function mapItem(r: any): Item {
         id: String(r.item_id ?? r.id ?? ""),
         code: r.code ?? r.item_code ?? "",
         label: r.label ?? r.name ?? "",
-        categoryCode: r.category_code ?? r.categoryCode ?? "",
-        categoryName: r.category_name ?? r.categoryName ?? "",
+        categoryCode: r.category_code ?? "",
+        categoryName: r.category_name ?? "",
         order: Number(r.sort_order ?? r.order ?? 0),
-        isActive: Boolean(r.is_active ?? r.isActive ?? true),
+        isActive: Boolean(r.is_active ?? true),
     };
 }
 

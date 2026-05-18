@@ -48,30 +48,30 @@ export default function DepartmentsPage() {
                 const doctorByDept = new Map<string, number>();
                 const patientByDept = new Map<string, number>();
                 for (const s of (Array.isArray(staffData) ? staffData : [])) {
-                    const deptId = String(s.department_id ?? s.departmentId ?? s.departments_id ?? "");
-                    const role = String(s.role ?? s.position ?? s.staff_role ?? "").toUpperCase();
+                    const deptId = String(s.department_id ?? "");
+                    const role = String(s.role ?? s.position ?? "").toUpperCase();
                     if (!deptId) continue;
                     if (role.includes("DOCTOR") || role.includes("BAC_SI") || role === "BS") {
                         doctorByDept.set(deptId, (doctorByDept.get(deptId) ?? 0) + 1);
                     }
                 }
                 for (const a of (Array.isArray(apptData) ? apptData : [])) {
-                    const deptId = String(a.department_id ?? a.departmentId ?? a.departments_id ?? "");
+                    const deptId = String(a.department_id ?? "");
                     if (!deptId) continue;
                     patientByDept.set(deptId, (patientByDept.get(deptId) ?? 0) + 1);
                 }
 
                 if (Array.isArray(items)) {
                     setDepartments(items.map((item: Record<string, unknown>) => {
-                        const id = (item.departments_id ?? item.id ?? "") as string;
-                        const beDoc = (item.doctor_count ?? item.doctorCount) as number | undefined;
-                        const bePat = (item.patient_count ?? item.patientCount) as number | undefined;
-                        const beAppt = (item.appointment_today ?? item.appointmentToday) as number | undefined;
+                        const id = (item.department_id ?? item.id ?? "") as string;
+                        const beDoc = item.doctor_count as number | undefined;
+                        const bePat = item.patient_count as number | undefined;
+                        const beAppt = item.appointment_today as number | undefined;
                         return {
                             id,
                             code: (item.code ?? "") as string,
                             name: (item.name ?? "") as string,
-                            nameEn: (item.name_en ?? item.nameEn ?? "") as string,
+                            nameEn: (item.name_en ?? "") as string,
                             description: (item.description ?? "") as string,
                             icon: (item.icon ?? "") as string,
                             color: (item.color ?? "") as string,
@@ -81,8 +81,8 @@ export default function DepartmentsPage() {
                             patientCount: bePat != null && bePat > 0 ? bePat : (patientByDept.get(id) ?? 0),
                             appointmentToday: beAppt != null && beAppt > 0 ? beAppt : (patientByDept.get(id) ?? 0),
                             status: (item.status ?? "ACTIVE") as string,
-                            createdAt: (item.created_at ?? item.createdAt ?? "") as string,
-                            updatedAt: (item.updated_at ?? item.updatedAt ?? "") as string,
+                            createdAt: (item.created_at ?? "") as string,
+                            updatedAt: (item.updated_at ?? "") as string,
                         } as Department;
                     }));
                 }

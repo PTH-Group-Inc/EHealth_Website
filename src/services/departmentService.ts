@@ -29,17 +29,17 @@ export function unwrapDepartments(res: any): Department[] {
     const raw = res?.data?.data ?? res?.data?.items ?? res?.data ?? res?.items ?? res ?? [];
     if (!Array.isArray(raw)) return [];
     return raw.map((d: any): Department => ({
-        id: d.id ?? d.departments_id ?? '',
+        id: d.department_id ?? d.id ?? '',
         name: d.name ?? '',
         code: d.code ?? '',
         description: d.description ?? '',
-        headDoctorId: d.headDoctorId ?? d.head_doctor_id ?? '',
-        headDoctorName: d.headDoctorName ?? d.head_doctor_name ?? '',
-        totalDoctors: d.totalDoctors ?? d.doctor_count ?? d.doctorCount ?? 0,
-        totalPatients: d.totalPatients ?? d.patient_count ?? d.patientCount ?? 0,
+        headDoctorId: d.head_doctor_id ?? '',
+        headDoctorName: d.head_doctor_name ?? '',
+        totalDoctors: d.doctor_count ?? d.totalDoctors ?? 0,
+        totalPatients: d.patient_count ?? d.totalPatients ?? 0,
         status: (d.status ?? 'active') as 'active' | 'inactive',
-        createdAt: d.createdAt ?? d.created_at ?? '',
-        updatedAt: d.updatedAt ?? d.updated_at ?? '',
+        createdAt: d.created_at ?? '',
+        updatedAt: d.updated_at ?? '',
     }));
 }
 

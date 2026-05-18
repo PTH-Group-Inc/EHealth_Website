@@ -103,21 +103,21 @@ function normalizeStatus(raw: any): User["status"] {
 }
 
 function mapApiUserToUserDetailVM(raw: any, userId: string): UserDetailVM {
-    const id = String(raw?.users_id ?? raw?.id ?? userId);
+    const id = String(raw?.user_id ?? raw?.users_id ?? raw?.id ?? userId);
 
-    const fullName = raw?.profile?.full_name ?? raw?.full_name ?? raw?.fullName ?? raw?.email ?? "";
+    const fullName = raw?.profile?.full_name ?? raw?.full_name ?? raw?.email ?? "";
     const email = raw?.email ?? "";
-    const phone = raw?.phone ?? raw?.phone_number ?? raw?.phoneNumber ?? "";
+    const phone = raw?.phone ?? raw?.phone_number ?? "";
     const rawAvatar = raw?.profile?.avatar_url ?? raw?.avatar ?? "";
     const avatar = getImageUrl(rawAvatar);
 
-    const createdAt = raw?.created_at ?? raw?.createdAt ?? "";
-    const updatedAt = raw?.updated_at ?? raw?.updatedAt ?? "";
-    const lastAccess = raw?.last_login ?? raw?.lastAccess ?? raw?.last_login_at ?? "";
+    const createdAt = raw?.created_at ?? "";
+    const updatedAt = raw?.updated_at ?? "";
+    const lastAccess = raw?.last_login ?? raw?.last_login_at ?? "";
 
     const dob = raw?.profile?.dob ?? raw?.dob ?? raw?.date_of_birth ?? "";
     const gender = raw?.profile?.gender ?? raw?.gender ?? "";
-    const identityCardNumber = raw?.profile?.identity_card_number ?? raw?.identity_card_number ?? raw?.identityCardNumber ?? "";
+    const identityCardNumber = raw?.profile?.identity_card_number ?? raw?.identity_card_number ?? "";
     const address = raw?.profile?.address ?? raw?.address ?? "";
 
     const departmentName = raw?.department?.name ?? raw?.department_name ?? raw?.department ?? "";

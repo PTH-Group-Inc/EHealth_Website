@@ -68,24 +68,24 @@ function normalizeStatus(raw: any): EquipmentStatus {
 
 function mapEquipment(e: any): Equipment {
     return {
-        id: String(e.equipments_id ?? e.equipment_id ?? e.id ?? ""),
+        id: String(e.equipment_id ?? e.id ?? ""),
         code: e.code ?? e.equipment_code ?? "",
         name: e.name ?? e.equipment_name ?? "",
         type: e.type ?? e.equipment_type ?? e.category ?? "",
         model: e.model ?? "",
         manufacturer: e.manufacturer ?? e.brand ?? "",
-        roomId: e.room_id ?? e.roomId ?? e.medical_room_id ?? "",
-        roomName: e.room_name ?? e.roomName ?? e.medical_room_name ?? "",
+        roomId: e.room_id ?? e.medical_room_id ?? "",
+        roomName: e.room_name ?? e.medical_room_name ?? "",
         status: normalizeStatus(e.status),
-        purchaseDate: e.purchase_date ?? e.purchaseDate ?? "",
-        warrantyUntil: e.warranty_until ?? e.warrantyUntil ?? e.warranty_end ?? "",
+        purchaseDate: e.purchase_date ?? "",
+        warrantyUntil: e.warranty_until ?? e.warranty_end ?? "",
         note: e.note ?? e.description ?? "",
     };
 }
 
 function mapRoom(r: any): RoomLite {
     return {
-        id: String(r.medical_rooms_id ?? r.medical_room_id ?? r.rooms_id ?? r.id ?? ""),
+        id: String(r.medical_room_id ?? r.room_id ?? r.id ?? ""),
         name: r.name ?? r.room_name ?? "",
     };
 }

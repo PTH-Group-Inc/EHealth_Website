@@ -43,24 +43,24 @@ function mapOrder(r: any): OnlineOrder {
     return {
         id: String(r.order_id ?? r.id ?? ""),
         orderCode: r.order_code ?? r.code ?? "",
-        invoiceCode: r.invoice_code ?? r.invoiceCode ?? "",
+        invoiceCode: r.invoice_code ?? "",
         amount: Number(r.amount ?? 0),
         status: normalizeOnlineStatus(r.status),
         method: r.payment_method ?? r.method ?? "SePay",
         createdAt: r.created_at ?? "",
-        paidAt: r.paid_at ?? r.paidAt ?? "",
+        paidAt: r.paid_at ?? "",
     };
 }
 
 function mapProfile(r: any): CashierProfile {
     return {
         id: String(r.profile_id ?? r.id ?? ""),
-        userId: String(r.user_id ?? r.userId ?? ""),
-        userName: r.user_name ?? r.userName ?? r.full_name ?? "—",
-        facilityName: r.facility_name ?? r.facilityName ?? "",
-        dailyLimit: Number(r.daily_limit ?? r.dailyLimit ?? 0),
-        isActive: Boolean(r.is_active ?? r.isActive ?? true),
-        lastShiftAt: r.last_shift_at ?? r.lastShiftAt ?? "",
+        userId: String(r.user_id ?? ""),
+        userName: r.user_name ?? r.full_name ?? "—",
+        facilityName: r.facility_name ?? "",
+        dailyLimit: Number(r.daily_limit ?? 0),
+        isActive: Boolean(r.is_active ?? true),
+        lastShiftAt: r.last_shift_at ?? "",
     };
 }
 

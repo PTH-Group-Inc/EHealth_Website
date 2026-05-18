@@ -75,7 +75,8 @@ function normalizeUserRoles(rawRoles: unknown): string[] {
 
 function mapApiUserToAdminUser(u: any): AdminUser {
     let idStr = "";
-    if (u.users_id) idStr = typeof u.users_id === "object" ? String(u.users_id.id || u.users_id._id || "") : String(u.users_id);
+    const uid = u.user_id ?? u.users_id;
+    if (uid) idStr = typeof uid === "object" ? String(uid.id || uid._id || "") : String(uid);
     else if (u.id) idStr = typeof u.id === "object" ? String(u.id.id || u.id._id || "") : String(u.id);
 
     let avatarStr = "";
@@ -99,15 +100,15 @@ function mapApiUserToAdminUser(u: any): AdminUser {
 
     return {
         id: idStr || "unknown_id",
-        fullName: String(u.profile?.full_name ?? u.full_name ?? u.fullName ?? emailStr ?? ""),
+        fullName: String(u.profile?.full_name ?? u.full_name ?? emailStr ?? ""),
         email: emailStr,
         phone: String(u.phone ?? u.phone_number ?? ""),
         role: roleVal as Role,
         roles,
         status: String(u.status ?? "ACTIVE") as AdminUser["status"],
         avatar: avatarStr,
-        createdAt: String(u.created_at ?? u.createdAt ?? ""),
-        updatedAt: String(u.updated_at ?? u.updatedAt ?? ""),
+        createdAt: String(u.created_at ?? ""),
+        updatedAt: String(u.updated_at ?? ""),
         dob: u.profile?.dob ?? u.dob ?? "",
         gender: u.profile?.gender ?? u.gender ?? "",
         identity_card_number: u.profile?.identity_card_number ?? u.identity_card_number ?? "",

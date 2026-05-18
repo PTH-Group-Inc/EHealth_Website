@@ -63,13 +63,13 @@ function normalizeStatus(s: any): RoomStatus {
 
 function mapRoom(r: any): Room {
     return {
-        id: String(r.medical_rooms_id ?? r.medical_room_id ?? r.rooms_id ?? r.id ?? ""),
+        id: String(r.medical_room_id ?? r.room_id ?? r.id ?? ""),
         code: r.code ?? r.room_code ?? "",
         name: r.name ?? r.room_name ?? "",
         floor: r.floor ?? r.level ?? "",
-        departmentId: r.department_id ?? r.departments_id ?? "",
+        departmentId: r.department_id ?? "",
         departmentName: r.department_name ?? "",
-        branchId: r.branch_id ?? r.branches_id ?? "",
+        branchId: r.branch_id ?? "",
         branchName: r.branch_name ?? "",
         status: normalizeStatus(r.status),
         capacity: typeof r.capacity === "number" ? r.capacity : undefined,
@@ -79,7 +79,7 @@ function mapRoom(r: any): Room {
 
 function mapService(s: any): MedicalServiceLite {
     return {
-        id: String(s.services_id ?? s.service_id ?? s.id ?? ""),
+        id: String(s.service_id ?? s.id ?? ""),
         code: s.code ?? s.service_code ?? "",
         name: s.name ?? s.service_name ?? "",
     };
@@ -112,7 +112,7 @@ export default function ClinicRoomsAdminPage() {
         try {
             const res = await axiosClient.get(DEPARTMENT_MANAGEMENT_ENDPOINTS.LIST, { params: { limit: 500 } });
             const raw: any[] = Array.isArray(res.data?.data) ? res.data.data : Array.isArray(res.data) ? res.data : [];
-            setDepartments(raw.map((d) => ({ id: String(d.departments_id ?? d.department_id ?? d.id ?? ""), name: d.name ?? "" })).filter((d) => d.id));
+            setDepartments(raw.map((d) => ({ id: String(d.department_id ?? d.id ?? ""), name: d.name ?? "" })).filter((d) => d.id));
         } catch {
             setDepartments([]);
         }
@@ -122,7 +122,7 @@ export default function ClinicRoomsAdminPage() {
         try {
             const res = await axiosClient.get(BRANCH_MANAGEMENT_ENDPOINTS.DROPDOWN);
             const raw: any[] = Array.isArray(res.data?.data) ? res.data.data : Array.isArray(res.data) ? res.data : [];
-            setBranches(raw.map((b) => ({ id: String(b.branches_id ?? b.branch_id ?? b.id ?? ""), name: b.name ?? "" })).filter((b) => b.id));
+            setBranches(raw.map((b) => ({ id: String(b.branch_id ?? b.id ?? ""), name: b.name ?? "" })).filter((b) => b.id));
         } catch {
             setBranches([]);
         }

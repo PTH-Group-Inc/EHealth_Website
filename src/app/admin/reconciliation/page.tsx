@@ -40,20 +40,20 @@ function normalizeStatus(raw: any): SessionStatus {
 }
 
 function mapSession(r: any): Session {
-    const expected = Number(r.expected_amount ?? r.expectedAmount ?? 0);
-    const actual = Number(r.actual_amount ?? r.actualAmount ?? 0);
+    const expected = Number(r.expected_amount ?? 0);
+    const actual = Number(r.actual_amount ?? 0);
     return {
         id: String(r.session_id ?? r.id ?? ""),
         code: r.code ?? r.session_code ?? "",
-        sessionType: r.session_type ?? r.sessionType ?? "",
+        sessionType: r.session_type ?? "",
         expectedAmount: expected,
         actualAmount: actual,
         discrepancy: actual - expected,
-        cashierName: r.cashier_name ?? r.cashierName ?? "",
+        cashierName: r.cashier_name ?? "",
         status: normalizeStatus(r.status),
         runAt: r.run_at ?? r.created_at ?? "",
-        reviewedBy: r.reviewed_by_name ?? r.reviewedByName ?? "",
-        reviewedAt: r.reviewed_at ?? r.reviewedAt ?? "",
+        reviewedBy: r.reviewed_by_name ?? "",
+        reviewedAt: r.reviewed_at ?? "",
     };
 }
 

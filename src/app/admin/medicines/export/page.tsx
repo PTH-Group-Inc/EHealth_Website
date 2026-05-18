@@ -82,7 +82,7 @@ export default function MedicineExportPage() {
                     totalQuantity: Number(item.total_quantity ?? item.quantity ?? 0),
                     date: formatDate(item.created_at ?? item.date),
                     status: normalizeStockOutStatus(item.status),
-                    createdBy: item.created_by_name ?? item.createdBy ?? "-",
+                    createdBy: item.created_by_name ?? "-",
                 })));
             })
             .catch(() => {

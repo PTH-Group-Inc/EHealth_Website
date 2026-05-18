@@ -37,12 +37,12 @@ function normalizeStatus(raw: any): FollowUpPlan["status"] {
 function mapPlan(r: any): FollowUpPlan {
     return {
         id: String(r.plan_id ?? r.id ?? ""),
-        patientName: r.patient_name ?? r.patientName ?? "—",
-        doctorName: r.doctor_name ?? r.doctorName ?? "",
-        planType: r.plan_type ?? r.planType ?? "",
-        scheduledDate: r.scheduled_date ?? r.scheduledDate ?? "",
+        patientName: r.patient_name ?? "—",
+        doctorName: r.doctor_name ?? "",
+        planType: r.plan_type ?? "",
+        scheduledDate: r.scheduled_date ?? "",
         status: normalizeStatus(r.status),
-        needsAttention: Boolean(r.needs_attention ?? r.needsAttention ?? false),
+        needsAttention: Boolean(r.needs_attention ?? false),
         updates: Number(r.update_count ?? r.updates ?? 0),
     };
 }

@@ -25,14 +25,14 @@ function mapResult(r: any): Result {
     return {
         id: String(r.consultation_id ?? r.result_id ?? r.id ?? ""),
         code: r.code ?? "",
-        patientName: r.patient_name ?? r.patientName ?? "—",
-        doctorName: r.doctor_name ?? r.doctorName ?? "",
+        patientName: r.patient_name ?? "—",
+        doctorName: r.doctor_name ?? "",
         diagnosis: r.diagnosis ?? r.primary_diagnosis ?? "",
         conclusion: r.conclusion ?? r.summary ?? "",
-        isSigned: Boolean(r.is_signed ?? r.isSigned ?? false),
-        completedAt: r.completed_at ?? r.completedAt ?? "",
+        isSigned: Boolean(r.is_signed ?? false),
+        completedAt: r.completed_at ?? "",
         createdAt: r.created_at ?? "",
-        needsFollowUp: Boolean(r.needs_follow_up ?? r.needsFollowUp ?? false),
+        needsFollowUp: Boolean(r.needs_follow_up ?? false),
     };
 }
 

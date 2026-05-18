@@ -47,17 +47,17 @@ interface Bundle {
 }
 
 function mapDiscount(r: any): Discount {
-    const dv = Number(r.discount_value ?? r.discountValue ?? 0);
+    const dv = Number(r.discount_value ?? 0);
     return {
         id: String(r.discount_id ?? r.id ?? ""),
         name: r.name ?? "",
         code: r.code ?? "",
-        discountType: (r.discount_type ?? r.discountType ?? "PERCENT") === "AMOUNT" ? "AMOUNT" : "PERCENT",
+        discountType: (r.discount_type ?? "PERCENT") === "AMOUNT" ? "AMOUNT" : "PERCENT",
         discountValue: dv,
-        validFrom: r.valid_from ?? r.validFrom ?? "",
-        validTo: r.valid_to ?? r.validTo ?? "",
-        isActive: Boolean(r.is_active ?? r.isActive ?? true),
-        usedCount: Number(r.used_count ?? r.usedCount ?? 0),
+        validFrom: r.valid_from ?? "",
+        validTo: r.valid_to ?? "",
+        isActive: Boolean(r.is_active ?? true),
+        usedCount: Number(r.used_count ?? 0),
     };
 }
 
@@ -70,24 +70,24 @@ function mapVoucher(r: any): Voucher {
         discountValue: Number(r.discount_value ?? 0),
         validFrom: r.valid_from ?? "",
         validTo: r.valid_to ?? "",
-        maxUse: Number(r.max_use ?? r.maxUse ?? 0),
-        usedCount: Number(r.used_count ?? r.usedCount ?? 0),
-        isActive: Boolean(r.is_active ?? r.isActive ?? true),
+        maxUse: Number(r.max_use ?? 0),
+        usedCount: Number(r.used_count ?? 0),
+        isActive: Boolean(r.is_active ?? true),
     };
 }
 
 function mapBundle(r: any): Bundle {
-    const total = Number(r.total_price ?? r.totalPrice ?? 0);
-    const bp = Number(r.bundle_price ?? r.bundlePrice ?? 0);
+    const total = Number(r.total_price ?? 0);
+    const bp = Number(r.bundle_price ?? 0);
     return {
         id: String(r.bundle_id ?? r.id ?? ""),
         name: r.name ?? "",
         code: r.code ?? "",
-        serviceCount: Number(r.service_count ?? r.serviceCount ?? 0),
+        serviceCount: Number(r.service_count ?? 0),
         totalPrice: total,
         bundlePrice: bp,
         savings: total - bp,
-        isActive: Boolean(r.is_active ?? r.isActive ?? true),
+        isActive: Boolean(r.is_active ?? true),
     };
 }
 

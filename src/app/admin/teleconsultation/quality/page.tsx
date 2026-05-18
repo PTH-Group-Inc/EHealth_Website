@@ -32,8 +32,8 @@ interface Alert {
 function mapReview(r: any): Review {
     return {
         id: String(r.review_id ?? r.id ?? ""),
-        patientName: r.patient_name ?? r.patientName ?? "—",
-        doctorName: r.doctor_name ?? r.doctorName ?? "—",
+        patientName: r.patient_name ?? "—",
+        doctorName: r.doctor_name ?? "—",
         rating: Number(r.rating ?? r.overall_rating ?? 0),
         comment: r.comment ?? r.feedback ?? "",
         createdAt: r.created_at ?? "",
@@ -47,8 +47,8 @@ function mapAlert(r: any): Alert {
         level: lvl === "CRITICAL" ? "CRITICAL" : lvl === "WARNING" ? "WARNING" : "INFO",
         title: r.title ?? r.message ?? "",
         description: r.description ?? r.details ?? "",
-        doctorName: r.doctor_name ?? r.doctorName ?? "",
-        isResolved: Boolean(r.is_resolved ?? r.isResolved ?? false),
+        doctorName: r.doctor_name ?? "",
+        isResolved: Boolean(r.is_resolved ?? false),
         createdAt: r.created_at ?? "",
     };
 }

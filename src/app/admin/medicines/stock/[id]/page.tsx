@@ -56,18 +56,18 @@ export default function StockBatchDetailPage() {
 
                 setBatch({
                     id: res.pharmacy_inventory_id ?? res.id ?? batchId,
-                    drugName: res.brand_name ?? res.drug_name ?? res.drugName ?? "-",
-                    drugCode: res.drug_code ?? res.drugCode ?? "-",
+                    drugName: res.brand_name ?? res.drug_name ?? "-",
+                    drugCode: res.drug_code ?? "-",
                     category: res.category_name ?? res.category ?? "-",
-                    lotNumber: res.batch_number ?? res.lot_number ?? res.lotNumber ?? "-",
-                    expiryDate: formatDate(res.expiry_date ?? res.expiryDate),
-                    currentStock: Number(res.stock_quantity ?? res.quantity ?? res.currentStock ?? 0),
-                    minStock: Number(res.low_stock_threshold ?? res.min_quantity ?? res.minQuantity ?? 0),
+                    lotNumber: res.batch_number ?? res.lot_number ?? "-",
+                    expiryDate: formatDate(res.expiry_date),
+                    currentStock: Number(res.stock_quantity ?? res.quantity ?? 0),
+                    minStock: Number(res.low_stock_threshold ?? res.min_quantity ?? 0),
                     unit: res.dispensing_unit ?? res.unit ?? "Đơn vị",
-                    warehouseName: res.warehouse_name ?? res.warehouse?.name ?? res.warehouseName ?? "-",
-                    supplier: res.supplier_name ?? res.supplier?.name ?? res.supplierName ?? "-",
-                    importDate: formatDate(res.created_at ?? res.import_date ?? res.importDate),
-                    unitPrice: Number(res.unit_price ?? res.unitPrice ?? 0),
+                    warehouseName: res.warehouse_name ?? res.warehouse?.name ?? "-",
+                    supplier: res.supplier_name ?? res.supplier?.name ?? "-",
+                    importDate: formatDate(res.created_at ?? res.import_date),
+                    unitPrice: Number(res.unit_price ?? 0),
                 });
             })
             .catch(() => {

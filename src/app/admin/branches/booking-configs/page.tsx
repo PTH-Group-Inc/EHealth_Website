@@ -40,18 +40,18 @@ interface BranchLite { id: string; name: string; }
 
 function mapConfig(r: any): BookingConfig {
     return {
-        advanceBookingDays: Number(r.advance_booking_days ?? r.advanceBookingDays ?? 30),
-        minHoursBeforeBooking: Number(r.min_hours_before_booking ?? r.minHoursBeforeBooking ?? 2),
-        maxConcurrentPerSlot: Number(r.max_concurrent_per_slot ?? r.maxConcurrentPerSlot ?? 1),
-        allowOnlineBooking: Boolean(r.allow_online_booking ?? r.allowOnlineBooking ?? true),
-        allowWalkIn: Boolean(r.allow_walk_in ?? r.allowWalkIn ?? true),
-        requireDeposit: Boolean(r.require_deposit ?? r.requireDeposit ?? false),
-        depositAmount: Number(r.deposit_amount ?? r.depositAmount ?? 0),
-        cancellationWindowHours: Number(r.cancellation_window_hours ?? r.cancellationWindowHours ?? 24),
-        reschedulingWindowHours: Number(r.rescheduling_window_hours ?? r.reschedulingWindowHours ?? 12),
-        autoConfirm: Boolean(r.auto_confirm ?? r.autoConfirm ?? false),
-        sendReminderHoursBefore: Number(r.send_reminder_hours_before ?? r.sendReminderHoursBefore ?? 24),
-        maxReschedulesPerAppointment: Number(r.max_reschedules_per_appointment ?? r.maxReschedulesPerAppointment ?? 2),
+        advanceBookingDays: Number(r.advance_booking_days ?? 30),
+        minHoursBeforeBooking: Number(r.min_hours_before_booking ?? 2),
+        maxConcurrentPerSlot: Number(r.max_concurrent_per_slot ?? 1),
+        allowOnlineBooking: Boolean(r.allow_online_booking ?? true),
+        allowWalkIn: Boolean(r.allow_walk_in ?? true),
+        requireDeposit: Boolean(r.require_deposit ?? false),
+        depositAmount: Number(r.deposit_amount ?? 0),
+        cancellationWindowHours: Number(r.cancellation_window_hours ?? 24),
+        reschedulingWindowHours: Number(r.rescheduling_window_hours ?? 12),
+        autoConfirm: Boolean(r.auto_confirm ?? false),
+        sendReminderHoursBefore: Number(r.send_reminder_hours_before ?? 24),
+        maxReschedulesPerAppointment: Number(r.max_reschedules_per_appointment ?? 2),
     };
 }
 

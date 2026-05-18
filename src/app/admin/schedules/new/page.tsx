@@ -38,10 +38,10 @@ export default function NewSchedulePage() {
             .then((res: any) => {
                 const raw: any[] = Array.isArray(res?.data) ? res.data : [];
                 const mapped: WorkShift[] = raw.map((s: any) => ({
-                    id: String(s.id ?? s.shifts_id ?? s.shift_id ?? ""),
+                    id: String(s.shift_id ?? s.id ?? ""),
                     name: s.name ?? "",
-                    startTime: (s.startTime ?? s.start_time ?? "").slice(0, 5),
-                    endTime: (s.endTime ?? s.end_time ?? "").slice(0, 5),
+                    startTime: (s.start_time ?? "").slice(0, 5),
+                    endTime: (s.end_time ?? "").slice(0, 5),
                     type: (s.type ?? s.code ?? "MORNING") as WorkShift["type"],
                     description: s.description ?? "",
                     isActive: typeof s.isActive === "boolean" ? s.isActive : String(s.status ?? "").toUpperCase() !== "INACTIVE",

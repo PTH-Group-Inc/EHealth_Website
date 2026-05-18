@@ -41,15 +41,15 @@ function normalizeStatus(raw: any): DocStatus {
 
 function mapDoc(r: any): EInvoice {
     return {
-        id: String(r.document_id ?? r.e_invoice_id ?? r.id ?? ""),
+        id: String(r.e_invoice_id ?? r.document_id ?? r.id ?? ""),
         code: r.code ?? r.document_code ?? "",
-        invoiceCode: r.invoice_code ?? r.invoiceCode ?? "",
-        customerName: r.customer_name ?? r.customerName ?? "—",
+        invoiceCode: r.invoice_code ?? "",
+        customerName: r.customer_name ?? "—",
         amount: Number(r.amount ?? r.total_amount ?? 0),
-        taxCode: r.tax_code ?? r.taxCode ?? "",
+        taxCode: r.tax_code ?? "",
         status: normalizeStatus(r.status),
-        issuedAt: r.issued_at ?? r.issuedAt ?? "",
-        sentAt: r.sent_at ?? r.sentAt ?? "",
+        issuedAt: r.issued_at ?? "",
+        sentAt: r.sent_at ?? "",
         note: r.note ?? "",
     };
 }

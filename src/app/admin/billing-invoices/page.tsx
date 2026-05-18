@@ -43,19 +43,19 @@ function normalizeStatus(raw: any, paid: number, total: number): InvoiceStatus {
 }
 
 function mapInvoice(r: any): Invoice {
-    const total = Number(r.total_amount ?? r.totalAmount ?? r.total ?? 0);
-    const paid = Number(r.paid_amount ?? r.paidAmount ?? 0);
+    const total = Number(r.total_amount ?? r.total ?? 0);
+    const paid = Number(r.paid_amount ?? 0);
     return {
         id: String(r.invoice_id ?? r.id ?? ""),
         code: r.code ?? r.invoice_code ?? "",
-        patientName: r.patient_name ?? r.patientName ?? "—",
+        patientName: r.patient_name ?? "—",
         totalAmount: total,
         paidAmount: paid,
         dueAmount: Math.max(0, total - paid),
         status: normalizeStatus(r.status, paid, total),
         issuedAt: r.issued_at ?? r.created_at ?? "",
-        dueAt: r.due_at ?? r.dueAt ?? "",
-        encounterCode: r.encounter_code ?? r.encounterCode ?? "",
+        dueAt: r.due_at ?? "",
+        encounterCode: r.encounter_code ?? "",
     };
 }
 

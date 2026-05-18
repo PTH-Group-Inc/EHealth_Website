@@ -36,14 +36,14 @@ function normalizeStatus(raw: any): Status {
 
 function mapStatus(r: any): FacilityStatus {
     return {
-        facilityId: String(r.facility_id ?? r.facilityId ?? r.facilities_id ?? ""),
-        facilityName: r.facility_name ?? r.facilityName ?? r.name ?? "—",
-        branchId: String(r.branch_id ?? r.branchId ?? r.branches_id ?? ""),
-        branchName: r.branch_name ?? r.branchName ?? "",
+        facilityId: String(r.facility_id ?? ""),
+        facilityName: r.facility_name ?? r.name ?? "—",
+        branchId: String(r.branch_id ?? ""),
+        branchName: r.branch_name ?? "",
         date: r.date ?? r.status_date ?? "",
         status: normalizeStatus(r.status),
-        openTime: (r.open_time ?? r.openTime ?? "").slice(0, 5),
-        closeTime: (r.close_time ?? r.closeTime ?? "").slice(0, 5),
+        openTime: (r.open_time ?? "").slice(0, 5),
+        closeTime: (r.close_time ?? "").slice(0, 5),
         note: r.note ?? r.reason ?? "",
     };
 }

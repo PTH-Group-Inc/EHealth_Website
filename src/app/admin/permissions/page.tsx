@@ -29,7 +29,7 @@ function mapMenu(r: any): Menu {
         code: r.code ?? "",
         label: r.label ?? r.name ?? "",
         icon: r.icon ?? "",
-        parent: r.parent_id ?? r.parentId ?? "",
+        parent: r.parent_id ?? "",
         order: Number(r.order ?? r.sort_order ?? 0),
     };
 }

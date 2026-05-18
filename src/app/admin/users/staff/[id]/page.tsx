@@ -130,21 +130,21 @@ function normalizeStatus(raw: any): User["status"] {
 }
 
 function mapApiUserToUserDetailVM(raw: any, userId: string): UserDetailVM {
-    const id = String(raw?.users_id ?? raw?.id ?? userId);
+    const id = String(raw?.user_id ?? raw?.users_id ?? raw?.id ?? userId);
 
-    const fullName = raw?.profile?.full_name ?? raw?.full_name ?? raw?.fullName ?? raw?.email ?? "";
+    const fullName = raw?.profile?.full_name ?? raw?.full_name ?? raw?.email ?? "";
     const email = raw?.email ?? "";
-    const phone = raw?.phone ?? raw?.phone_number ?? raw?.phoneNumber ?? "";
+    const phone = raw?.phone ?? raw?.phone_number ?? "";
     const rawAvatar = raw?.profile?.avatar_url ?? raw?.avatar ?? "";
     const avatar = getImageUrl(rawAvatar);
 
-    const createdAt = raw?.created_at ?? raw?.createdAt ?? "";
-    const updatedAt = raw?.updated_at ?? raw?.updatedAt ?? "";
-    const lastAccess = raw?.last_login ?? raw?.lastAccess ?? raw?.last_login_at ?? "";
+    const createdAt = raw?.created_at ?? "";
+    const updatedAt = raw?.updated_at ?? "";
+    const lastAccess = raw?.last_login ?? raw?.last_login_at ?? "";
 
     const dob = raw?.profile?.dob ?? raw?.dob ?? raw?.date_of_birth ?? "";
     const gender = raw?.profile?.gender ?? raw?.gender ?? "";
-    const identityCardNumber = raw?.profile?.identity_card_number ?? raw?.identity_card_number ?? raw?.identityCardNumber ?? "";
+    const identityCardNumber = raw?.profile?.identity_card_number ?? raw?.identity_card_number ?? "";
     const address = raw?.profile?.address ?? raw?.address ?? "";
 
     const departmentName = raw?.department?.name ?? raw?.department_name ?? raw?.department ?? "";
@@ -156,7 +156,7 @@ function mapApiUserToUserDetailVM(raw: any, userId: string): UserDetailVM {
     const biography = raw?.biography ?? raw?.bio ?? "";
     const consultation_fee = raw?.consultation_fee ?? 0;
     const rating = raw?.rating ?? 0;
-    const reviewCount = raw?.review_count ?? raw?.reviewCount ?? 0;
+    const reviewCount = raw?.review_count ?? 0;
     const licenses = raw?.licenses ?? [];
     const professionalImage = raw?.professional_image ?? raw?.professional_avatar ?? "";
     const signatureUrl = getImageUrl(raw?.signature_url ?? raw?.signatureUrl ?? raw?.signature ?? "");
@@ -453,10 +453,10 @@ function WorkplaceTab({ userId }: { userId: string }) {
             ) : assignments.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {assignments.map((a, idx) => {
-                        const branchName = a.branch_name ?? a.branchName ?? a.name ?? "—";
-                        const departmentName = a.department_name ?? a.departmentName ?? a.department?.name ?? null;
-                        const facilityName = a.facility_name ?? a.facilityName ?? null;
-                        const roleTitle = a.role_title ?? a.roleTitle ?? null;
+                        const branchName = a.branch_name ?? a.name ?? "—";
+                        const departmentName = a.department_name ?? a.department?.name ?? null;
+                        const facilityName = a.facility_name ?? null;
+                        const roleTitle = a.role_title ?? null;
                         return (
                             <div
                                 key={a.user_branch_dept_id ?? a.id ?? `${branchName}-${idx}`}
@@ -1926,11 +1926,11 @@ function BranchAssignmentPanel({ userId }: { userId: string }) {
                 ) : assignments.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {assignments.map((a, idx) => {
-                            const branchId = String(a.branch_id ?? a.branchId ?? a.id ?? "");
-                            const branchName = a.branch_name ?? a.branchName ?? a.name ?? "—";
-                            const departmentName = a.department_name ?? a.departmentName ?? null;
-                            const facilityName = a.facility_name ?? a.facilityName ?? null;
-                            const roleTitle = a.role_title ?? a.roleTitle ?? null;
+                            const branchId = String(a.branch_id ?? a.id ?? "");
+                            const branchName = a.branch_name ?? a.name ?? "—";
+                            const departmentName = a.department_name ?? null;
+                            const facilityName = a.facility_name ?? null;
+                            const roleTitle = a.role_title ?? null;
                             return (
                                 <div
                                     key={a.user_branch_dept_id ?? `${branchId}-${idx}`}

@@ -46,10 +46,10 @@ export default function EditDoctorPage() {
                 if (d && (d.id || d.staff_id)) {
                     const doc = {
                         id: d.id ?? d.staff_id ?? doctorId,
-                        fullName: d.full_name ?? d.fullName ?? "",
+                        fullName: d.full_name ?? "",
                         email: d.email ?? "",
                         phone: d.phone_number ?? d.phone ?? "",
-                        departmentId: d.department?.id ?? d.departmentId ?? d.department_id ?? "",
+                        departmentId: d.department_id ?? d.department?.id ?? "",
                         specialization: d.specialization ?? "",
                         experience: d.experience ?? 0,
                         gender: d.gender ?? "Nam",

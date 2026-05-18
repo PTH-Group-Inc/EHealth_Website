@@ -97,8 +97,8 @@ export default function StockOutDetailPage() {
                     id: order.stock_out_order_id ?? order.id ?? orderId,
                     code: order.order_code ?? order.code ?? `XK-${orderId}`,
                     status: normalizeStatus(order.status),
-                    createdAt: formatDate(order.created_at ?? order.createdAt),
-                    createdBy: order.created_by_name ?? order.createdBy ?? "-",
+                    createdAt: formatDate(order.created_at),
+                    createdBy: order.created_by_name ?? "-",
                     destination: order.dest_warehouse_name ?? order.supplier_name ?? order.destination ?? "-",
                     reason: mapReasonType(order.reason_type ?? order.reason),
                     warehouseName: order.warehouse_name ?? order.warehouse?.name ?? "-",
@@ -107,16 +107,16 @@ export default function StockOutDetailPage() {
                     totalQuantity: Number(order.total_quantity ?? 0),
                     confirmedBy: order.confirmed_by_name ?? "-",
                     confirmedAt: formatDate(order.confirmed_at),
-                    cancelReason: order.cancelled_reason ?? order.cancelReason ?? "",
+                    cancelReason: order.cancelled_reason ?? "",
                 });
 
                 setItems(details.map((item: any, index: number) => ({
                     id: item.stock_out_detail_id ?? item.id ?? String(index + 1),
-                    drugName: item.brand_name ?? item.drug_name ?? item.drugName ?? "-",
+                    drugName: item.brand_name ?? item.drug_name ?? "-",
                     quantity: Number(item.quantity ?? 0),
                     unit: item.dispensing_unit ?? item.unit ?? "Đơn vị",
                     lotNumber: item.batch_number ?? item.lot_number ?? "",
-                    expiryDate: formatDate(item.expiry_date ?? item.expiryDate),
+                    expiryDate: formatDate(item.expiry_date),
                     note: item.reason_note ?? item.note ?? "",
                 })));
             })

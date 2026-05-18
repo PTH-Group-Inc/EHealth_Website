@@ -59,10 +59,10 @@ export default function MedicineImportPage() {
                     supplier: item.supplier_name ?? item.supplier?.name ?? "-",
                     warehouseName: item.warehouse_name ?? item.warehouse?.name ?? "-",
                     totalAmount: Number(item.total_amount ?? 0),
-                    totalItems: Number(item.total_items ?? item.totalItems ?? 0),
+                    totalItems: Number(item.total_items ?? 0),
                     date: formatDate(item.created_at ?? item.date),
                     status: normalizeStockInStatus(item.status),
-                    createdBy: item.created_by_name ?? item.createdBy ?? "-",
+                    createdBy: item.created_by_name ?? "-",
                 })));
             })
             .catch(() => {

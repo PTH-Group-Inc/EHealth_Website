@@ -44,7 +44,7 @@ function mapType(r: any): TeleType {
         description: r.description ?? r.note ?? "",
         duration: Number(r.duration_minutes ?? r.duration ?? 0),
         price: Number(r.base_price ?? r.price ?? 0),
-        isActive: Boolean(r.is_active ?? r.isActive ?? true),
+        isActive: Boolean(r.is_active ?? true),
     };
 }
 

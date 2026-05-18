@@ -64,13 +64,13 @@ function normalizeStatus(raw: any): BedStatus {
 
 function mapBed(b: any): Bed {
     return {
-        id: String(b.beds_id ?? b.bed_id ?? b.id ?? ""),
+        id: String(b.bed_id ?? b.id ?? ""),
         code: b.code ?? b.bed_code ?? "",
         name: b.name ?? b.bed_name ?? b.code ?? "",
-        roomId: b.room_id ?? b.roomId ?? b.medical_room_id ?? "",
-        roomName: b.room_name ?? b.roomName ?? b.medical_room_name ?? "",
-        bedType: b.bed_type ?? b.bedType ?? b.type ?? "STANDARD",
-        patientName: b.patient_name ?? b.patientName ?? "",
+        roomId: b.room_id ?? b.medical_room_id ?? "",
+        roomName: b.room_name ?? b.medical_room_name ?? "",
+        bedType: b.bed_type ?? b.type ?? "STANDARD",
+        patientName: b.patient_name ?? "",
         status: normalizeStatus(b.status),
         note: b.note ?? b.description ?? "",
     };
@@ -78,7 +78,7 @@ function mapBed(b: any): Bed {
 
 function mapRoom(r: any): RoomLite {
     return {
-        id: String(r.medical_rooms_id ?? r.medical_room_id ?? r.rooms_id ?? r.id ?? ""),
+        id: String(r.medical_room_id ?? r.room_id ?? r.id ?? ""),
         code: r.code ?? r.room_code ?? "",
         name: r.name ?? r.room_name ?? "",
     };

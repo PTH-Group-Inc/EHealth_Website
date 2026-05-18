@@ -44,15 +44,15 @@ const TYPE_META: Record<string, { labelKey: "main" | "pharmacy" | "equipment" | 
 
 function mapWarehouse(r: any): Warehouse {
     return {
-        id: String(r.warehouses_id ?? r.warehouse_id ?? r.id ?? ""),
+        id: String(r.warehouse_id ?? r.id ?? ""),
         code: r.code ?? r.warehouse_code ?? "",
         name: r.name ?? r.warehouse_name ?? "",
-        facilityName: r.facility_name ?? r.facilityName ?? "",
+        facilityName: r.facility_name ?? "",
         address: r.address ?? "",
-        manager: r.manager_name ?? r.managerName ?? r.manager ?? "",
+        manager: r.manager_name ?? r.manager ?? "",
         phone: r.phone ?? "",
         type: (r.type ?? r.warehouse_type ?? "MAIN").toUpperCase(),
-        isActive: Boolean(r.is_active ?? r.isActive ?? true),
+        isActive: Boolean(r.is_active ?? true),
         note: r.note ?? r.description ?? "",
     };
 }

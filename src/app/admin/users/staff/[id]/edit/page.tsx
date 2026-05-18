@@ -40,21 +40,21 @@ export default function EditUserPage() {
                         ? String(d.roles[0]).toUpperCase()
                         : String(d.role ?? ROLES.STAFF).toUpperCase();
                     setUser({
-                        id: d.users_id ?? d.id ?? userId,
-                        fullName: d.profile?.full_name ?? d.full_name ?? d.fullName ?? "",
+                        id: d.user_id ?? d.users_id ?? d.id ?? userId,
+                        fullName: d.profile?.full_name ?? d.full_name ?? "",
                         email: d.email ?? "",
                         role: roleVal as Role,
                         status: (d.status ?? "ACTIVE") as User["status"],
                         avatar: d.profile?.avatar_url ?? d.avatar ?? "",
-                        createdAt: d.created_at ?? d.createdAt ?? "",
+                        createdAt: d.created_at ?? "",
                     } as User);
                     setFormData({
-                        fullName: d.profile?.full_name ?? d.full_name ?? d.fullName ?? "",
+                        fullName: d.profile?.full_name ?? d.full_name ?? "",
                         email: d.email ?? "",
                         role: roleVal,
-                        phone: d.phone ?? d.phone_number ?? d.phoneNumber ?? "",
+                        phone: d.phone ?? d.phone_number ?? "",
                         gender: d.gender === "MALE" ? "Nam" : d.gender === "FEMALE" ? "Nữ" : "Nam",
-                        birthDate: d.dob ?? d.date_of_birth ?? d.birthDate ?? "",
+                        birthDate: d.dob ?? d.date_of_birth ?? "",
                         address: d.address ?? "",
                     });
                 } else {

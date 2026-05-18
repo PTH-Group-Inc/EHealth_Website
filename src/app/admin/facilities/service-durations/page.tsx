@@ -21,9 +21,9 @@ interface FacilityLite { id: string; name: string; }
 
 function mapDuration(r: any): Duration {
     return {
-        facilityServiceId: String(r.facility_service_id ?? r.facility_services_id ?? r.service_id ?? r.id ?? ""),
+        facilityServiceId: String(r.facility_service_id ?? r.service_id ?? r.id ?? ""),
         serviceName: r.service_name ?? r.name ?? "",
-        durationMinutes: Number(r.duration_minutes ?? r.durationMinutes ?? r.default_duration ?? 30),
+        durationMinutes: Number(r.duration_minutes ?? r.default_duration ?? 30),
     };
 }
 

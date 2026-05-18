@@ -24,14 +24,14 @@ interface FacilityLite { id: string; name: string; }
 
 function mapPolicy(r: any): Policy {
     return {
-        id: String(r.policy_id ?? r.pricing_policy_id ?? r.id ?? ""),
-        facilityServiceId: String(r.facility_service_id ?? r.facilityServiceId ?? ""),
-        serviceName: r.service_name ?? r.serviceName ?? r.name ?? "—",
-        basePrice: Number(r.base_price ?? r.basePrice ?? r.price ?? 0),
+        id: String(r.pricing_policy_id ?? r.policy_id ?? r.id ?? ""),
+        facilityServiceId: String(r.facility_service_id ?? ""),
+        serviceName: r.service_name ?? r.name ?? "—",
+        basePrice: Number(r.base_price ?? r.price ?? 0),
         currency: r.currency ?? "VND",
-        effectiveFrom: r.effective_from ?? r.effectiveFrom ?? "",
-        effectiveTo: r.effective_to ?? r.effectiveTo ?? "",
-        isActive: Boolean(r.is_active ?? r.isActive ?? true),
+        effectiveFrom: r.effective_from ?? "",
+        effectiveTo: r.effective_to ?? "",
+        isActive: Boolean(r.is_active ?? true),
         note: r.note ?? r.description ?? "",
     };
 }

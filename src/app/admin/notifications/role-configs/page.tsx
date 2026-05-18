@@ -21,7 +21,7 @@ function mapCategory(r: any): Category {
 
 function mapRole(r: any): Role {
     return {
-        id: String(r.role_id ?? r.roles_id ?? r.id ?? ""),
+        id: String(r.role_id ?? r.id ?? ""),
         name: r.name ?? r.role_name ?? "",
         code: r.code ?? "",
     };
@@ -29,8 +29,8 @@ function mapRole(r: any): Role {
 
 function mapConfig(r: any): RoleConfig {
     return {
-        roleId: String(r.role_id ?? r.roleId ?? ""),
-        categoryId: String(r.category_id ?? r.categoryId ?? ""),
+        roleId: String(r.role_id ?? ""),
+        categoryId: String(r.category_id ?? ""),
         email: Boolean(r.email ?? r.via_email ?? false),
         sms: Boolean(r.sms ?? r.via_sms ?? false),
         push: Boolean(r.push ?? r.via_push ?? false),

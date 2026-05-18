@@ -37,14 +37,14 @@ const EMPTY_FORM: FormState = { name: "", taxCode: "", phone: "", email: "", add
 
 function mapSupplier(r: any): Supplier {
     return {
-        id: String(r.suppliers_id ?? r.supplier_id ?? r.id ?? ""),
+        id: String(r.supplier_id ?? r.id ?? ""),
         code: r.code ?? r.supplier_code ?? "",
         name: r.name ?? r.supplier_name ?? "",
-        taxCode: r.tax_code ?? r.taxCode ?? "",
+        taxCode: r.tax_code ?? "",
         phone: r.phone ?? r.phone_number ?? "",
         email: r.email ?? "",
         address: r.address ?? "",
-        contactPerson: r.contact_person ?? r.contactPerson ?? "",
+        contactPerson: r.contact_person ?? "",
         status: (r.status ?? "ACTIVE") === "INACTIVE" ? "INACTIVE" : "ACTIVE",
         note: r.note ?? r.description ?? "",
     };

@@ -29,14 +29,14 @@ function normalizeStatus(raw: any): Prescription["status"] {
 
 function mapRx(r: any): Prescription {
     return {
-        id: String(r.consultation_id ?? r.prescription_id ?? r.id ?? ""),
+        id: String(r.prescription_id ?? r.consultation_id ?? r.id ?? ""),
         code: r.code ?? r.prescription_code ?? "",
-        patientName: r.patient_name ?? r.patientName ?? "—",
-        doctorName: r.doctor_name ?? r.doctorName ?? "",
-        itemCount: Number(r.item_count ?? r.itemCount ?? 0),
+        patientName: r.patient_name ?? "—",
+        doctorName: r.doctor_name ?? "",
+        itemCount: Number(r.item_count ?? 0),
         status: normalizeStatus(r.status),
         createdAt: r.created_at ?? "",
-        sentAt: r.sent_at ?? r.sentAt ?? "",
+        sentAt: r.sent_at ?? "",
     };
 }
 

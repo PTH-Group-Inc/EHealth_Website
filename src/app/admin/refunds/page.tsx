@@ -47,15 +47,15 @@ function mapRequest(r: any): RefundRequest {
     return {
         id: String(r.refund_request_id ?? r.request_id ?? r.id ?? ""),
         code: r.code ?? r.request_code ?? "",
-        invoiceCode: r.invoice_code ?? r.invoiceCode ?? "",
-        patientName: r.patient_name ?? r.patientName ?? "—",
+        invoiceCode: r.invoice_code ?? "",
+        patientName: r.patient_name ?? "—",
         amount: Number(r.amount ?? r.refund_amount ?? 0),
         reason: r.reason ?? "",
         status: normalizeStatus(r.status),
-        requestedBy: r.requested_by_name ?? r.requestedByName ?? "",
-        approverName: r.approver_name ?? r.approverName ?? "",
+        requestedBy: r.requested_by_name ?? "",
+        approverName: r.approver_name ?? "",
         requestedAt: r.requested_at ?? r.created_at ?? "",
-        processedAt: r.processed_at ?? r.processedAt ?? "",
+        processedAt: r.processed_at ?? "",
     };
 }
 

@@ -58,10 +58,10 @@ export default function StaffSchedulePage() {
                 const data: any = sh.value;
                 const raw: any[] = Array.isArray(data?.data) ? data.data : [];
                 setShifts(raw.map((s) => ({
-                    id: String(s.id ?? s.shifts_id ?? s.shift_id ?? s.code ?? ""),
+                    id: String(s.shift_id ?? s.id ?? s.code ?? ""),
                     name: s.name ?? "",
-                    startTime: (s.startTime ?? s.start_time ?? "").slice(0, 5),
-                    endTime: (s.endTime ?? s.end_time ?? "").slice(0, 5),
+                    startTime: (s.start_time ?? "").slice(0, 5),
+                    endTime: (s.end_time ?? "").slice(0, 5),
                     type: (s.type ?? s.code ?? "MORNING") as WorkShift["type"],
                     description: s.description ?? "",
                     isActive: typeof s.isActive === "boolean" ? s.isActive : String(s.status ?? "").toUpperCase() !== "INACTIVE",
@@ -358,18 +358,18 @@ export default function StaffSchedulePage() {
 
 function mapSchedule(s: any): StaffSchedule {
     return {
-        id: String(s.id ?? s.schedule_id ?? ""),
-        staffId: String(s.staffId ?? s.staff_id ?? ""),
-        staffName: s.staffName ?? s.staff_name ?? s.fullName ?? s.full_name ?? "",
-        shiftId: String(s.shiftId ?? s.shift_id ?? ""),
-        shiftName: s.shiftName ?? s.shift_name ?? s.shift?.name ?? "",
-        workDate: (s.workDate ?? s.work_date ?? s.date ?? "").slice(0, 10),
-        startTime: s.startTime ?? s.start_time ?? "",
-        endTime: s.endTime ?? s.end_time ?? "",
-        departmentId: s.departmentId ?? s.department_id ?? "",
+        id: String(s.schedule_id ?? s.id ?? ""),
+        staffId: String(s.staff_id ?? ""),
+        staffName: s.staff_name ?? s.full_name ?? "",
+        shiftId: String(s.shift_id ?? ""),
+        shiftName: s.shift_name ?? s.shift?.name ?? "",
+        workDate: (s.work_date ?? s.date ?? "").slice(0, 10),
+        startTime: s.start_time ?? "",
+        endTime: s.end_time ?? "",
+        departmentId: s.department_id ?? "",
         status: (s.status ?? "SCHEDULED") as StaffSchedule["status"],
         note: s.note ?? "",
-        createdAt: s.createdAt ?? s.created_at ?? "",
+        createdAt: s.created_at ?? "",
     };
 }
 

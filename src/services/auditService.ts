@@ -86,7 +86,7 @@ function unwrapLog(raw: any): AuditLog {
         ipAddress: raw.ip_address ?? '',
         userAgent: raw.user_agent ?? '',
         status: deriveStatus(raw),
-        timestamp: raw.created_at ?? raw.createdAt ?? '',
+        timestamp: raw.created_at ?? '',
     };
 }
 

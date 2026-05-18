@@ -32,16 +32,16 @@ export default function HospitalsPage() {
                 const items: any[] = res?.data?.items ?? res?.items ?? res?.data?.data ?? res?.data ?? res ?? [];
                 if (Array.isArray(items) && items.length > 0) {
                     setHospitals(items.map((f: any) => ({
-                        id: f.facilities_id ?? f.id ?? "",
+                        id: f.facility_id ?? f.id ?? "",
                         name: f.name ?? "",
-                        code: f.code ?? f.facilities_id ?? f.id ?? "",
+                        code: f.code ?? f.facility_id ?? f.id ?? "",
                         address: f.address ?? "",
                         phone: f.phone ?? "",
                         email: f.email ?? "",
                         type: f.type ?? "Phòng khám đa khoa",
                         status: (f.status ?? "active").toLowerCase(),
-                        doctorCount: f.doctor_count ?? f.doctorCount ?? 0,
-                        departmentCount: f.department_count ?? f.departmentCount ?? 0,
+                        doctorCount: f.doctor_count ?? 0,
+                        departmentCount: f.department_count ?? 0,
                     })));
                 }
             })

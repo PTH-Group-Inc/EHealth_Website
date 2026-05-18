@@ -26,11 +26,11 @@ function mapRoom(r: any): ActiveRoom {
     return {
         id: String(r.consultation_id ?? r.id ?? ""),
         code: r.code ?? r.session_code ?? "",
-        patientName: r.patient_name ?? r.patientName ?? "—",
-        doctorName: r.doctor_name ?? r.doctorName ?? "—",
+        patientName: r.patient_name ?? "—",
+        doctorName: r.doctor_name ?? "—",
         startedAt: started,
         durationMinutes: Math.max(0, Math.round((now - startedTs) / 60000)),
-        participantCount: Number(r.participant_count ?? r.participantCount ?? 0),
+        participantCount: Number(r.participant_count ?? 0),
         status: (r.status ?? "OPEN").toUpperCase() === "IN_CALL" || r.in_call ? "IN_CALL" : (r.status === "WAITING" ? "WAITING" : "OPEN"),
     };
 }

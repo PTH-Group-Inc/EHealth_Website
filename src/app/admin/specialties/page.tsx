@@ -36,14 +36,14 @@ const SPECIALTY_ICONS = [
 
 function mapSpecialty(r: any): Specialty {
     return {
-        id: String(r.specialties_id ?? r.specialty_id ?? r.id ?? ""),
+        id: String(r.specialty_id ?? r.id ?? ""),
         code: r.code ?? r.specialty_code ?? "",
         name: r.name ?? r.specialty_name ?? "",
         description: r.description ?? "",
         icon: r.icon ?? "local_hospital",
-        doctorCount: Number(r.doctor_count ?? r.doctorCount ?? 0),
-        serviceCount: Number(r.service_count ?? r.serviceCount ?? 0),
-        isActive: Boolean(r.is_active ?? r.isActive ?? true),
+        doctorCount: Number(r.doctor_count ?? 0),
+        serviceCount: Number(r.service_count ?? 0),
+        isActive: Boolean(r.is_active ?? true),
     };
 }
 
@@ -87,7 +87,7 @@ export default function SpecialtiesPage() {
                 : [];
             const doctorBySpec = new Map<string, number>();
             for (const s of (Array.isArray(staffData) ? staffData : [])) {
-                const sid = String(s.specialty_id ?? s.specialtyId ?? s.specialties_id ?? "");
+                const sid = String(s.specialty_id ?? "");
                 const role = String(s.role ?? s.position ?? "").toUpperCase();
                 if (!sid) continue;
                 if (role.includes("DOCTOR") || role.includes("BAC_SI") || role === "BS") {
