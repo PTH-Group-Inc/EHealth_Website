@@ -11,6 +11,7 @@ import {
 import { unwrapList } from "@/api/response";
 import { useToast } from "@/contexts/ToastContext";
 import { PageHeader, FilterBar, EmptyState, StatCard } from "@/components/shared/layout";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 type RoomStatus = "ACTIVE" | "INACTIVE" | "MAINTENANCE";
 
@@ -34,7 +35,6 @@ interface MedicalServiceLite { id: string; code?: string; name: string; }
 
 interface FormState {
     id?: string;
-    code: string;
     name: string;
     floor: string;
     capacity: string;
@@ -43,7 +43,7 @@ interface FormState {
     note: string;
 }
 
-const EMPTY_FORM: FormState = { code: "", name: "", floor: "", capacity: "", departmentId: "", branchId: "", note: "" };
+const EMPTY_FORM: FormState = { name: "", floor: "", capacity: "", departmentId: "", branchId: "", note: "" };
 
 const STATUS_META: Record<RoomStatus, { label: string; bg: string; color: string }> = {
     ACTIVE: { label: "Hoạt động", bg: "from-emerald-500 to-teal-500", color: "emerald" },
@@ -169,7 +169,6 @@ export default function ClinicRoomsAdminPage() {
     const openEdit = (r: Room) => {
         setForm({
             id: r.id,
-            code: r.code,
             name: r.name,
             floor: r.floor ?? "",
             capacity: r.capacity != null ? String(r.capacity) : "",
@@ -181,14 +180,13 @@ export default function ClinicRoomsAdminPage() {
     };
 
     const handleSave = async () => {
-        if (!form.code.trim() || !form.name.trim()) {
-            toast.warning("Vui lòng nhập mã và tên phòng.");
+        if (!form.name.trim()) {
+            toast.warning("Vui lòng nhập tên phòng.");
             return;
         }
         setSaving(true);
         try {
             const payload: any = {
-                code: form.code.trim(),
                 name: form.name.trim(),
                 floor: form.floor.trim() || undefined,
                 capacity: form.capacity ? Number(form.capacity) : undefined,
@@ -425,30 +423,30 @@ export default function ClinicRoomsAdminPage() {
                             {form.id ? "Sửa phòng khám" : "Tạo phòng khám mới"}
                         </h3>
                         <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Mã *</label>
-                                    <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="VD: ROOM-101" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên *</label>
-                                    <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="VD: Phòng khám 101" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên phòng *</label>
+                                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="VD: Phòng khám 101" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Khoa</label>
-                                    <select value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })} className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white">
-                                        <option value="">— Chọn khoa —</option>
-                                        {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                                    </select>
+                                    <CustomSelect
+                                        options={[{ id: "", name: "— Chọn khoa —" }, ...departments.map((d) => ({ id: d.id, name: d.name }))]}
+                                        value={form.departmentId}
+                                        onChange={(value) => setForm({ ...form, departmentId: String(value) })}
+                                        placeholder="— Chọn khoa —"
+                                        icon="workspaces"
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Chi nhánh</label>
-                                    <select value={form.branchId} onChange={(e) => setForm({ ...form, branchId: e.target.value })} className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white">
-                                        <option value="">— Chọn chi nhánh —</option>
-                                        {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                    </select>
+                                    <CustomSelect
+                                        options={[{ id: "", name: "— Chọn chi nhánh —" }, ...branches.map((b) => ({ id: b.id, name: b.name }))]}
+                                        value={form.branchId}
+                                        onChange={(value) => setForm({ ...form, branchId: String(value) })}
+                                        placeholder="— Chọn chi nhánh —"
+                                        icon="apartment"
+                                    />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">

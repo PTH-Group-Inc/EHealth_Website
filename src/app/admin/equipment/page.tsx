@@ -8,6 +8,7 @@ import { MEDICAL_EQUIPMENT_ENDPOINTS, MEDICAL_ROOM_MANAGEMENT_ENDPOINTS } from "
 import { unwrapList } from "@/api/response";
 import { useToast } from "@/contexts/ToastContext";
 import { PageHeader, FilterBar, EmptyState, StatCard } from "@/components/shared/layout";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 type EquipmentStatus = "ACTIVE" | "INACTIVE" | "MAINTENANCE" | "BROKEN";
 
@@ -33,7 +34,6 @@ interface RoomLite {
 
 interface FormState {
     id?: string;
-    code: string;
     name: string;
     type: string;
     model: string;
@@ -45,7 +45,7 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
-    code: "", name: "", type: "", model: "", manufacturer: "",
+    name: "", type: "", model: "", manufacturer: "",
     roomId: "", purchaseDate: "", warrantyUntil: "", note: "",
 };
 
@@ -158,7 +158,6 @@ export default function EquipmentAdminPage() {
     const openEdit = (e: Equipment) => {
         setForm({
             id: e.id,
-            code: e.code,
             name: e.name,
             type: e.type ?? "",
             model: e.model ?? "",
@@ -172,14 +171,13 @@ export default function EquipmentAdminPage() {
     };
 
     const handleSave = async () => {
-        if (!form.code.trim() || !form.name.trim()) {
-            toast.warning("Vui lòng nhập mã và tên thiết bị.");
+        if (!form.name.trim()) {
+            toast.warning("Vui lòng nhập tên thiết bị.");
             return;
         }
         setSaving(true);
         try {
             const payload: any = {
-                code: form.code.trim(),
                 name: form.name.trim(),
                 type: form.type.trim() || undefined,
                 model: form.model.trim() || undefined,
@@ -370,15 +368,9 @@ export default function EquipmentAdminPage() {
                             {form.id ? "Sửa thiết bị" : "Thêm thiết bị mới"}
                         </h3>
                         <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Mã *</label>
-                                    <input value={form.code} onChange={(ev) => setForm({ ...form, code: ev.target.value })} placeholder="VD: EQ-XRAY-01" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên *</label>
-                                    <input value={form.name} onChange={(ev) => setForm({ ...form, name: ev.target.value })} placeholder="VD: Máy X-Quang Kỹ thuật số" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên thiết bị *</label>
+                                <input value={form.name} onChange={(ev) => setForm({ ...form, name: ev.target.value })} placeholder="VD: Máy X-Quang Kỹ thuật số" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
                             </div>
                             <div className="grid grid-cols-3 gap-3">
                                 <div>
@@ -396,10 +388,13 @@ export default function EquipmentAdminPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Phòng lắp đặt</label>
-                                <select value={form.roomId} onChange={(ev) => setForm({ ...form, roomId: ev.target.value })} className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white">
-                                    <option value="">— Chưa gán —</option>
-                                    {rooms.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-                                </select>
+                                <CustomSelect
+                                    options={[{ id: "", name: "— Chưa gán —" }, ...rooms.map((r) => ({ id: r.id, name: r.name }))]}
+                                    value={form.roomId}
+                                    onChange={(value) => setForm({ ...form, roomId: String(value) })}
+                                    placeholder="— Chọn phòng —"
+                                    icon="meeting_room"
+                                />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
