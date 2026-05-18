@@ -6,6 +6,7 @@ import Link from "next/link";
 import { emrService } from "@/services/emrService";
 import { encounterService } from "@/services/encounterService";
 import { prescriptionService } from "@/services/prescriptionService";
+import { billingService } from "@/services/billingService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import { validateBloodPressure, validateVitalSign } from "@/utils/validation";
@@ -434,6 +435,15 @@ export default function ExaminationPage() {
                     followUpDate: followUp || undefined,
                     doctorNote: doctorNote || undefined,
                 });
+
+                // 3. Tự động tạo hóa đơn (Auto-generate invoice)
+                try {
+                    await billingService.generateInvoice(eid);
+                    toast.success("Hóa đơn đã được tự động tạo và chuyển đến Lễ tân/Thu ngân.");
+                } catch (err) {
+                    console.error("Lỗi khi tự động tạo hóa đơn:", err);
+                    toast.error("Không thể tự động tạo hóa đơn. Vui lòng báo Thu ngân kiểm tra lại.");
+                }
             } else {
                 // Fallback: dùng emrService tạo record
                 const payload = buildEmrPayload();

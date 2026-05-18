@@ -13,6 +13,7 @@ import { RELATIONSHIP_OPTIONS, type AvatarImage, type PatientProfile } from "@/t
 import { validateFile } from "@/utils/fileValidation";
 import { enrichPatientProfileInsurance, getInsuranceStatusMeta, toPatientRelationshipEnum } from "@/utils/patientProfileHelpers";
 import { validateDob, validateIdNumber, validateName, validatePhone } from "@/utils/validation";
+import { getImageUrl } from "@/utils/helpers";
 
 type FormState = {
     fullName: string;
@@ -365,7 +366,7 @@ export default function PatientProfilesPage() {
         }
     };
 
-    const displayAvatar = selectedAvatarPreview || (!avatarMarkedForDeletion ? initialAvatar?.url || "" : "");
+    const displayAvatar = selectedAvatarPreview || (!avatarMarkedForDeletion ? getImageUrl(initialAvatar?.url) || "" : "");
     const canRemoveAvatar = Boolean(selectedAvatarFile || (!avatarMarkedForDeletion && initialAvatar?.url));
 
     if (loading) {
@@ -712,7 +713,7 @@ function ProfileCard({
                 <div className="flex items-start gap-4">
                     <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#3C81C6] to-[#2563eb] text-white shadow-lg shadow-[#3C81C6]/20 sm:h-14 sm:w-14">
                         {profile.avatar ? (
-                            <img src={profile.avatar} alt={profile.fullName} className="h-full w-full object-cover" />
+                            <img src={getImageUrl(profile.avatar)} alt={profile.fullName} className="h-full w-full object-cover" />
                         ) : (
                             <span className="material-symbols-outlined" style={{ fontSize: "26px" }}>
                                 {RELATIONSHIP_OPTIONS.find((item) => item.value === profile.relationship)?.icon || "person"}

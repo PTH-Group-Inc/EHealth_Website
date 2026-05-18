@@ -52,18 +52,26 @@ export default function AppointmentsPage() {
     const [rescheduleModal, setRescheduleModal] = useState<RescheduleModalState | null>(null);
     const [resendingId, setResendingId] = useState<string | null>(null);
     const [profilesLoaded, setProfilesLoaded] = useState(false);
-    const [payingData, setPayingData] = useState<{ appointmentId: string; invoiceId?: string; qrData: string; amount: number } | null>(null);
+    const [payingData, setPayingData] = useState<{ appointmentId: string; invoiceId?: string; qrData: string; amount: number; initialTimeLeft?: number } | null>(null);
     const [loadingPay, setLoadingPay] = useState<string | null>(null);
 
     const handleContinuePayment = async (id: string) => {
         setLoadingPay(id);
         try {
             const res = await regenerateAppointmentQr(id);
+            let timeLeft = undefined;
+            if (typeof res.remaining_seconds === "number") {
+                timeLeft = Math.max(0, res.remaining_seconds);
+            } else if (res.expires_at) {
+                timeLeft = Math.max(0, Math.floor((new Date(res.expires_at).getTime() - Date.now()) / 1000));
+            }
+            
             setPayingData({
                 appointmentId: res.appointment_id ?? id,
                 invoiceId: res.invoice_id,
                 qrData: res.qrTemplateData ?? res.qr_url ?? "",
                 amount: Number(res.amount ?? 0),
+                initialTimeLeft: timeLeft,
             });
         } catch (e: any) {
             showToast(e?.response?.data?.message ?? e?.message ?? "Không tạo lại được QR", "error");
@@ -604,6 +612,7 @@ export default function AppointmentsPage() {
                     invoiceId={payingData.invoiceId}
                     qrData={payingData.qrData}
                     amount={payingData.amount}
+                    initialTimeLeft={payingData.initialTimeLeft}
                     onPaid={async () => {
                         setPayingData(null);
                         showToast("Thanh toán cọc thành công. Lịch khám đã được xác nhận.", "success");

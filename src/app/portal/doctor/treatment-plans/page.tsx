@@ -43,7 +43,7 @@ export default function DoctorTreatmentPlansPage() {
     // Load patient options for picker
     useEffect(() => {
         getPatients({ limit: 50 }).then((res: any) => {
-            const data = res?.data ?? [];
+            const data = res?.data?.items ?? (Array.isArray(res?.data) ? res.data : []);
             const opts = (Array.isArray(data) ? data : []).map((p: any) => ({
                 id: p.id ?? p.patient_id,
                 label: `${p.full_name ?? p.fullName ?? "(không tên)"} ${p.patient_code ? `· ${p.patient_code}` : ""}`,

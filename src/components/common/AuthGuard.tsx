@@ -58,6 +58,10 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     const [isChecking, setIsChecking] = useState(true);
 
     useEffect(() => {
+        // Reset trạng thái khi bắt đầu kiểm tra lại (ví dụ: khi pathname thay đổi sau logout)
+        setIsChecking(true);
+        setIsAuthorized(false);
+
         const checkAuth = () => {
             try {
                 const token = localStorage.getItem(AUTH_CONFIG.ACCESS_TOKEN_KEY);

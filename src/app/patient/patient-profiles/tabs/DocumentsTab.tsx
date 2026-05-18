@@ -117,11 +117,7 @@ export default function DocumentsTab({ profile }: TabProps) {
             formData.append("document_type_id", fileType);
             formData.append("patient_id", patientId.toString());
 
-            await axiosClient.post(DOCUMENT_ENDPOINTS.UPLOAD(patientId.toString()), formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            await axiosClient.post(DOCUMENT_ENDPOINTS.UPLOAD(patientId.toString()), formData);
 
             showToast("Tải tài liệu lên thành công!", "success");
             setFileName("");

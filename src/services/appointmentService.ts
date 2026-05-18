@@ -260,6 +260,17 @@ export const cancelAppointment = async (id: string, reason?: string): Promise<vo
 };
 
 // ============================================
+// Đánh dấu Không đến (No-Show)
+// ============================================
+export const markNoShow = async (id: string): Promise<void> => {
+    try {
+        await axiosClient.post(APPOINTMENT_STATUS_ENDPOINTS.NO_SHOW(id));
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Đánh dấu Không đến thất bại');
+    }
+};
+
+// ============================================
 // Tạo mã QR check-in cho lịch hẹn
 // ============================================
 export const generateAppointmentQr = async (id: string): Promise<{ qr_token: string; expires_at: string }> => {
@@ -394,7 +405,7 @@ export const preBookAppointment = async (data: PreBookRequest): Promise<PreBookR
     };
     if (data.patientId) payload.patient_id = data.patientId;
     if (data.branchId) payload.branch_id = data.branchId;
-    if (data.facilityId) payload.facility_id = data.facilityId;
+    // NOTE: facility_id không có trong BE CreateAppointmentInput, chỉ cần branch_id
     if (data.slotId) payload.slot_id = data.slotId;
     if (data.shiftId) payload.shift_id = data.shiftId;
     if (data.doctorId) payload.doctor_id = data.doctorId;
@@ -407,16 +418,39 @@ export const preBookAppointment = async (data: PreBookRequest): Promise<PreBookR
         const res = await axiosClient.post(APPOINTMENT_ENDPOINTS.PRE_BOOK, payload);
         return unwrapOne(res) as PreBookResponse;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Tạo lịch và thanh toán cọc thất bại');
+        // Giữ nguyên error gốc để page.tsx đọc được response.status cho fallback logic
+        throw error;
     }
 };
 
+export interface RegenerateAppointmentQrResponse {
+    appointment_id?: string;
+    invoice_id?: string;
+    payment_orders_id?: string;
+    order_code?: string;
+    amount: number;
+    qrTemplateData?: string;
+    qr_url?: string;
+    qr_code_url?: string;
+    expires_at?: string;
+    remaining_seconds?: number;
+    [key: string]: any;
+}
+
 export const regenerateAppointmentQr = async (
     id: string,
-): Promise<{ appointment_id: string; invoice_id: string; amount: number; qrTemplateData?: string; qr_url?: string }> => {
+): Promise<RegenerateAppointmentQrResponse> => {
     try {
         const res = await axiosClient.post(APPOINTMENT_ENDPOINTS.REGENERATE_QR(id), {});
-        return unwrapOne(res);
+        const data = unwrapOne(res) as RegenerateAppointmentQrResponse;
+        const qrUrl = data.qr_url || data.qr_code_url || data.qrTemplateData;
+        return {
+            ...data,
+            amount: Number(data.amount || 0),
+            qr_url: qrUrl,
+            qr_code_url: data.qr_code_url || qrUrl,
+            qrTemplateData: data.qrTemplateData || qrUrl,
+        };
     } catch (error: any) {
         throw new Error(error.response?.data?.message || 'Tạo lại QR thanh toán thất bại');
     }
@@ -434,9 +468,9 @@ export const getAppointmentPaymentStatus = async (id: string): Promise<PaymentSt
         const res = await axiosClient.get(APPOINTMENT_ENDPOINTS.PAYMENT_STATUS(id));
         const d = unwrapOne(res) as any;
         return {
-            isPaid: !!(d?.isPaid ?? d?.is_paid),
+            isPaid: !!(d?.isPaid || d?.is_paid || d?.payment_status === 'PAID' || d?.appointment_status === 'CONFIRMED' || d?.appointment_status === 'SCHEDULED'),
             appointment_status: d?.appointment_status ?? d?.appointmentStatus,
-            invoice_status: d?.invoice_status ?? d?.invoiceStatus,
+            invoice_status: d?.invoice_status ?? d?.invoiceStatus ?? d?.payment_status,
             ...d,
         };
     } catch (error: any) {

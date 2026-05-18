@@ -74,7 +74,7 @@ export const USER_ENDPOINTS = {
     RESET_PASSWORD: (id: string) => `/api/users/${id}/reset-password`,   // POST: admin reset pw
     CHANGE_PASSWORD: (id: string) => `/api/users/${id}/change-password`, // POST: admin đổi pw
 
-    // 1.1.5 Gán vai trò cho người dùng
+    // 1.1.5 Đổi vai trò hiệu lực cho người dùng
     ROLES: (id: string) => `/api/users/${id}/roles`,                         // GET/POST
     ROLE_DELETE: (userId: string, roleId: string) => `/api/users/${userId}/roles/${roleId}`, // DELETE
 
@@ -715,6 +715,7 @@ export const APPOINTMENT_STATUS_ENDPOINTS = {
     DASHBOARD_TODAY: '/api/appointment-status/dashboard/today',
     DASHBOARD_DATE: (date: string) => `/api/appointment-status/dashboard/${date}`,
     ROOM_STATUS: '/api/appointment-status/room-status',
+    FORCE_RELEASE: (id: string) => `/api/appointment-status/rooms/${id}/release`,
     SETTINGS: '/api/appointment-status/settings',
     CHECK_IN: (id: string) => `/api/appointment-status/${id}/check-in`,
     START_EXAM: (id: string) => `/api/appointment-status/${id}/start-exam`,

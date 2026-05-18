@@ -207,9 +207,19 @@ export default function UserDetailPage() {
     const [user, setUser] = useState<UserDetailVM | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<(typeof TABS)[number]["key"]>("info");
+    const [visitedTabs, setVisitedTabs] = useState<Set<string>>(new Set(["info"]));
     const [refresh, setRefresh] = useState(0);
 
     const triggerRefresh = () => setRefresh(prev => prev + 1);
+
+    useEffect(() => {
+        setVisitedTabs(prev => {
+            if (prev.has(activeTab)) return prev;
+            const newSet = new Set(prev);
+            newSet.add(activeTab);
+            return newSet;
+        });
+    }, [activeTab]);
 
     useEffect(() => {
         let cancelled = false;
@@ -342,13 +352,23 @@ export default function UserDetailPage() {
 
             {/* Tab Content */}
             <div className="pb-10">
-                {activeTab === "info" && <OverviewTab user={user} isActive={isActive} />}
-                {activeTab === "workplace" && <WorkplaceTab userId={userId} />}
-                {activeTab === "specialty" && <SpecialtyTab user={user} userId={userId} isDoctor={isDoctor} />}
-                {activeTab === "schedule" && <ScheduleTab userId={userId} />}
-                {activeTab === "assignments" && (
-                    <AssignmentsTab userId={userId} roles={normalizedRoleCodes} onRefresh={triggerRefresh} />
-                )}
+                <div className={activeTab === "info" ? "block" : "hidden"}>
+                    {visitedTabs.has("info") && <OverviewTab user={user} isActive={isActive} />}
+                </div>
+                <div className={activeTab === "workplace" ? "block" : "hidden"}>
+                    {visitedTabs.has("workplace") && <WorkplaceTab userId={userId} />}
+                </div>
+                <div className={activeTab === "specialty" ? "block" : "hidden"}>
+                    {visitedTabs.has("specialty") && <SpecialtyTab user={user} userId={userId} isDoctor={isDoctor} />}
+                </div>
+                <div className={activeTab === "schedule" ? "block" : "hidden"}>
+                    {visitedTabs.has("schedule") && <ScheduleTab userId={userId} />}
+                </div>
+                <div className={activeTab === "assignments" ? "block" : "hidden"}>
+                    {visitedTabs.has("assignments") && (
+                        <AssignmentsTab userId={userId} roles={normalizedRoleCodes} onRefresh={triggerRefresh} />
+                    )}
+                </div>
             </div>
         </>
     );

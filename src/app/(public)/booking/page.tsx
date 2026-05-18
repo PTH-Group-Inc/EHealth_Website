@@ -12,14 +12,15 @@ import { DoctorCard } from "@/components/patient/DoctorCard";
 import { getSpecialties, getSpecialtiesByFacility, type Specialty } from "@/services/specialtyService";
 import { doctorService, type Doctor } from "@/services/doctorService";
 import { createAppointment, confirmAppointment, generateAppointmentQr, getAvailableSlots, getAvailableSlotsByDepartment, preBookAppointment } from "@/services/appointmentService";
-import { PreBookingPaymentModal } from "@/components/shared/PreBookingPaymentModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
 import { MOCK_SPECIALTIES, filterMockDoctors, getMockDoctorById } from "@/data/patient-mock";
 import { MOCK_MEDICAL_SERVICES, getServicesBySpecialtyId, getSpecialtyIdsByServiceId, SERVICE_CATEGORIES, type MedicalServiceItem } from "@/data/medical-services-mock";
 import { MOCK_PATIENT_PROFILES, getProfilesByUserId, type PatientProfile } from "@/data/patient-profiles-mock";
 import { patientProfileService } from "@/services/patientProfileService";
 import { telemedicineService } from "@/services/telemedicineService";
 import { validateName, validatePhone, validateAppointmentDate } from "@/utils/validation";
+import { getImageUrl } from "@/utils/helpers";
 
 const STEPS = [
     { label: "Hình thức", icon: "category" },
@@ -54,6 +55,7 @@ function BookingPageInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user, isAuthenticated } = useAuth();
+    const { error, warning } = useToast();
 
     const initDoctorId = searchParams.get("doctorId") || "";
     const initDoctorName = searchParams.get("doctorName") || "";
@@ -69,11 +71,32 @@ function BookingPageInner() {
         initDoctorId || initDoctorName ? "doctor" : initServiceId ? "service" : "specialty"
     );
 
-    // Sync step from URL if user clicks browser back button
+    // Sync step from URL if user clicks browser back button or navigates to /booking
     useEffect(() => {
-        const urlStep = parseInt(searchParams.get("step") || "1", 10);
+        const urlStepStr = searchParams.get("step");
+        const urlStep = parseInt(urlStepStr || "1", 10);
         if (urlStep !== step) {
             _setStep(urlStep);
+        }
+        
+        // If user navigates directly to /booking without a step, they expect a fresh booking page
+        if (!urlStepStr) {
+            sessionStorage.removeItem("ehealth_booking_state");
+            setBookingType(initDoctorId || initDoctorName ? "doctor" : initServiceId ? "service" : "specialty");
+            setConsultType("in-person");
+            setSelectedFacility("");
+            setSelectedBranch("");
+            setSelectedSpecialty(initSpecialtyId);
+            setSelectedDoctor(initDoctorId);
+            setSelectedDoctorObj(null);
+            setSelectedService(initServiceId);
+            setSelectedDate(initDate);
+            setSelectedTime(initTime);
+            setSelectedSlotId("");
+            setForm(emptyForm);
+            setAgreedTerms(false);
+            setSelectedProfileId("");
+            setAvailableSlots([]);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams.get("step")]);
@@ -110,12 +133,14 @@ function BookingPageInner() {
     const [bookingCode, setBookingCode] = useState("");
     const [qrToken, setQrToken] = useState("");
     const [submitting, setSubmitting] = useState(false);
-    const [payingData, setPayingData] = useState<{ appointmentId: string; invoiceId?: string; qrData: string; amount: number } | null>(null);
+    const [isDoctorLoading, setIsDoctorLoading] = useState(false);
+    const [paymentStatus, setPaymentStatus] = useState<"paid" | "pending" | "not_required">("not_required");
     const [selectedProfileId, setSelectedProfileId] = useState<string>("");
     const [serviceFilter, setServiceFilter] = useState("all");
     const [availableSlots, setAvailableSlots] = useState<{ id?: string, time: string; available: boolean; remaining: number }[]>([]);
     const [isFetchingSlots, setIsFetchingSlots] = useState(false);
     const [facilityClosedMessage, setFacilityClosedMessage] = useState("");
+    const [isBookingCompleted, setIsBookingCompleted] = useState(false);
 
     // Data
     const [facilities, setFacilities] = useState<any[]>([]);
@@ -136,6 +161,7 @@ function BookingPageInner() {
         if (stored) {
             try {
                 const data = JSON.parse(stored);
+                if (data.bookingType) setBookingType(data.bookingType);
                 if (data.consultType) setConsultType(data.consultType);
                 if (data.selectedFacility) setSelectedFacility(data.selectedFacility);
                 if (data.selectedBranch) setSelectedBranch(data.selectedBranch);
@@ -151,21 +177,22 @@ function BookingPageInner() {
             } catch (err) {}
         }
         setIsClientSessionReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
-        if (!isClientSessionReady) return;
+        if (!isClientSessionReady || isBookingCompleted) return;
         
         if (step === 5) {
             sessionStorage.removeItem("ehealth_booking_state");
         } else {
             sessionStorage.setItem("ehealth_booking_state", JSON.stringify({
-                consultType, selectedFacility, selectedBranch, selectedSpecialty,
+                bookingType, consultType, selectedFacility, selectedBranch, selectedSpecialty,
                 selectedDoctor, selectedService, selectedDate, selectedTime,
                 selectedSlotId, form, agreedTerms, selectedProfileId
             }));
         }
-    }, [isClientSessionReady, step, consultType, selectedFacility, selectedBranch, selectedSpecialty, selectedDoctor, selectedService, selectedDate, selectedTime, selectedSlotId, form, agreedTerms, selectedProfileId]);
+    }, [isClientSessionReady, isBookingCompleted, step, consultType, selectedFacility, selectedBranch, selectedSpecialty, selectedDoctor, selectedService, selectedDate, selectedTime, selectedSlotId, form, agreedTerms, selectedProfileId]);
 
     // Load available services dynamically based on selected doctor OR specialty
     useEffect(() => {
@@ -279,22 +306,23 @@ function BookingPageInner() {
     const doctorServices = fetchedServices;
 
     useEffect(() => { 
+        if (!isClientSessionReady) return; // Wait for sessionStorage to load first
         import('@/services/facilityService').then(mod => {
             mod.facilityService.getList({ limit: 50, status: 'ACTIVE' }).then(res => {
                 if (res.data && res.data.length > 0) {
                     setFacilities(res.data);
-                    setSelectedFacility(res.data[0].id);
+                    setSelectedFacility(prev => prev || res.data[0].id);
                 } else {
                     setFacilities([{ id: "fac-01", name: "EHealth Hospital Quận 7", address: "123 Nguyễn Văn Linh, Quận 7, TP.HCM" }]);
-                    setSelectedFacility("fac-01");
+                    setSelectedFacility(prev => prev || "fac-01");
                 }
             }).catch(e => {
                 console.error(e);
                 setFacilities([{ id: "fac-01", name: "EHealth Hospital Quận 7", address: "123 Nguyễn Văn Linh, Quận 7, TP.HCM" }]);
-                setSelectedFacility("fac-01");
+                setSelectedFacility(prev => prev || "fac-01");
             });
         });
-    }, []);
+    }, [isClientSessionReady]);
 
     // Fetch branches dynamically whenever selectedFacility changes
     useEffect(() => {
@@ -305,7 +333,10 @@ function BookingPageInner() {
                 if (isMounted) {
                     if (res.data && res.data.length > 0) {
                         setBranches(res.data);
-                        setSelectedBranch(res.data[0].id);
+                        setSelectedBranch(prev => {
+                            if (prev && res.data.some((b: any) => b.id === prev || b.branch_id === prev)) return prev;
+                            return res.data[0].id || res.data[0].branch_id;
+                        });
                     } else {
                         setBranches([]);
                         setSelectedBranch("");
@@ -546,6 +577,13 @@ function BookingPageInner() {
         }
     };
 
+    useEffect(() => {
+        if (selectedDoctor && !selectedDoctorObj) {
+            setIsDoctorLoading(true);
+            loadSelectedDoctor(selectedDoctor).finally(() => setIsDoctorLoading(false));
+        }
+    }, [selectedDoctor, selectedDoctorObj]);
+
     // When service is selected, auto-select specialty if only one match
     const handleServiceSelect = async (svcId: string) => {
         if (selectedService === svcId) {
@@ -588,12 +626,19 @@ function BookingPageInner() {
                     const matchInState = specList.find((sp: any) => specialties.some(s => s.id === sp.specialty_id));
                     setSelectedSpecialty(matchInState?.specialty_id || specList[0].specialty_id);
                 } else {
+                    error('Không thể xác định chuyên khoa cho dịch vụ này. Vui lòng chọn dịch vụ khác.');
+                    setSelectedService("");
                     setSelectedSpecialty("");
                 }
-            } catch {
+            } catch (err) {
+                console.warn('[Booking] Không thể reverse lookup specialty cho service', svcId, err);
+                error('Đã có lỗi xảy ra khi xác định chuyên khoa. Vui lòng thử lại sau.');
+                setSelectedService("");
                 setSelectedSpecialty("");
             }
         } else {
+            error('Không thể xác định chuyên khoa cho dịch vụ này. Vui lòng chọn dịch vụ khác.');
+            setSelectedService("");
             setSelectedSpecialty("");
         }
     };
@@ -628,7 +673,8 @@ function BookingPageInner() {
     const canProceedStep2 = selectedDate && selectedTime && validateAppointmentDate(selectedDate).valid;
     const canProceedStep3 = isAuthenticated && form.fullName && form.phone && form.gender
         && validateName(form.fullName).valid && validatePhone(form.phone).valid;
-    const canProceedStep4 = agreedTerms;
+    // ★ Chặn submit khi đang load thông tin bác sĩ (race condition guard)
+    const canProceedStep4 = agreedTerms && !isDoctorLoading;
 
     const handleSubmit = async () => {
         setSubmitting(true);
@@ -639,8 +685,9 @@ function BookingPageInner() {
                 alert("Vui lòng chọn hồ sơ bệnh nhân trước khi đặt lịch.");
                 return;
             }
-            if (!selectedSlotId && !selectedDate) {
-                alert("Vui lòng chọn ngày và giờ khám.");
+            const resolvedSlotId = selectedSlotId || availableSlots.find(slot => slot.time === selectedTime)?.id || "";
+            if (!selectedDate || !selectedTime || (consultType === "in-person" && !resolvedSlotId)) {
+                alert("Vui lòng chọn ngày và khung giờ khám hợp lệ.");
                 return;
             }
 
@@ -652,7 +699,7 @@ function BookingPageInner() {
                     facility_id: selectedFacility || undefined,
                     type_id: "TCT_VIDEO",
                     doctor_id: selectedDoctorObj?.doctorId || undefined,
-                    slot_id: selectedSlotId || undefined,
+                    slot_id: resolvedSlotId || undefined,
                     booking_date: selectedDate,
                     booking_start_time: selectedTime,
                     reason_for_visit: form.symptoms,
@@ -662,30 +709,44 @@ function BookingPageInner() {
                 // Pre-Booking flow: tạo appointment PENDING + invoice + QR cọc SePay.
                 // Khách quét QR → BE nhận webhook → trạng thái tự chuyển sang PAID/SCHEDULED.
                 try {
+                    const finalBranchId = selectedBranch || selectedDoctorObj?.branchId || selectedDoctorObj?.facilities?.[0]?.branch_id || undefined;
+                    const finalFacilityId = selectedFacility || selectedDoctorObj?.facilities?.[0]?.facility_id || undefined;
+
+                    // ★ Safety: nếu đặt theo dịch vụ nhưng chưa resolve được specialty → cảnh báo
+                    if (bookingType === 'service' && selectedService && !selectedSpecialty) {
+                        console.warn('[Booking] Service-first flow nhưng specialty chưa được resolve. Service:', selectedService);
+                    }
+
+                    console.log('[Booking] Pre-book payload:', {
+                        patientId, doctorId: selectedDoctorObj?.doctorId, branchId: finalBranchId,
+                        specialtyId: selectedSpecialty, serviceId: selectedService, slotId: resolvedSlotId,
+                    });
+
                     const pre = await preBookAppointment({
                         patientId,
                         doctorId: selectedDoctorObj?.doctorId || undefined,
-                        facilityId: selectedFacility || undefined,
-                        branchId: selectedBranch || undefined,
+                        facilityId: finalFacilityId,
+                        branchId: finalBranchId,
                         specialtyId: selectedSpecialty || undefined,
                         serviceId: selectedService || undefined,
-                        slotId: selectedSlotId || undefined,
+                        slotId: resolvedSlotId,
                         appointmentDate: selectedDate,
                         reasonForVisit: form.symptoms,
                         notes: form.symptoms,
-                        bookingChannel: "WEB_PORTAL",
+                        bookingChannel: "WEB",
                     });
 
-                    const aptId = pre?.appointment?.appointments_id || pre?.appointment?.id || "";
-                    const invId = pre?.invoice?.invoices_id || pre?.invoice?.id;
-                    const qr = pre?.payment?.qrTemplateData || pre?.payment?.qr_url || pre?.payment?.qrString || "";
-                    const amount = Number(pre?.invoice?.total_amount ?? 0);
+                    const aptId = pre?.appointments_id || pre?.appointment?.appointments_id || pre?.appointment?.id || "";
+                    const invId = pre?.deposit_invoice?.invoice_id || pre?.invoice?.invoices_id || pre?.invoice?.id;
+                    const qr = pre?.payment_order?.qr_code_url || pre?.payment?.qrTemplateData || pre?.payment?.qr_url || "";
+                    const amount = Number(pre?.deposit_invoice?.deposit_amount ?? pre?.invoice?.total_amount ?? 0);
 
-                    appointment = { ...pre.appointment, id: aptId };
+                    appointment = { appointments_id: aptId, id: aptId, ...pre };
 
-                    if (aptId && qr) {
-                        setPayingData({ appointmentId: aptId, invoiceId: invId, qrData: qr, amount });
-                        // step 5 hiển thị sau khi Paid callback (xem onPaid của modal).
+                    if (aptId && invId) {
+                        setIsBookingCompleted(true);
+                        sessionStorage.removeItem("ehealth_booking_state");
+                        router.push(`/payment/${invId}?appointmentId=${aptId}`);
                         return;
                     }
 
@@ -698,19 +759,27 @@ function BookingPageInner() {
                         } catch { /* ignore */ }
                     }
                 } catch (err: any) {
-                    // Nếu BE chưa triển khai pre-book (404/405/501) → fallback API cũ.
+                    // Nếu BE chưa triển khai pre-book (404/405/501) -> fallback API cũ.
                     const statusCode = err?.response?.status;
-                    if (statusCode && ![404, 405, 501].includes(statusCode)) {
-                        throw err;
+                    if (!statusCode || ![404, 405, 501].includes(statusCode)) {
+                        // Lỗi thực sự (timeout/422/500/...) → hiển thị cho user
+                        const msg = err?.response?.data?.message || err?.message || 'Đặt lịch thất bại';
+                        throw new Error(msg);
                     }
+                    
+                    // Chỉ fallback nếu route chưa tồn tại
+                    console.warn('[Booking] pre-book chưa khả dụng, fallback sang createAppointment...');
+                    const finalBranchId = selectedBranch || selectedDoctorObj?.branchId || selectedDoctorObj?.facilities?.[0]?.branch_id || undefined;
+                    const finalFacilityId = selectedFacility || selectedDoctorObj?.facilities?.[0]?.facility_id || undefined;
+
                     appointment = await createAppointment({
                         patientId,
                         doctorId: selectedDoctorObj?.doctorId || undefined,
-                        facilityId: selectedFacility || undefined,
-                        branchId: selectedBranch || undefined,
+                        facilityId: finalFacilityId,
+                        branchId: finalBranchId,
                         specialtyId: selectedSpecialty || undefined,
                         serviceId: selectedService || undefined,
-                        slotId: selectedSlotId || undefined,
+                        slotId: resolvedSlotId,
                         date: selectedDate,
                         time: selectedTime,
                         type: "first_visit",
@@ -727,6 +796,7 @@ function BookingPageInner() {
 
             const bookingId = appointment?.id || appointment?.appointments_id || appointment?.session_id || appointment?.session_code || `EH-${Date.now().toString(36).toUpperCase()}`;
             setBookingCode(bookingId);
+            setPaymentStatus("not_required");
             setStep(5);
         } catch (err: any) {
             console.error("Lỗi khi đặt lịch:", err);
@@ -919,7 +989,7 @@ function BookingPageInner() {
                                                     <button key={doc.id} onClick={() => { setSelectedDoctor(doc.id); setSelectedDoctorObj(doc); }}
                                                         className={`text-left flex items-center gap-3 p-3 rounded-xl border transition-all
                                                         ${selectedDoctor === doc.id ? "border-[#3C81C6] bg-[#3C81C6]/[0.02] shadow-sm ring-1 ring-[#3C81C6]/30" : "border-gray-100 bg-white hover:border-gray-200"}`}>
-                                                        <img src={doc.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.fullName)}&background=3C81C6&color=fff`} 
+                                                        <img src={doc.avatar ? getImageUrl(doc.avatar) : `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.fullName)}&background=3C81C6&color=fff`} 
                                                             alt={doc.fullName} 
                                                             className="w-12 h-12 rounded-full object-cover shrink-0 border border-gray-100" />
                                                         <div className="min-w-0 flex-1">
@@ -1357,12 +1427,24 @@ function BookingPageInner() {
                     {/* ========== STEP 5 — Success ========== */}
                     {step === 5 && (
                         <div className="text-center py-8 space-y-6">
-                            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mx-auto shadow-lg shadow-green-500/25 animate-bounce">
-                                <span className="material-symbols-outlined text-white" style={{ fontSize: "40px" }}>check_circle</span>
+                            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-lg ${
+                                paymentStatus === 'pending'
+                                    ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-orange-500/25'
+                                    : 'bg-gradient-to-br from-green-400 to-emerald-500 shadow-green-500/25 animate-bounce'
+                            }`}>
+                                <span className="material-symbols-outlined text-white" style={{ fontSize: "40px" }}>
+                                    {paymentStatus === 'pending' ? 'schedule' : 'check_circle'}
+                                </span>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900 mb-2">Đặt lịch thành công!</h2>
-                                <p className="text-gray-500">Lịch hẹn của bạn đã được ghi nhận. Chúng tôi sẽ xác nhận qua SMS trong vòng 30 phút.</p>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                    {paymentStatus === 'pending' ? 'Đặt lịch thành công (Chờ thanh toán)' : 'Đặt lịch thành công!'}
+                                </h2>
+                                <p className="text-gray-500">
+                                    {paymentStatus === 'pending'
+                                        ? 'Lịch hẹn của bạn đã được ghi nhận. Vui lòng thanh toán cọc trong phần Lịch hẹn của tôi để xác nhận lịch.'
+                                        : 'Lịch hẹn của bạn đã được ghi nhận. Chúng tôi sẽ xác nhận qua SMS trong vòng 30 phút.'}
+                                </p>
                             </div>
 
                             {qrToken ? (
@@ -1421,7 +1503,9 @@ function BookingPageInner() {
                             ) : (
                                 <button type="button" onClick={handleSubmit} disabled={!canProceedStep4 || submitting}
                                     className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-md shadow-green-500/20 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.97] flex items-center gap-1.5">
-                                    {submitting ? (
+                                    {isDoctorLoading ? (
+                                        <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Đang tải...</>
+                                    ) : submitting ? (
                                         <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Đang xử lý...</>
                                     ) : (
                                         <>Xác nhận đặt lịch <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>check</span></>
@@ -1434,30 +1518,6 @@ function BookingPageInner() {
             </div>
 
             <PatientFooter />
-
-            {payingData && (
-                <PreBookingPaymentModal
-                    appointmentId={payingData.appointmentId}
-                    invoiceId={payingData.invoiceId}
-                    qrData={payingData.qrData}
-                    amount={payingData.amount}
-                    onPaid={() => {
-                        const bookingId = payingData.appointmentId || `EH-${Date.now().toString(36).toUpperCase()}`;
-                        setBookingCode(bookingId);
-                        setStep(5);
-                        setPayingData(null);
-                        setSubmitting(false);
-                    }}
-                    onClose={() => {
-                        // Người dùng đóng modal khi chưa thanh toán → lịch vẫn PENDING, có thể thanh toán tiếp ở /patient/appointments.
-                        const bookingId = payingData.appointmentId;
-                        setBookingCode(bookingId);
-                        setPayingData(null);
-                        setSubmitting(false);
-                        setStep(5);
-                    }}
-                />
-            )}
         </div>
     );
 }

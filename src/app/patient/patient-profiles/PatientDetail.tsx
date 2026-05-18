@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { type PatientProfile } from "@/types/patient-profile";
 import { getInsuranceStatusMeta } from "@/utils/patientProfileHelpers";
+import { getImageUrl } from "@/utils/helpers";
 
 import OverviewTab from "./tabs/OverviewTab";
 import InsuranceTab from "./tabs/InsuranceTab";
@@ -88,7 +89,7 @@ export default function PatientDetail({ profile, onBack, onEdit, onRefresh }: Pa
                 <div className="mt-5 flex items-start gap-4">
                     <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#3C81C6] to-[#2563eb] text-white shadow-md">
                         {profile.avatar ? (
-                            <img src={profile.avatar} alt={profile.fullName} className="h-full w-full object-cover" />
+                            <img src={getImageUrl(profile.avatar)} alt={profile.fullName} className="h-full w-full object-cover" />
                         ) : (
                             <span className="material-symbols-outlined" style={{ fontSize: "30px" }}>person</span>
                         )}

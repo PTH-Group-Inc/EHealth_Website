@@ -14,9 +14,7 @@ export const documentService = {
   },
 
   upload: async (patientId: string, formData: FormData) => {
-    const res = await axiosClient.post(DOCUMENT_ENDPOINTS.UPLOAD(patientId), formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const res = await axiosClient.post(DOCUMENT_ENDPOINTS.UPLOAD(patientId), formData);
     return unwrap(res);
   },
 

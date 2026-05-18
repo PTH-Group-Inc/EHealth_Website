@@ -5,7 +5,7 @@
  * Hiển thị avatar, tên, chuyên khoa, rating, status.
  */
 
-import { getInitials } from "@/utils/helpers";
+import { getInitials, getImageUrl } from "@/utils/helpers";
 
 export interface DoctorCardProps {
     id: string;
@@ -79,7 +79,7 @@ export function DoctorCard({
                     <div className="relative flex-shrink-0">
                         {avatarUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={avatarUrl} alt={fullName}
+                            <img src={getImageUrl(avatarUrl)} alt={fullName}
                                 className="w-16 h-16 rounded-2xl object-cover border border-gray-100 dark:border-gray-800" />
                         ) : (
                             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3C81C6] to-[#1d4ed8] flex items-center justify-center text-white font-bold text-lg">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -8,6 +8,7 @@ import axiosClient from "@/api/axiosClient";
 import { PROFILE_ENDPOINTS } from "@/api/endpoints";
 import { getProfileSessions, deleteProfileSession } from "@/services/authService";
 import { validateName, validatePhone, validateDob, validateIdNumber } from "@/utils/validation";
+import { getImageUrl } from "@/utils/helpers";
 
 const TABS = [
     { id: "personal", label: "Thông tin cá nhân", icon: "person" },
@@ -42,6 +43,8 @@ export default function ProfilePage() {
     const [activeTab, setActiveTab] = useState("personal");
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [profile, setProfile] = useState<ProfileData>({
         fullName: user?.fullName || "",
         phone: user?.phone || "",
@@ -205,6 +208,34 @@ export default function ProfilePage() {
 
     const updateProfile = (key: keyof ProfileData, value: string) => setProfile(prev => ({ ...prev, [key]: value }));
 
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setUploadingAvatar(true);
+            const formData = new FormData();
+            formData.append("avatar", file);
+
+            const res = await axiosClient.post(PROFILE_ENDPOINTS.AVATAR, formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            
+            showToast("Tải ảnh đại diện thành công", "success");
+            await loadProfile();
+            
+            if (res.data?.data?.url) {
+                updateUser({ avatar: res.data.data.url });
+            }
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || "Tải ảnh thất bại";
+            showToast(msg, "error");
+        } finally {
+            setUploadingAvatar(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -218,12 +249,30 @@ export default function ProfilePage() {
             {/* Profile card */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col sm:flex-row items-center sm:items-start gap-5">
                 <div className="relative">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#3C81C6] to-[#60a5fa] flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-[#3C81C6]/20">
-                        {profile.fullName?.charAt(0)?.toUpperCase() || "U"}
-                    </div>
-                    <button className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 shadow-sm transition-colors">
-                        <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>edit</span>
+                    {profile.avatar ? (
+                        <div className="w-20 h-20 rounded-full border border-gray-200 overflow-hidden shadow-lg">
+                            <img src={getImageUrl(profile.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+                        </div>
+                    ) : (
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#3C81C6] to-[#60a5fa] flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-[#3C81C6]/20">
+                            {profile.fullName?.charAt(0)?.toUpperCase() || "U"}
+                        </div>
+                    )}
+                    <button 
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                        className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 shadow-sm transition-colors disabled:opacity-50">
+                        <span className={`material-symbols-outlined ${uploadingAvatar ? "animate-spin" : ""}`} style={{ fontSize: "14px" }}>
+                            {uploadingAvatar ? "hourglass_empty" : "edit"}
+                        </span>
                     </button>
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleAvatarUpload} 
+                        accept="image/*" 
+                        className="hidden" 
+                    />
                 </div>
                 <div className="text-center sm:text-left">
                     <h2 className="text-xl font-bold text-gray-900">{profile.fullName || "Bệnh nhân"}</h2>
