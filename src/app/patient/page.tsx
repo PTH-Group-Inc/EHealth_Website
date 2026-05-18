@@ -55,6 +55,8 @@ export default function PatientDashboard() {
         const storedLogs = loadFromStorage<MedicationLog[]>(STORAGE_KEYS.MEDICATION_LOGS, []);
         setReminders(storedRem);
         setMedLogs(storedLogs);
+    // loadEHRData/loadTele khai báo bên dưới, đều phụ thuộc user?.id
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id]);
 
     const loadData = async () => {

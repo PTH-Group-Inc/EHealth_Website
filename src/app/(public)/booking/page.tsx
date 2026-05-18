@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -192,7 +193,7 @@ function BookingPageInner() {
                 selectedSlotId, form, agreedTerms, selectedProfileId
             }));
         }
-    }, [isClientSessionReady, isBookingCompleted, step, consultType, selectedFacility, selectedBranch, selectedSpecialty, selectedDoctor, selectedService, selectedDate, selectedTime, selectedSlotId, form, agreedTerms, selectedProfileId]);
+    }, [isClientSessionReady, isBookingCompleted, step, bookingType, consultType, selectedFacility, selectedBranch, selectedSpecialty, selectedDoctor, selectedService, selectedDate, selectedTime, selectedSlotId, form, agreedTerms, selectedProfileId]);
 
     // Load available services dynamically based on selected doctor OR specialty
     useEffect(() => {
@@ -351,8 +352,13 @@ function BookingPageInner() {
         });
         return () => { isMounted = false; };
     }, [selectedFacility]);
+    // loadSpecialties/loadDoctors/loadSelectedDoctor được khai báo bên dưới, không stable
+    // nhưng deps đã đủ phản ánh state đầu vào — bỏ qua warning để tránh vòng lặp.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { loadSpecialties(); }, [selectedFacility, selectedBranch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { if (selectedSpecialty || selectedFacility) loadDoctors(); }, [selectedSpecialty, selectedFacility, selectedBranch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { if (initDoctorId) loadSelectedDoctor(initDoctorId); }, [initDoctorId]);
     useEffect(() => {
         if (initDoctorName) {
@@ -953,7 +959,7 @@ function BookingPageInner() {
                                                     ${selectedSpecialty === s.id ? "border-[#3C81C6] bg-gradient-to-b from-white to-[#3C81C6]/10 shadow-sm" : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"}`}>
                                                     <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${selectedSpecialty === s.id ? "bg-[#3C81C6] text-white" : "bg-gray-50 text-[#3C81C6]"}`}>
                                                         {s.logo_url ? (
-                                                            <img src={s.logo_url} alt={s.name} className="w-8 h-8 object-contain drop-shadow-sm group-hover:scale-110 transition-transform" />
+                                                            <Image src={s.logo_url} alt={s.name} width={32} height={32} className="w-8 h-8 object-contain drop-shadow-sm group-hover:scale-110 transition-transform" />
                                                         ) : (
                                                             <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>stethoscope</span>
                                                         )}
@@ -981,8 +987,8 @@ function BookingPageInner() {
                                                     <button key={doc.id} onClick={() => { setSelectedDoctor(doc.id); setSelectedDoctorObj(doc); }}
                                                         className={`text-left flex items-center gap-3 p-3 rounded-xl border transition-all
                                                         ${selectedDoctor === doc.id ? "border-[#3C81C6] bg-[#3C81C6]/[0.02] shadow-sm ring-1 ring-[#3C81C6]/30" : "border-gray-100 bg-white hover:border-gray-200"}`}>
-                                                        <img src={doc.avatar ? getImageUrl(doc.avatar) : `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.fullName)}&background=3C81C6&color=fff`} 
-                                                            alt={doc.fullName} 
+                                                        <Image src={doc.avatar ? getImageUrl(doc.avatar) : `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.fullName)}&background=3C81C6&color=fff`}
+                                                            alt={doc.fullName} width={48} height={48}
                                                             className="w-12 h-12 rounded-full object-cover shrink-0 border border-gray-100" />
                                                         <div className="min-w-0 flex-1">
                                                             <p className={`text-sm font-bold truncate ${selectedDoctor === doc.id ? "text-[#3C81C6]" : "text-gray-900"}`}>{doc.fullName}</p>
@@ -1442,7 +1448,7 @@ function BookingPageInner() {
                             {qrToken ? (
                                 <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-sm border border-gray-100">
                                     <p className="text-sm font-semibold text-gray-700 mb-2">Mã QR Check-in Tự Động</p>
-                                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrToken}`} alt="QR Code" className="w-48 h-48" />
+                                    <Image src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrToken}`} alt="QR Code" width={192} height={192} unoptimized className="w-48 h-48" />
                                     <p className="text-xs text-gray-500 mt-2 text-center">Vui lòng quét QR này tại Kiosk hoặc Quầy Lễ Tân khi đến khám.</p>
                                 </div>
                             ) : (

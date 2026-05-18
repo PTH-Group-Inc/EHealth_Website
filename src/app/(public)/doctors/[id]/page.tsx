@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { PatientNavbar } from "@/components/patient/PatientNavbar";
@@ -30,11 +30,7 @@ export default function DoctorDetailPage() {
     const [availableSlots, setAvailableSlots] = useState<{ time: string; available: boolean; remaining: number }[]>([]);
     const [isFetchingSlots, setIsFetchingSlots] = useState(false);
 
-    useEffect(() => {
-        if (id) loadDoctor();
-    }, [id]);
-
-    const loadDoctor = async () => {
+    const loadDoctor = useCallback(async () => {
         try {
             setLoading(true);
             const doc = await doctorService.getById(id);
@@ -59,7 +55,11 @@ export default function DoctorDetailPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
+
+    useEffect(() => {
+        if (id) loadDoctor();
+    }, [id, loadDoctor]);
 
     useEffect(() => {
         if (!selectedDate || !doctor) return;

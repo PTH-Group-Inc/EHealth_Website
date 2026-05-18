@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Modal from "@/components/common/Modal";
 import { useToast } from "@/contexts/ToastContext";
 import { type PatientProfile } from "@/types/patient-profile";
@@ -51,7 +51,7 @@ export default function OverviewTab({ profile }: TabProps) {
     const [form, setForm] = useState<RelationFormState>(INITIAL_FORM);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const loadOverviewData = async () => {
+    const loadOverviewData = useCallback(async () => {
         if (!profile.id) {
             setRelations([]);
             setRelationTypes([]);
@@ -79,11 +79,11 @@ export default function OverviewTab({ profile }: TabProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [profile.id, showToast]);
 
     useEffect(() => {
         loadOverviewData();
-    }, [profile.id]);
+    }, [loadOverviewData]);
 
     const sortedRelations = useMemo(() => {
         return [...relations].sort((a, b) => {

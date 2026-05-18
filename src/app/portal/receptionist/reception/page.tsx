@@ -73,7 +73,7 @@ export default function ReceptionPage() {
                 }
             })
             .catch(() => { setApiSlots([]); });
-    }, [selectedDoctor, selectedDept]);
+    }, [selectedDoctor, selectedDept, departments]);
 
     const handleSearch = async () => {
         if (!searchQuery.trim()) return;

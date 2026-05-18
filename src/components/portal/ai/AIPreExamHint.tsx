@@ -207,7 +207,9 @@ export function AIPreExamHint({ patientId, patientName, visible, onClose }: AIPr
         return () => {
             cancelledRef.current = true;
         };
-    }, [visible, patientId]); // intentionally exclude `summary` to avoid loop
+    // intentionally exclude `summary` to avoid loop — chính effect này set summary
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [visible, patientId]);
 
     const handleClose = () => {
         onClose?.();

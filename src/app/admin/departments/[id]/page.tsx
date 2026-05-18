@@ -82,7 +82,7 @@ export default function DepartmentDetailPage() {
                 .catch(() => { /* giữ empty */ })
                 .finally(() => setStaffLoading(false));
         }
-    }, [activeTab, deptId]);
+    }, [activeTab, deptId, staff.length]);
 
     if (loading) {
         return (

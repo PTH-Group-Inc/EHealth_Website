@@ -92,6 +92,8 @@ export default function DoctorAppointmentsPage() {
             setLoading(false);
         }
     };
+    // load là closure ổn định, chỉ phụ thuộc user?.id thực sự
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { load(); }, [user?.id]);
 
     const today = new Date().toISOString().slice(0, 10);

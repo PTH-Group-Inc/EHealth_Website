@@ -814,6 +814,8 @@ export default function HealthRecordsPage() {
         if (user?.id) {
             fetchProfiles();
         }
+    // selectedProfileId là guard "!selectedProfileId" — không nên trigger re-fetch
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id]);
 
     // Track which tabs đã fetch rồi

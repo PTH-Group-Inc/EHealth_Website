@@ -55,6 +55,13 @@ export function ToastProvider({ children }: ToastProviderProps) {
     const [toasts, setToasts] = useState<Toast[]>([]);
 
     // ============================================
+    // Ẩn toast
+    // ============================================
+    const hideToast = useCallback((id: string) => {
+        setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, []);
+
+    // ============================================
     // Hiển thị toast
     // ============================================
     const showToast = useCallback((
@@ -77,14 +84,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
         setTimeout(() => {
             hideToast(id);
         }, duration);
-    }, []);
-
-    // ============================================
-    // Ẩn toast
-    // ============================================
-    const hideToast = useCallback((id: string) => {
-        setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }, []);
+    }, [hideToast]);
 
     // ============================================
     // Shortcuts

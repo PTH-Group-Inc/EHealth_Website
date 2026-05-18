@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { type PatientProfile } from "@/types/patient-profile";
 import axiosClient from "@/api/axiosClient";
 import { DOCUMENT_ENDPOINTS, DOCUMENT_TYPE_ENDPOINTS } from "@/api/endpoints";
@@ -22,7 +22,7 @@ export default function DocumentsTab({ profile }: TabProps) {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
-    const fetchDocuments = async () => {
+    const fetchDocuments = useCallback(async () => {
         try {
             setLoading(true);
             const patientId = profile.id;
@@ -36,9 +36,9 @@ export default function DocumentsTab({ profile }: TabProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [profile.id]);
 
-    const fetchDocumentTypes = async () => {
+    const fetchDocumentTypes = useCallback(async () => {
         try {
             const res = await axiosClient.get(DOCUMENT_TYPE_ENDPOINTS.LIST);
             const data = res.data?.data || res.data;
@@ -51,12 +51,12 @@ export default function DocumentsTab({ profile }: TabProps) {
         } catch (error) {
             console.error("Error fetching document types:", error);
         }
-    };
+    }, [fileType]);
 
     useEffect(() => {
         fetchDocuments();
         fetchDocumentTypes();
-    }, [profile.id]);
+    }, [fetchDocuments, fetchDocumentTypes]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {

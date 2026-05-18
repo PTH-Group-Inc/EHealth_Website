@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -88,6 +89,8 @@ export default function ProfilePage() {
 
     useEffect(() => {
         loadProfile();
+    // chỉ chạy 1 lần on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Load sessions khi chuyển sang tab security
@@ -251,7 +254,7 @@ export default function ProfilePage() {
                 <div className="relative">
                     {profile.avatar ? (
                         <div className="w-20 h-20 rounded-full border border-gray-200 overflow-hidden shadow-lg">
-                            <img src={getImageUrl(profile.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+                            <Image src={getImageUrl(profile.avatar)} alt="Avatar" width={80} height={80} className="w-full h-full object-cover" />
                         </div>
                     ) : (
                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#3C81C6] to-[#60a5fa] flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-[#3C81C6]/20">

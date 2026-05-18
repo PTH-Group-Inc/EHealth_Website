@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import QRCode from "react-qr-code";
@@ -44,11 +44,23 @@ export default function AppointmentDetailPage() {
     const [prescriptions, setPrescriptions] = useState<any[]>([]);
     const [loadingResult, setLoadingResult] = useState(false);
 
+    const loadAppointment = useCallback(async () => {
+        try {
+            setLoading(true);
+            const response = await getAppointmentById(id);
+            setAppointment(response?.id ? response : null);
+        } catch {
+            setAppointment(null);
+        } finally {
+            setLoading(false);
+        }
+    }, [id]);
+
     useEffect(() => {
         if (id) {
             void loadAppointment();
         }
-    }, [id]);
+    }, [id, loadAppointment]);
 
     useEffect(() => {
         const fetchResults = async () => {
@@ -88,18 +100,6 @@ export default function AppointmentDetailPage() {
 
         void fetchResults();
     }, [appointment, id]);
-
-    const loadAppointment = async () => {
-        try {
-            setLoading(true);
-            const response = await getAppointmentById(id);
-            setAppointment(response?.id ? response : null);
-        } catch {
-            setAppointment(null);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleCancel = async () => {
         try {

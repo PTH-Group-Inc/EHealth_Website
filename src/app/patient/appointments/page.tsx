@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { AppointmentStatusBadge } from "@/components/patient/AppointmentStatusBadge";
@@ -102,12 +102,7 @@ export default function AppointmentsPage() {
         void loadProfiles();
     }, [user?.id]);
 
-    useEffect(() => {
-        if (!user?.id || !profilesLoaded) return;
-        void loadAppointments();
-    }, [activeTab, profilesLoaded, selectedProfileId, user?.id]);
-
-    const loadAppointments = async () => {
+    const loadAppointments = useCallback(async () => {
         const statusMap: Record<string, string> = {
             upcoming: "PENDING,CONFIRMED",
             completed: "COMPLETED",
@@ -144,7 +139,12 @@ export default function AppointmentsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeTab, selectedProfileId]);
+
+    useEffect(() => {
+        if (!user?.id || !profilesLoaded) return;
+        void loadAppointments();
+    }, [user?.id, profilesLoaded, loadAppointments]);
 
     const handleResendEmail = async (id: string) => {
         setResendingId(id);

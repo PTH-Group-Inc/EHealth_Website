@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { type PatientProfile } from "@/types/patient-profile";
 import axiosClient from "@/api/axiosClient";
 import { APPOINTMENT_ENDPOINTS, ENCOUNTER_ENDPOINTS, PATIENT_ENDPOINTS_EXT } from "@/api/endpoints";
@@ -11,7 +11,7 @@ export default function EncountersTab({ profile }: TabProps) {
     const [events, setEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchEvents = async () => {
+    const fetchEvents = useCallback(async () => {
         try {
             setLoading(true);
             const patientId = profile.id;
@@ -52,11 +52,11 @@ export default function EncountersTab({ profile }: TabProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [profile.id]);
 
     useEffect(() => {
         fetchEvents();
-    }, [profile.id]);
+    }, [fetchEvents]);
 
     const sortedEvents = useMemo(() => {
         return [...events].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());

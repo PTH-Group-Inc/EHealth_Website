@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axiosClient from "@/api/axiosClient";
 import { EHR_ENDPOINTS, VITAL_SIGNS_ENDPOINTS } from "@/api/endpoints";
 import { extractErrorMessage } from "@/api/response";
@@ -59,7 +59,7 @@ export default function VitalsTab({ profile }: TabProps) {
         [metricCode],
     );
 
-    const loadVitals = async () => {
+    const loadVitals = useCallback(async () => {
         if (!profile.id) return;
 
         try {
@@ -114,11 +114,11 @@ export default function VitalsTab({ profile }: TabProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [profile.id, showToast]);
 
     useEffect(() => {
         loadVitals();
-    }, [profile.id]);
+    }, [loadVitals]);
 
     const resetForm = () => {
         setMetricCode("BLOOD_PRESSURE");

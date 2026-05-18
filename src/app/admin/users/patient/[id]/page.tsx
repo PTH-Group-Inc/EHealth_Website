@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ROLES, ROLE_LABELS, ROLE_COLORS, type Role } from "@/constants/roles";
@@ -387,14 +387,14 @@ function FamilyProfilesTab({ userId }: { userId: string }) {
     const [editProfile, setEditProfile] = useState<any>(null);
     const [showAdd, setShowAdd] = useState(false);
 
-    const fetchProfiles = () => {
+    const fetchProfiles = useCallback(() => {
         setLoading(true);
         axiosClient.get(PATIENT_ENDPOINTS.BY_ACCOUNT(userId))
             .then(res => setProfiles(res.data?.data || res.data || []))
             .catch(() => showToast("Không thể tải danh sách hồ sơ gia đình", "error"))
             .finally(() => setLoading(false));
-    };
-    useEffect(() => { fetchProfiles(); }, [userId]);
+    }, [userId, showToast]);
+    useEffect(() => { fetchProfiles(); }, [fetchProfiles]);
 
     const handleDelete = async (profileId: string) => {
         if (!window.confirm("Xóa hồ sơ này?")) return;
@@ -486,7 +486,7 @@ function ContactsTab({ userId }: { userId: string }) {
     const [loading, setLoading] = useState(true);
     const [showAddContact, setShowAddContact] = useState(false);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             const profRes = await axiosClient.get(PATIENT_ENDPOINTS.BY_ACCOUNT(userId));
@@ -504,8 +504,8 @@ function ContactsTab({ userId }: { userId: string }) {
             setContacts(allContacts);
         } catch { showToast("Lỗi tải dữ liệu liên hệ", "error"); }
         setLoading(false);
-    };
-    useEffect(() => { fetchData(); }, [userId]);
+    }, [userId, showToast]);
+    useEffect(() => { fetchData(); }, [fetchData]);
 
     if (loading) return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-[#3C81C6] border-t-transparent rounded-full animate-spin"></div></div>;
 

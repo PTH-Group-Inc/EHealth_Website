@@ -61,6 +61,8 @@ function DoctorsPageInner() {
     // Fetch dữ liệu mới khi params hoặc page thay đổi
     useEffect(() => {
         loadDoctors();
+    // loadDoctors khai báo dưới, deps đã đủ phản ánh tham số API
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, search, selectedSpecialty, selectedGender, priceRange, selectedFacility, selectedBranch, selectedService]);
 
     const loadSpecialties = async () => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axiosClient from "@/api/axiosClient";
 import { EHR_ENDPOINTS } from "@/api/endpoints";
 import { extractErrorMessage } from "@/api/response";
@@ -86,7 +86,7 @@ export default function MedicalHistoryTab({ profile }: TabProps) {
     const [allergies, setAllergies] = useState<AllergyItem[]>([]);
     const [histories, setHistories] = useState<HistoryItem[]>([]);
 
-    const loadMedicalHistory = async () => {
+    const loadMedicalHistory = useCallback(async () => {
         if (!profile.id) return;
 
         try {
@@ -106,11 +106,11 @@ export default function MedicalHistoryTab({ profile }: TabProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [profile.id, showToast]);
 
     useEffect(() => {
         loadMedicalHistory();
-    }, [profile.id]);
+    }, [loadMedicalHistory]);
 
     const closeModal = () => {
         setIsModalOpen(false);

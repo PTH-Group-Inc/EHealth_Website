@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Modal from "@/components/common/Modal";
 import { extractErrorMessage } from "@/api/response";
 import { useToast } from "@/contexts/ToastContext";
@@ -42,7 +42,7 @@ export default function InsuranceTab({ profile, onInsuranceChanged }: TabProps) 
     const [form, setForm] = useState<InsuranceFormState>(INITIAL_FORM());
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const loadInsuranceData = async () => {
+    const loadInsuranceData = useCallback(async () => {
         if (!profile.id) return;
 
         try {
@@ -60,11 +60,11 @@ export default function InsuranceTab({ profile, onInsuranceChanged }: TabProps) 
         } finally {
             setLoading(false);
         }
-    };
+    }, [profile.id, showToast]);
 
     useEffect(() => {
         loadInsuranceData();
-    }, [profile.id]);
+    }, [loadInsuranceData]);
 
     const normalizedInsurances = useMemo(() => sortInsuranceRecords(insurances), [insurances]);
 

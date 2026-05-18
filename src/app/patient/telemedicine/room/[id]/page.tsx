@@ -63,9 +63,12 @@ export default function TelemedicineRoomPage() {
 
     // Stop streams when unmounting
     useEffect(() => {
+        // Copy ref vào biến local — phòng trường hợp ref.current đổi giữa lúc
+        // effect chạy và lúc cleanup, đảm bảo cleanup dùng đúng node ban đầu.
+        const videoEl = localVideoRef.current;
         return () => {
-            if (localVideoRef.current && localVideoRef.current.srcObject) {
-                const stream = localVideoRef.current.srcObject as MediaStream;
+            if (videoEl && videoEl.srcObject) {
+                const stream = videoEl.srcObject as MediaStream;
                 stream.getTracks().forEach(track => track.stop());
             }
         };

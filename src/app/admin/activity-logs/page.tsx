@@ -41,7 +41,7 @@ export default function ActivityLogsPage() {
         } finally {
             setLoading(false);
         }
-    }, [page, actionFilter, dateFrom, dateTo]);
+    }, [page, actionFilter, dateFrom, dateTo, toast]);
 
     useEffect(() => {
         fetchLogs();
