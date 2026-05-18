@@ -57,7 +57,7 @@ function formatDT(d?: string): string {
 }
 
 function formatVND(n: number): string {
-    return n.toLocaleString("vi-VN") + " ₫";
+    return (n ?? 0).toLocaleString("vi-VN") + " ₫";
 }
 
 export default function CashierOfflinePage() {

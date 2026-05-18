@@ -92,7 +92,7 @@ export default function PharmacistInventory() {
         threeMonthsLater.setMonth(threeMonthsLater.getMonth() + 3);
         return expDate <= threeMonthsLater;
     }).length;
-    const fmt = (n: number) => n.toLocaleString("vi-VN") + "đ";
+    const fmt = (n: number) => (n ?? 0).toLocaleString("vi-VN") + "đ";
 
     const handleCreateRequest = async () => {
         if (!reqForm.medicine || !reqForm.qty) return;
