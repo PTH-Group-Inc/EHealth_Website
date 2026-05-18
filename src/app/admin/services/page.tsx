@@ -66,6 +66,15 @@ function normalizeStatus(s: any): ServiceStatus {
     return v === "INACTIVE" || v === "DISABLED" ? "INACTIVE" : "ACTIVE";
 }
 
+function parsePrice(...candidates: any[]): number | undefined {
+    for (const v of candidates) {
+        if (v === null || v === undefined || v === "") continue;
+        const n = typeof v === "number" ? v : Number(v);
+        if (!Number.isNaN(n)) return n;
+    }
+    return undefined;
+}
+
 function mapMaster(s: any): MasterService {
     return {
         id: String(s.services_id ?? s.service_id ?? s.id ?? ""),
@@ -73,7 +82,7 @@ function mapMaster(s: any): MasterService {
         name: s.name ?? s.service_name ?? "",
         group: s.service_group ?? s.group ?? "",
         category: s.category_name ?? s.category ?? "",
-        price: typeof s.price === "number" ? s.price : typeof s.default_price === "number" ? s.default_price : undefined,
+        price: parsePrice(s.price, s.default_price, s.unit_price, s.base_price, s.master_price),
         duration: typeof s.duration_minutes === "number" ? s.duration_minutes : typeof s.duration === "number" ? s.duration : undefined,
         status: normalizeStatus(s.status),
         description: s.description ?? "",
@@ -88,7 +97,7 @@ function mapFacilityService(s: any): FacilityService {
         serviceCode: s.service_code ?? s.code ?? "",
         facilityId: String(s.facilities_id ?? s.facility_id ?? ""),
         facilityName: s.facility_name ?? "",
-        price: typeof s.price === "number" ? s.price : undefined,
+        price: parsePrice(s.price, s.unit_price, s.base_price, s.facility_price),
         duration: typeof s.duration_minutes === "number" ? s.duration_minutes : typeof s.duration === "number" ? s.duration : undefined,
         status: normalizeStatus(s.status),
         specialtyName: s.specialty_name ?? "",
@@ -459,12 +468,10 @@ export default function ServicesAdminPage() {
                                             {s.category && <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">{s.category}</span>}
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-[#687582] dark:text-gray-400 mb-3">
-                                            {s.price != null && (
-                                                <span className="flex items-center gap-1 text-[#3C81C6] font-semibold">
-                                                    <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>payments</span>
-                                                    {s.price.toLocaleString("vi-VN")}đ
-                                                </span>
-                                            )}
+                                            <span className="flex items-center gap-1 text-[#3C81C6] font-semibold">
+                                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>payments</span>
+                                                {s.price != null ? `${s.price.toLocaleString("vi-VN")}đ` : "Chưa có giá"}
+                                            </span>
                                             {s.duration != null && (
                                                 <span className="flex items-center gap-1">
                                                     <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>timer</span>
@@ -568,12 +575,10 @@ export default function ServicesAdminPage() {
                                             <span className="text-[10px] px-2 py-0.5 rounded-md bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300">{s.specialtyName}</span>
                                         )}
                                         <div className="flex items-center gap-3 text-xs text-[#687582] dark:text-gray-400 mt-2 mb-3">
-                                            {s.price != null && (
-                                                <span className="flex items-center gap-1 text-[#3C81C6] font-semibold">
-                                                    <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>payments</span>
-                                                    {s.price.toLocaleString("vi-VN")}đ
-                                                </span>
-                                            )}
+                                            <span className="flex items-center gap-1 text-[#3C81C6] font-semibold">
+                                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>payments</span>
+                                                {s.price != null ? `${s.price.toLocaleString("vi-VN")}đ` : "Chưa có giá"}
+                                            </span>
                                             {s.duration != null && (
                                                 <span className="flex items-center gap-1">
                                                     <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>timer</span>
