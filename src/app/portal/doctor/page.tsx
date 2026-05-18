@@ -309,7 +309,7 @@ export default function DoctorDashboardPage() {
                             <div className="p-4 grid grid-cols-3 gap-2 text-center">
                                 <div>
                                     <p className="text-xl font-bold text-violet-600">{loading ? "—" : followUpActive}</p>
-                                    <p className="text-[10px] uppercase tracking-wider text-[#687582] dark:text-gray-500 font-semibold">Active</p>
+                                    <p className="text-[10px] uppercase tracking-wider text-[#687582] dark:text-gray-500 font-semibold">Đang theo dõi</p>
                                 </div>
                                 <div>
                                     <p className="text-xl font-bold text-amber-600">{loading ? "—" : followUpUpcoming}</p>

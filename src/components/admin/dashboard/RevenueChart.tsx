@@ -36,8 +36,8 @@ export function RevenueChart({ data }: { data: RevenueData[] }) {
                         <span className="material-symbols-outlined text-[20px] text-rose-500">bar_chart</span>
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-[#121417] dark:text-white">Doanh thu gan day</h3>
-                        <p className="text-xs text-[#687582] dark:text-gray-500">Don vi: VND</p>
+                        <h3 className="text-sm font-bold text-[#121417] dark:text-white">Doanh thu gần đây</h3>
+                        <p className="text-xs text-[#687582] dark:text-gray-500">Đơn vị: VND</p>
                     </div>
                 </div>
             </div>
@@ -51,7 +51,7 @@ export function RevenueChart({ data }: { data: RevenueData[] }) {
                     <div className={`flex items-center gap-1 text-xs font-bold ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
                         <span className="material-symbols-outlined text-[14px]">{isPositive ? "trending_up" : "trending_down"}</span>
                         {isPositive ? "+" : ""}{changePercent}%
-                        <span className="ml-1 font-normal text-[#687582] dark:text-gray-500">ky gan nhat</span>
+                        <span className="ml-1 font-normal text-[#687582] dark:text-gray-500">kỳ gần nhất</span>
                     </div>
                 </div>
             </div>

@@ -24,25 +24,25 @@ const TYPE_CONFIG: Record<
 > = {
     patient: {
         icon: 'person',
-        label: 'Benh nhan',
+        label: 'Bệnh nhân',
         colorClass: 'text-blue-500',
         badgeClass: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
     },
     medicine: {
         icon: 'medication',
-        label: 'Thuoc',
+        label: 'Thuốc',
         colorClass: 'text-green-500',
         badgeClass: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
     },
     appointment: {
         icon: 'calendar_month',
-        label: 'Lich hen',
+        label: 'Lịch hẹn',
         colorClass: 'text-violet-500',
         badgeClass: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
     },
     record: {
         icon: 'folder_open',
-        label: 'Ho so',
+        label: 'Hồ sơ',
         colorClass: 'text-amber-500',
         badgeClass: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
     },
@@ -205,7 +205,7 @@ export default function AISearchBar() {
                             setIsOpen(true);
                         }
                     }}
-                    placeholder="AI search..."
+                    placeholder="Tìm kiếm với AI..."
                     className="
                         block w-full rounded-xl border border-[#e5e7eb] bg-[#f6f7f8] py-2 pl-10 pr-3 text-sm
                         text-[#121417] transition-colors placeholder-[#94a3b8]
@@ -233,11 +233,11 @@ export default function AISearchBar() {
                             >
                                 progress_activity
                             </span>
-                            AI dang tim kiem...
+                            AI đang tìm kiếm...
                         </div>
                     ) : flatResults.length === 0 ? (
                         <div className="px-4 py-3 text-xs text-[#687582] dark:text-gray-400">
-                            Khong tim thay ket qua
+                            Không tìm thấy kết quả
                         </div>
                     ) : (
                         TYPE_ORDER.map((type) => {

@@ -16,10 +16,10 @@ interface Appointment {
 }
 
 const STATUS_MAP: Record<string, { label: string; dot: string; text: string }> = {
-    confirmed: { label: "Da xac nhan", dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
-    waiting: { label: "Cho xac nhan", dot: "bg-amber-500", text: "text-amber-600 dark:text-amber-400" },
-    in_progress: { label: "Dang kham", dot: "bg-blue-500", text: "text-blue-600 dark:text-blue-400" },
-    cancelled: { label: "Da huy", dot: "bg-red-500", text: "text-red-600 dark:text-red-400" },
+    confirmed: { label: "Đã xác nhận", dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
+    waiting: { label: "Chờ xác nhận", dot: "bg-amber-500", text: "text-amber-600 dark:text-amber-400" },
+    in_progress: { label: "Đang khám", dot: "bg-blue-500", text: "text-blue-600 dark:text-blue-400" },
+    cancelled: { label: "Đã huỷ", dot: "bg-red-500", text: "text-red-600 dark:text-red-400" },
 };
 
 export function UpcomingAppointments({ data }: { data: Appointment[] }) {
@@ -31,12 +31,12 @@ export function UpcomingAppointments({ data }: { data: Appointment[] }) {
                         <span className="material-symbols-outlined text-[20px] text-blue-600">calendar_month</span>
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-[#121417] dark:text-white">Lich hen sap toi</h3>
-                        <p className="text-xs text-[#687582] dark:text-gray-500">{data.length} lich hen hom nay</p>
+                        <h3 className="text-sm font-bold text-[#121417] dark:text-white">Lịch hẹn sắp tới</h3>
+                        <p className="text-xs text-[#687582] dark:text-gray-500">{data.length} lịch hẹn hôm nay</p>
                     </div>
                 </div>
                 <Link href={ROUTES.ADMIN.SCHEDULES} className="text-xs font-medium text-[#3C81C6] hover:underline">
-                    Xem tat ca
+                    Xem tất cả
                 </Link>
             </div>
 
@@ -73,7 +73,7 @@ export function UpcomingAppointments({ data }: { data: Appointment[] }) {
                                 </div>
                                 <p className="mt-1 text-sm font-medium text-[#121417] dark:text-white">
                                     {appointment.patientName}
-                                    <span className="font-normal text-[#687582] dark:text-gray-500"> ({appointment.patientAge ?? "--"} tuoi)</span>
+                                    <span className="font-normal text-[#687582] dark:text-gray-500"> ({appointment.patientAge ?? "--"} tuổi)</span>
                                 </p>
                                 <p className="mt-0.5 text-xs text-[#687582] dark:text-gray-500">
                                     {appointment.doctorName} • {appointment.department}

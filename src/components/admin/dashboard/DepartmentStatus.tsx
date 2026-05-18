@@ -21,8 +21,8 @@ export function DepartmentStatus({ departments }: { departments: DeptDistributio
                         <span className="material-symbols-outlined text-[20px] text-indigo-600">local_hospital</span>
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-[#121417] dark:text-white">Phan bo bac si theo khoa</h3>
-                        <p className="text-xs text-[#687582] dark:text-gray-500">{departments.length} chuyen khoa</p>
+                        <h3 className="text-sm font-bold text-[#121417] dark:text-white">Phân bổ bác sĩ theo khoa</h3>
+                        <p className="text-xs text-[#687582] dark:text-gray-500">{departments.length} chuyên khoa</p>
                     </div>
                 </div>
                 <Link href={ROUTES.ADMIN.DEPARTMENTS} className="text-xs font-medium text-[#3C81C6] hover:underline">
@@ -67,9 +67,9 @@ export function DepartmentStatus({ departments }: { departments: DeptDistributio
                                     />
                                 </div>
                                 <div className="mt-1 flex items-center justify-between">
-                                    <span className="text-[10px] text-[#687582] dark:text-gray-500">{dutyPct}% dang truc</span>
+                                    <span className="text-[10px] text-[#687582] dark:text-gray-500">{dutyPct}% đang trực</span>
                                     <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
-                                        {department.patientsWaiting} BN cho
+                                        {department.patientsWaiting} BN chờ
                                     </span>
                                 </div>
                             </div>

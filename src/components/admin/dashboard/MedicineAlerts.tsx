@@ -30,12 +30,12 @@ export function MedicineAlerts({ data }: { data: MedicineAlert[] }) {
                         <span className="material-symbols-outlined text-[20px] text-red-500">medication</span>
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-[#121417] dark:text-white">Canh bao thuoc</h3>
-                        <p className="text-xs text-[#687582] dark:text-gray-500">{data.length} mat hang can chu y</p>
+                        <h3 className="text-sm font-bold text-[#121417] dark:text-white">Cảnh báo thuốc</h3>
+                        <p className="text-xs text-[#687582] dark:text-gray-500">{data.length} mặt hàng cần chú ý</p>
                     </div>
                 </div>
                 <Link href={ROUTES.ADMIN.MEDICINES_STOCK} className="text-xs font-medium text-[#3C81C6] hover:underline">
-                    Xem ton kho
+                    Xem tồn kho
                 </Link>
             </div>
 
@@ -62,9 +62,9 @@ export function MedicineAlerts({ data }: { data: MedicineAlert[] }) {
                                         </span>
                                     </div>
                                     <div className="mt-1 flex items-center gap-3 text-[11px] text-[#687582] dark:text-gray-500">
-                                        <span>Ma: {item.code}</span>
+                                        <span>Mã: {item.code}</span>
                                         <span>•</span>
-                                        <span>Ton: <b className={item.stock === 0 ? "text-red-500" : "text-[#121417] dark:text-white"}>{item.stock}</b> {item.unit}</span>
+                                        <span>Tồn: <b className={item.stock === 0 ? "text-red-500" : "text-[#121417] dark:text-white"}>{item.stock}</b> {item.unit}</span>
                                         {item.expiryDate && item.expiryDate !== "-" && (
                                             <>
                                                 <span>•</span>

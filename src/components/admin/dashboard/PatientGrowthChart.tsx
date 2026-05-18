@@ -26,7 +26,7 @@ export function PatientGrowthChart({ data, highlightIndex = 7 }: { data: Patient
                             {UI_TEXT.ADMIN.DASHBOARD.PATIENT_GROWTH}
                         </h3>
                         <p className="text-xs text-[#687582] dark:text-gray-500">
-                            Luong benh nhan moi theo thang - Tong: <b className="text-[#121417] dark:text-white">{total.toLocaleString("vi-VN")}</b>
+                            Lượng bệnh nhân mới theo tháng - Tổng: <b className="text-[#121417] dark:text-white">{total.toLocaleString("vi-VN")}</b>
                         </p>
                     </div>
                 </div>
@@ -90,7 +90,7 @@ export function PatientGrowthChart({ data, highlightIndex = 7 }: { data: Patient
                 <div className="mt-2 flex items-center gap-4 border-t border-[#f0f1f3] pt-2 dark:border-[#2d353e]">
                     <div className="flex items-center gap-1.5">
                         <div className="h-2.5 w-2.5 rounded-sm bg-gradient-to-t from-[#3C81C6] to-[#60a5fa]" />
-                        <span className="text-[11px] text-[#687582] dark:text-gray-500">Cao nhat</span>
+                        <span className="text-[11px] text-[#687582] dark:text-gray-500">Cao nhất</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="h-2.5 w-2.5 rounded-sm bg-[#3C81C6]/15" />
