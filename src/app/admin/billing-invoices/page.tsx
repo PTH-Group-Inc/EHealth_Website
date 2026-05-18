@@ -23,12 +23,14 @@ interface Invoice {
     encounterCode?: string;
 }
 
-const STATUS_META: Record<InvoiceStatus, { label: string; color: string; icon: string }> = {
-    DRAFT: { label: "Nháp", color: "amber", icon: "edit_note" },
-    PENDING: { label: "Chờ TT", color: "blue", icon: "pending" },
-    PARTIALLY_PAID: { label: "TT 1 phần", color: "violet", icon: "check_circle" },
-    PAID: { label: "Đã TT", color: "emerald", icon: "done_all" },
-    CANCELLED: { label: "Đã huỷ", color: "red", icon: "cancel" },
+type StatusKey = "draft" | "pending" | "partiallyPaid" | "paid" | "cancelled";
+
+const STATUS_META: Record<InvoiceStatus, { labelKey: StatusKey; color: string; icon: string }> = {
+    DRAFT: { labelKey: "draft", color: "amber", icon: "edit_note" },
+    PENDING: { labelKey: "pending", color: "blue", icon: "pending" },
+    PARTIALLY_PAID: { labelKey: "partiallyPaid", color: "violet", icon: "check_circle" },
+    PAID: { labelKey: "paid", color: "emerald", icon: "done_all" },
+    CANCELLED: { labelKey: "cancelled", color: "red", icon: "cancel" },
 };
 
 function normalizeStatus(raw: any, paid: number, total: number): InvoiceStatus {
@@ -85,10 +87,10 @@ export default function BillingInvoicesPage() {
             const { data } = unwrapList<any>(res);
             setItems(data.map(mapInvoice));
         } catch {
-            setError("Không tải được danh sách hoá đơn.");
+            setError(t("toast.loadError"));
             setItems([]);
         } finally { setLoading(false); }
-    }, []);
+    }, [t]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -110,12 +112,12 @@ export default function BillingInvoicesPage() {
     }), [items]);
 
     const handleCancel = async (i: Invoice) => {
-        const reason = prompt("Lý do huỷ hoá đơn:");
+        const reason = prompt(t("toast.cancelPrompt"));
         if (!reason) return;
         try {
             await axiosClient.patch(BILLING_INVOICE_ENDPOINTS.CANCEL(i.id), { reason });
-            toast.success("Đã huỷ."); await load();
-        } catch { toast.error("Không huỷ được."); }
+            toast.success(t("toast.cancelled")); await load();
+        } catch { toast.error(t("toast.cancelError")); }
     };
 
     return (
@@ -128,29 +130,29 @@ export default function BillingInvoicesPage() {
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Tổng HĐ" value={stats.total} icon="receipt" color="blue" loading={loading} />
-                <StatCard label="Chưa TT" value={stats.pending} icon="pending" color="amber" loading={loading} />
-                <StatCard label="Đã TT" value={stats.paid} icon="check_circle" color="emerald" loading={loading} />
-                <StatCard label="Tổng doanh thu" value={formatVND(stats.totalRevenue)} icon="payments" color="violet" loading={loading} />
+                <StatCard label={t("stats.total")} value={stats.total} icon="receipt" color="blue" loading={loading} />
+                <StatCard label={t("stats.pending")} value={stats.pending} icon="pending" color="amber" loading={loading} />
+                <StatCard label={t("stats.paid")} value={stats.paid} icon="check_circle" color="emerald" loading={loading} />
+                <StatCard label={t("stats.totalRevenue")} value={formatVND(stats.totalRevenue)} icon="payments" color="violet" loading={loading} />
             </div>
 
             {stats.totalDue > 0 && (
                 <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 flex items-center gap-3">
                     <span className="material-symbols-outlined text-amber-600" style={{ fontSize: "24px" }}>warning</span>
                     <div>
-                        <div className="text-sm font-semibold text-amber-800 dark:text-amber-200">Công nợ chưa thu</div>
+                        <div className="text-sm font-semibold text-amber-800 dark:text-amber-200">{t("alert.totalDueLabel")}</div>
                         <div className="text-xs text-amber-700 dark:text-amber-300 font-mono font-bold">{formatVND(stats.totalDue)}</div>
                     </div>
                 </div>
             )}
 
             <FilterBar
-                searchPlaceholder="Tìm mã HĐ, BN, encounter..."
+                searchPlaceholder={t("filter.searchPlaceholder")}
                 searchValue={search}
                 onSearchChange={setSearch}
                 filters={[{
-                    key: "status", label: "Trạng thái", value: statusFilter, onChange: setStatusFilter,
-                    options: [{ value: "all", label: "Tất cả" }, ...Object.entries(STATUS_META).map(([k, v]) => ({ value: k, label: v.label }))],
+                    key: "status", label: tc("filter.status"), value: statusFilter, onChange: setStatusFilter,
+                    options: [{ value: "all", label: tc("filter.all") }, ...Object.entries(STATUS_META).map(([k, v]) => ({ value: k, label: t(`statusLabel.${v.labelKey}`) }))],
                 }]}
                 onReset={() => { setSearch(""); setStatusFilter("all"); }}
             />
@@ -160,22 +162,22 @@ export default function BillingInvoicesPage() {
             {loading ? (
                 <div className="space-y-3">{[0, 1, 2, 3].map((i) => <div key={i} className="h-16 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />)}</div>
             ) : filtered.length === 0 ? (
-                <EmptyState icon="receipt" title="Chưa có hoá đơn" description={items.length === 0 ? "Hoá đơn được tạo từ phiên khám hoặc generate manual." : "Không khớp bộ lọc."} />
+                <EmptyState icon="receipt" title={t("empty.none")} description={items.length === 0 ? t("empty.noneDesc") : t("empty.noMatchDesc")} />
             ) : (
                 <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead className="bg-[#f8f9fa] dark:bg-[#13191f] border-b border-[#dde0e4] dark:border-[#2d353e]">
                                 <tr>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582]">Mã HĐ</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582]">Bệnh nhân</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582]">Encounter</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-[#687582]">Tổng</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-[#687582]">Đã TT</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-[#687582]">Còn nợ</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582]">Trạng thái</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582]">Ngày</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-[#687582]">Thao tác</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582]">{t("table.code")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582]">{t("table.patient")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582]">{t("table.encounter")}</th>
+                                    <th className="text-right px-4 py-3 font-semibold text-[#687582]">{t("table.total")}</th>
+                                    <th className="text-right px-4 py-3 font-semibold text-[#687582]">{t("table.paid")}</th>
+                                    <th className="text-right px-4 py-3 font-semibold text-[#687582]">{t("table.due")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582]">{t("table.status")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582]">{t("table.issuedAt")}</th>
+                                    <th className="text-right px-4 py-3 font-semibold text-[#687582]">{tc("table.actions")}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -200,13 +202,13 @@ export default function BillingInvoicesPage() {
                                                     "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
                                                 }`}>
                                                     <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>{meta.icon}</span>
-                                                    {meta.label}
+                                                    {t(`statusLabel.${meta.labelKey}`)}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-xs text-[#687582]">{formatDT(i.issuedAt)}</td>
                                             <td className="px-4 py-3 text-right">
                                                 {i.status !== "CANCELLED" && i.status !== "PAID" && (
-                                                    <button onClick={() => handleCancel(i)} className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md" title="Huỷ">
+                                                    <button onClick={() => handleCancel(i)} className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md" title={t("table.cancelTitle")}>
                                                         <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>cancel</span>
                                                     </button>
                                                 )}

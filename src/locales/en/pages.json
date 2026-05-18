@@ -135,13 +135,145 @@
     },
     "clinicRooms": {
         "title": "Clinic Rooms",
-        "subtitle": "Manage clinic rooms and service assignments",
-        "addButton": "Add room"
+        "subtitle": "Manage functional rooms and assign services performed in each room",
+        "addButton": "Create room",
+        "stats": {
+            "total": "Total rooms",
+            "active": "Active",
+            "maintenance": "Under maintenance",
+            "departments": "Departments"
+        },
+        "filter": {
+            "searchPlaceholder": "Search by code, name, floor, department...",
+            "deptLabel": "Department",
+            "allDepts": "All departments",
+            "statusLabel": "Status",
+            "allStatuses": "All statuses"
+        },
+        "statusLabel": {
+            "active": "Active",
+            "inactive": "Paused",
+            "maintenance": "Maintenance"
+        },
+        "empty": {
+            "none": "No clinic rooms yet",
+            "noneDesc": "Create the first room to start assigning services.",
+            "noMatch": "No matching rooms",
+            "noMatchDesc": "No rooms match the filters.",
+            "createFirst": "+ Create room"
+        },
+        "card": {
+            "services": "Services",
+            "pause": "Pause",
+            "activate": "Activate",
+            "floor": "Floor {floor}",
+            "capacity": "{count} seats"
+        },
+        "modal": {
+            "titleCreate": "Create new clinic room",
+            "titleEdit": "Edit clinic room",
+            "name": "Room name",
+            "namePlaceholder": "e.g., Clinic Room 101",
+            "department": "Department",
+            "departmentPlaceholder": "— Select department —",
+            "branch": "Branch",
+            "branchPlaceholder": "— Select branch —",
+            "floor": "Floor",
+            "floorPlaceholder": "e.g., 1",
+            "capacity": "Capacity",
+            "note": "Note"
+        },
+        "assign": {
+            "title": "Services at {name}",
+            "subtitle": "Select master services to assign or unassign existing ones.",
+            "assignedHeader": "Assigned ({count})",
+            "noneAssigned": "No services assigned yet.",
+            "addHeader": "Add service",
+            "searchPlaceholder": "Search master services...",
+            "noneAvailable": "No more unassigned services.",
+            "close": "Close",
+            "addButton": "Assign service"
+        },
+        "toast": {
+            "requiredName": "Please enter the room name.",
+            "loadError": "Could not load the clinic room list.",
+            "created": "Clinic room created.",
+            "updated": "Clinic room updated.",
+            "saveError": "Could not save the clinic room.",
+            "deleted": "Room deleted.",
+            "deleteError": "Could not delete the room.",
+            "statusChanged": "Status changed: {label}",
+            "toggleFailed": "Could not change the status.",
+            "loadServicesError": "Could not load services.",
+            "assigned": "Service assigned to room.",
+            "assignError": "Could not assign the service.",
+            "unassigned": "Service unassigned.",
+            "unassignError": "Could not unassign the service."
+        }
     },
     "equipment": {
         "title": "Medical Equipment",
         "subtitle": "Manage equipment and maintenance schedules",
-        "addButton": "Add equipment"
+        "addButton": "Add equipment",
+        "stats": {
+            "total": "Total equipment",
+            "active": "Active",
+            "maintenance": "Under maintenance",
+            "broken": "Broken"
+        },
+        "filter": {
+            "searchPlaceholder": "Search by code, name, model, brand, room...",
+            "statusLabel": "Status",
+            "allStatuses": "All statuses",
+            "roomLabel": "Room",
+            "allRooms": "All rooms"
+        },
+        "statusLabel": {
+            "active": "Active",
+            "inactive": "Retired",
+            "maintenance": "Maintenance",
+            "broken": "Broken"
+        },
+        "empty": {
+            "none": "No equipment yet",
+            "noneDesc": "Add the first device to start asset management.",
+            "noMatchDesc": "No equipment matches the filters.",
+            "createFirst": "+ Add equipment"
+        },
+        "card": {
+            "warrantySoon": "Warranty ending soon",
+            "detail": "Details"
+        },
+        "modal": {
+            "titleCreate": "Add new equipment",
+            "titleEdit": "Edit equipment",
+            "name": "Equipment name",
+            "namePlaceholder": "e.g., Digital X-Ray Machine",
+            "type": "Type",
+            "typePlaceholder": "X-Ray, Ultrasound, ...",
+            "manufacturer": "Brand",
+            "manufacturerPlaceholder": "Siemens, Philips, ...",
+            "model": "Model",
+            "modelPlaceholder": "e.g., DR-3000",
+            "room": "Installed in room",
+            "roomUnassigned": "— Unassigned —",
+            "roomPlaceholder": "— Select room —",
+            "purchaseDate": "Purchase date",
+            "warrantyUntil": "Warranty until",
+            "note": "Note"
+        },
+        "toast": {
+            "requiredName": "Please enter the equipment name.",
+            "loadError": "Could not load the equipment list.",
+            "created": "New equipment created.",
+            "updated": "Equipment updated.",
+            "saveError": "Could not save the equipment.",
+            "deleted": "Equipment deleted.",
+            "deleteError": "Could not delete the equipment.",
+            "deleteConfirm": "Are you sure you want to delete equipment \"{name}\"?",
+            "statusChanged": "Status changed: {label}",
+            "toggleFailed": "Could not change the status."
+        }
     },
     "beds": {
         "title": "Hospital Beds",
@@ -333,19 +465,233 @@
     },
     "billingInvoices": {
         "title": "Invoices",
-        "subtitle": "Manage all patient billing invoices"
+        "subtitle": "Manage all patient billing invoices",
+        "stats": {
+            "total": "Total invoices",
+            "pending": "Unpaid",
+            "paid": "Paid",
+            "totalRevenue": "Total revenue"
+        },
+        "alert": {
+            "totalDueLabel": "Outstanding receivables"
+        },
+        "filter": {
+            "searchPlaceholder": "Search by invoice code, patient, encounter..."
+        },
+        "statusLabel": {
+            "draft": "Draft",
+            "pending": "Pending",
+            "partiallyPaid": "Partially paid",
+            "paid": "Paid",
+            "cancelled": "Cancelled"
+        },
+        "empty": {
+            "none": "No invoices yet",
+            "noneDesc": "Invoices are created from visits or manually.",
+            "noMatchDesc": "No matches for filters."
+        },
+        "table": {
+            "code": "Invoice #",
+            "patient": "Patient",
+            "encounter": "Encounter",
+            "total": "Total",
+            "paid": "Paid",
+            "due": "Outstanding",
+            "status": "Status",
+            "issuedAt": "Date",
+            "cancelTitle": "Cancel"
+        },
+        "toast": {
+            "loadError": "Could not load the invoice list.",
+            "cancelPrompt": "Reason for cancellation:",
+            "cancelled": "Cancelled.",
+            "cancelError": "Could not cancel."
+        }
     },
     "pricingPolicies": {
         "title": "Service Pricing Policy",
-        "subtitle": "Configure medical service pricing by facility and effective period"
+        "subtitle": "Configure medical service pricing by facility and effective period",
+        "stats": {
+            "total": "Total policies",
+            "active": "In effect",
+            "avg": "Average price",
+            "expiring": "Expiring soon"
+        },
+        "header": {
+            "facilityLabel": "Facility:",
+            "facilityPlaceholder": "— Select —",
+            "expiringOnly": "Show only expiring soon"
+        },
+        "filter": {
+            "searchPlaceholder": "Search services..."
+        },
+        "statusLabel": {
+            "active": "In effect",
+            "inactive": "Paused"
+        },
+        "empty": {
+            "none": "No pricing policies yet",
+            "noneDesc": "This facility has no pricing policy yet.",
+            "noMatchDesc": "No matches for filters."
+        },
+        "table": {
+            "service": "Service",
+            "basePrice": "Base price",
+            "effective": "Effective",
+            "status": "Status",
+            "deleteTitle": "Delete"
+        },
+        "toast": {
+            "loadError": "Could not load pricing policies.",
+            "deleteConfirm": "Delete pricing policy for \"{name}\"?",
+            "deleted": "Deleted.",
+            "deleteError": "Could not delete."
+        }
     },
     "eInvoices": {
         "title": "E-Invoices",
-        "subtitle": "Issue and send electronic invoices to patients"
+        "subtitle": "Issue and send electronic invoices to patients",
+        "stats": {
+            "total": "Total invoices",
+            "issued": "Issued",
+            "draft": "Draft",
+            "amount": "Total value"
+        },
+        "filter": {
+            "searchPlaceholder": "Search by invoice code, customer, tax..."
+        },
+        "statusLabel": {
+            "draft": "Draft",
+            "issued": "Issued",
+            "sent": "Sent",
+            "cancelled": "Cancelled"
+        },
+        "empty": {
+            "none": "No e-invoices yet",
+            "noneDesc": "Invoices will be created from the Payments page.",
+            "noMatchDesc": "No matches for filters."
+        },
+        "table": {
+            "code": "Invoice #",
+            "customer": "Customer",
+            "taxCode": "Tax code",
+            "amount": "Amount",
+            "status": "Status",
+            "issuedAt": "Time",
+            "downloadTitle": "Download PDF",
+            "issueTitle": "Issue",
+            "sendTitle": "Send to customer"
+        },
+        "toast": {
+            "loadError": "Could not load e-invoices.",
+            "loadError404": "E-invoice endpoint is not yet implemented on the backend.",
+            "loadErrorForbidden": "Insufficient permission to view e-invoices.",
+            "issueConfirm": "Issue invoice {code}?",
+            "issued": "Issued.",
+            "issueError": "Could not issue.",
+            "sendConfirm": "Send invoice {code} to the customer?",
+            "sent": "Sent.",
+            "sendError": "Could not send."
+        }
     },
     "promotions": {
         "title": "Promotions",
-        "subtitle": "Discounts, vouchers, and service bundles"
+        "subtitle": "Discounts, vouchers, and service bundles",
+        "tabs": {
+            "discounts": "Discounts",
+            "vouchers": "Vouchers",
+            "bundles": "Bundles"
+        },
+        "discounts": {
+            "description": "List of automatically applied discounts",
+            "addButton": "Add promotion",
+            "stats": {
+                "total": "Total discounts",
+                "active": "In effect",
+                "percentType": "% Type",
+                "usedCount": "Times used"
+            },
+            "empty": {
+                "none": "No discounts yet",
+                "noneDesc": "Click Add promotion to create a new discount."
+            },
+            "table": {
+                "nameCode": "Name / Code",
+                "value": "Value",
+                "effective": "Valid period",
+                "usedCount": "Used",
+                "deleteTitle": "Delete"
+            },
+            "modal": {
+                "title": "Add new discount",
+                "name": "Discount name",
+                "namePlaceholder": "e.g., 10% off for invoices over 500k",
+                "code": "Code (optional)",
+                "codePlaceholder": "e.g., SUMMER10",
+                "type": "Type",
+                "typePercent": "Percent (%)",
+                "typeAmount": "Amount (₫)",
+                "value": "Value",
+                "validFrom": "Valid from",
+                "validTo": "Valid to",
+                "submitButton": "Add discount"
+            },
+            "toast": {
+                "requiredName": "Please enter the discount name.",
+                "requiredValue": "Discount value must be greater than 0.",
+                "loadError": "Could not load discounts.",
+                "created": "Discount added.",
+                "createError": "Could not add the discount.",
+                "deleteConfirm": "Delete discount \"{name}\"?",
+                "deleted": "Deleted.",
+                "deleteError": "Could not delete."
+            }
+        },
+        "vouchers": {
+            "stats": {
+                "total": "Total vouchers",
+                "active": "In effect",
+                "usedCount": "Used",
+                "remaining": "Remaining"
+            },
+            "empty": {
+                "none": "No vouchers yet",
+                "noneDesc": "Create a voucher with a code customers can enter for a discount."
+            },
+            "card": {
+                "usedLabel": "Used:"
+            },
+            "toast": {
+                "loadError": "Could not load vouchers.",
+                "deleteConfirm": "Delete voucher \"{name}\"?",
+                "deleted": "Deleted.",
+                "deleteError": "Could not delete."
+            }
+        },
+        "bundles": {
+            "stats": {
+                "total": "Total bundles",
+                "active": "On sale",
+                "savings": "Total savings",
+                "avgServices": "Avg services/bundle"
+            },
+            "empty": {
+                "none": "No bundles yet",
+                "noneDesc": "Create a bundle to group services and sell at a discounted price."
+            },
+            "card": {
+                "original": "Original",
+                "combo": "Bundle",
+                "savings": "Savings",
+                "includes": "Includes {count} services"
+            },
+            "toast": {
+                "loadError": "Could not load bundles.",
+                "deleteConfirm": "Delete bundle \"{name}\"?",
+                "deleted": "Deleted.",
+                "deleteError": "Could not delete."
+            }
+        }
     },
     "paymentGateway": {
         "title": "Payment Gateway",

@@ -135,13 +135,145 @@
     },
     "clinicRooms": {
         "title": "Phòng khám",
-        "subtitle": "Quản lý phòng khám và gán dịch vụ",
-        "addButton": "Thêm phòng"
+        "subtitle": "Quản lý phòng chức năng và gán dịch vụ thực hiện trong từng phòng",
+        "addButton": "Tạo phòng",
+        "stats": {
+            "total": "Tổng phòng",
+            "active": "Hoạt động",
+            "maintenance": "Bảo trì",
+            "departments": "Khoa phòng"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm theo mã, tên, tầng, khoa...",
+            "deptLabel": "Khoa",
+            "allDepts": "Mọi khoa",
+            "statusLabel": "Trạng thái",
+            "allStatuses": "Mọi trạng thái"
+        },
+        "statusLabel": {
+            "active": "Hoạt động",
+            "inactive": "Tạm dừng",
+            "maintenance": "Bảo trì"
+        },
+        "empty": {
+            "none": "Chưa có phòng khám",
+            "noneDesc": "Tạo phòng đầu tiên để bắt đầu gán dịch vụ.",
+            "noMatch": "Không khớp bộ lọc",
+            "noMatchDesc": "Không có phòng phù hợp bộ lọc.",
+            "createFirst": "+ Tạo phòng"
+        },
+        "card": {
+            "services": "Dịch vụ",
+            "pause": "Tạm dừng",
+            "activate": "Kích hoạt",
+            "floor": "Tầng {floor}",
+            "capacity": "{count} chỗ"
+        },
+        "modal": {
+            "titleCreate": "Tạo phòng khám mới",
+            "titleEdit": "Sửa phòng khám",
+            "name": "Tên phòng",
+            "namePlaceholder": "VD: Phòng khám 101",
+            "department": "Khoa",
+            "departmentPlaceholder": "— Chọn khoa —",
+            "branch": "Chi nhánh",
+            "branchPlaceholder": "— Chọn chi nhánh —",
+            "floor": "Tầng",
+            "floorPlaceholder": "VD: 1",
+            "capacity": "Sức chứa",
+            "note": "Ghi chú"
+        },
+        "assign": {
+            "title": "Dịch vụ tại {name}",
+            "subtitle": "Chọn dịch vụ master để gán, hoặc bỏ gán dịch vụ đã có.",
+            "assignedHeader": "Đã gán ({count})",
+            "noneAssigned": "Chưa gán dịch vụ nào.",
+            "addHeader": "Thêm dịch vụ",
+            "searchPlaceholder": "Tìm dịch vụ master...",
+            "noneAvailable": "Không còn dịch vụ chưa gán.",
+            "close": "Đóng",
+            "addButton": "Gán dịch vụ"
+        },
+        "toast": {
+            "requiredName": "Vui lòng nhập tên phòng.",
+            "loadError": "Không tải được danh sách phòng khám.",
+            "created": "Đã tạo phòng khám.",
+            "updated": "Đã cập nhật phòng khám.",
+            "saveError": "Không lưu được phòng khám.",
+            "deleted": "Đã xoá phòng.",
+            "deleteError": "Không xoá được phòng.",
+            "statusChanged": "Đã đổi trạng thái: {label}",
+            "toggleFailed": "Không đổi được trạng thái.",
+            "loadServicesError": "Không tải được dịch vụ.",
+            "assigned": "Đã gán dịch vụ vào phòng.",
+            "assignError": "Không gán được dịch vụ.",
+            "unassigned": "Đã bỏ gán dịch vụ.",
+            "unassignError": "Không bỏ gán được dịch vụ."
+        }
     },
     "equipment": {
         "title": "Thiết bị y tế",
         "subtitle": "Quản lý thiết bị và lịch bảo trì",
-        "addButton": "Thêm thiết bị"
+        "addButton": "Thêm thiết bị",
+        "stats": {
+            "total": "Tổng thiết bị",
+            "active": "Hoạt động",
+            "maintenance": "Đang bảo trì",
+            "broken": "Hỏng"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm theo mã, tên, model, hãng, phòng...",
+            "statusLabel": "Trạng thái",
+            "allStatuses": "Mọi trạng thái",
+            "roomLabel": "Phòng",
+            "allRooms": "Mọi phòng"
+        },
+        "statusLabel": {
+            "active": "Hoạt động",
+            "inactive": "Ngừng dùng",
+            "maintenance": "Bảo trì",
+            "broken": "Hỏng"
+        },
+        "empty": {
+            "none": "Chưa có thiết bị",
+            "noneDesc": "Thêm thiết bị đầu tiên để bắt đầu quản lý tài sản.",
+            "noMatchDesc": "Không có thiết bị phù hợp bộ lọc.",
+            "createFirst": "+ Thêm thiết bị"
+        },
+        "card": {
+            "warrantySoon": "Sắp hết bảo hành",
+            "detail": "Chi tiết"
+        },
+        "modal": {
+            "titleCreate": "Thêm thiết bị mới",
+            "titleEdit": "Sửa thiết bị",
+            "name": "Tên thiết bị",
+            "namePlaceholder": "VD: Máy X-Quang Kỹ thuật số",
+            "type": "Loại",
+            "typePlaceholder": "X-Quang, Siêu âm, ...",
+            "manufacturer": "Hãng",
+            "manufacturerPlaceholder": "Siemens, Philips, ...",
+            "model": "Model",
+            "modelPlaceholder": "VD: DR-3000",
+            "room": "Phòng lắp đặt",
+            "roomUnassigned": "— Chưa gán —",
+            "roomPlaceholder": "— Chọn phòng —",
+            "purchaseDate": "Ngày mua",
+            "warrantyUntil": "Hết bảo hành",
+            "note": "Ghi chú"
+        },
+        "toast": {
+            "requiredName": "Vui lòng nhập tên thiết bị.",
+            "loadError": "Không tải được danh sách thiết bị.",
+            "created": "Đã tạo thiết bị mới.",
+            "updated": "Đã cập nhật thiết bị.",
+            "saveError": "Không lưu được thiết bị.",
+            "deleted": "Đã xoá thiết bị.",
+            "deleteError": "Không xoá được thiết bị.",
+            "deleteConfirm": "Bạn chắc chắn xoá thiết bị \"{name}\"?",
+            "statusChanged": "Đã đổi trạng thái: {label}",
+            "toggleFailed": "Không đổi được trạng thái."
+        }
     },
     "beds": {
         "title": "Giường bệnh",
@@ -333,19 +465,233 @@
     },
     "billingInvoices": {
         "title": "Hoá đơn",
-        "subtitle": "Quản lý toàn bộ hoá đơn thanh toán viện phí"
+        "subtitle": "Quản lý toàn bộ hoá đơn thanh toán viện phí",
+        "stats": {
+            "total": "Tổng HĐ",
+            "pending": "Chưa TT",
+            "paid": "Đã TT",
+            "totalRevenue": "Tổng doanh thu"
+        },
+        "alert": {
+            "totalDueLabel": "Công nợ chưa thu"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm mã HĐ, BN, encounter..."
+        },
+        "statusLabel": {
+            "draft": "Nháp",
+            "pending": "Chờ TT",
+            "partiallyPaid": "TT 1 phần",
+            "paid": "Đã TT",
+            "cancelled": "Đã huỷ"
+        },
+        "empty": {
+            "none": "Chưa có hoá đơn",
+            "noneDesc": "Hoá đơn được tạo từ phiên khám hoặc generate manual.",
+            "noMatchDesc": "Không khớp bộ lọc."
+        },
+        "table": {
+            "code": "Mã HĐ",
+            "patient": "Bệnh nhân",
+            "encounter": "Encounter",
+            "total": "Tổng",
+            "paid": "Đã TT",
+            "due": "Còn nợ",
+            "status": "Trạng thái",
+            "issuedAt": "Ngày",
+            "cancelTitle": "Huỷ"
+        },
+        "toast": {
+            "loadError": "Không tải được danh sách hoá đơn.",
+            "cancelPrompt": "Lý do huỷ hoá đơn:",
+            "cancelled": "Đã huỷ.",
+            "cancelError": "Không huỷ được."
+        }
     },
     "pricingPolicies": {
         "title": "Chính sách giá dịch vụ",
-        "subtitle": "Cấu hình bảng giá dịch vụ y tế theo cơ sở và thời gian hiệu lực"
+        "subtitle": "Cấu hình bảng giá dịch vụ y tế theo cơ sở và thời gian hiệu lực",
+        "stats": {
+            "total": "Tổng chính sách",
+            "active": "Đang áp dụng",
+            "avg": "Giá trung bình",
+            "expiring": "Sắp hết hạn"
+        },
+        "header": {
+            "facilityLabel": "Cơ sở:",
+            "facilityPlaceholder": "— Chọn —",
+            "expiringOnly": "Chỉ xem sắp hết hạn"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm dịch vụ..."
+        },
+        "statusLabel": {
+            "active": "Đang áp dụng",
+            "inactive": "Tạm ngưng"
+        },
+        "empty": {
+            "none": "Chưa có chính sách giá",
+            "noneDesc": "Cơ sở chưa có chính sách giá nào.",
+            "noMatchDesc": "Không khớp bộ lọc."
+        },
+        "table": {
+            "service": "Dịch vụ",
+            "basePrice": "Giá cơ sở",
+            "effective": "Hiệu lực",
+            "status": "Trạng thái",
+            "deleteTitle": "Xoá"
+        },
+        "toast": {
+            "loadError": "Không tải được chính sách giá.",
+            "deleteConfirm": "Xoá chính sách giá cho \"{name}\"?",
+            "deleted": "Đã xoá.",
+            "deleteError": "Không xoá được."
+        }
     },
     "eInvoices": {
         "title": "Hoá đơn điện tử",
-        "subtitle": "Phát hành và gửi hoá đơn điện tử tới bệnh nhân"
+        "subtitle": "Phát hành và gửi hoá đơn điện tử tới bệnh nhân",
+        "stats": {
+            "total": "Tổng HĐ",
+            "issued": "Đã phát hành",
+            "draft": "Nháp",
+            "amount": "Tổng giá trị"
+        },
+        "filter": {
+            "searchPlaceholder": "Tìm mã HĐ, KH, MST..."
+        },
+        "statusLabel": {
+            "draft": "Nháp",
+            "issued": "Đã phát hành",
+            "sent": "Đã gửi KH",
+            "cancelled": "Đã huỷ"
+        },
+        "empty": {
+            "none": "Chưa có hoá đơn điện tử",
+            "noneDesc": "Hoá đơn sẽ được tạo từ trang Thanh toán.",
+            "noMatchDesc": "Không khớp bộ lọc."
+        },
+        "table": {
+            "code": "Mã HĐ",
+            "customer": "Khách hàng",
+            "taxCode": "MST",
+            "amount": "Số tiền",
+            "status": "Trạng thái",
+            "issuedAt": "Thời gian",
+            "downloadTitle": "Tải PDF",
+            "issueTitle": "Phát hành",
+            "sendTitle": "Gửi KH"
+        },
+        "toast": {
+            "loadError": "Không tải được hoá đơn điện tử.",
+            "loadError404": "Endpoint hoá đơn điện tử chưa được BE triển khai.",
+            "loadErrorForbidden": "Không đủ quyền xem hoá đơn điện tử.",
+            "issueConfirm": "Phát hành hoá đơn {code}?",
+            "issued": "Đã phát hành.",
+            "issueError": "Không phát hành được.",
+            "sendConfirm": "Gửi hoá đơn {code} cho khách hàng?",
+            "sent": "Đã gửi.",
+            "sendError": "Không gửi được."
+        }
     },
     "promotions": {
         "title": "Khuyến mãi",
-        "subtitle": "Giảm giá, voucher và combo dịch vụ"
+        "subtitle": "Giảm giá, voucher và combo dịch vụ",
+        "tabs": {
+            "discounts": "Chiết khấu",
+            "vouchers": "Voucher",
+            "bundles": "Gói combo"
+        },
+        "discounts": {
+            "description": "Danh sách chiết khấu áp dụng tự động",
+            "addButton": "Thêm khuyến mãi",
+            "stats": {
+                "total": "Tổng chiết khấu",
+                "active": "Đang áp dụng",
+                "percentType": "Loại %",
+                "usedCount": "Lượt sử dụng"
+            },
+            "empty": {
+                "none": "Chưa có chiết khấu",
+                "noneDesc": "Bấm Thêm khuyến mãi để tạo chiết khấu mới."
+            },
+            "table": {
+                "nameCode": "Tên / Mã",
+                "value": "Giá trị",
+                "effective": "Hiệu lực",
+                "usedCount": "Đã dùng",
+                "deleteTitle": "Xoá"
+            },
+            "modal": {
+                "title": "Thêm chiết khấu mới",
+                "name": "Tên chiết khấu",
+                "namePlaceholder": "VD: Giảm 10% cho hóa đơn trên 500k",
+                "code": "Mã (tuỳ chọn)",
+                "codePlaceholder": "VD: SUMMER10",
+                "type": "Loại",
+                "typePercent": "Phần trăm (%)",
+                "typeAmount": "Số tiền (₫)",
+                "value": "Giá trị",
+                "validFrom": "Hiệu lực từ",
+                "validTo": "Hiệu lực đến",
+                "submitButton": "Thêm chiết khấu"
+            },
+            "toast": {
+                "requiredName": "Vui lòng nhập tên chiết khấu.",
+                "requiredValue": "Giá trị giảm phải lớn hơn 0.",
+                "loadError": "Không tải được danh sách chiết khấu.",
+                "created": "Đã thêm chiết khấu.",
+                "createError": "Không thêm được chiết khấu.",
+                "deleteConfirm": "Xoá chiết khấu \"{name}\"?",
+                "deleted": "Đã xoá.",
+                "deleteError": "Không xoá được."
+            }
+        },
+        "vouchers": {
+            "stats": {
+                "total": "Tổng voucher",
+                "active": "Đang áp dụng",
+                "usedCount": "Đã dùng",
+                "remaining": "Còn lại"
+            },
+            "empty": {
+                "none": "Chưa có voucher",
+                "noneDesc": "Tạo voucher với mã khách hàng nhập để được giảm giá."
+            },
+            "card": {
+                "usedLabel": "Đã dùng:"
+            },
+            "toast": {
+                "loadError": "Không tải được voucher.",
+                "deleteConfirm": "Xoá voucher \"{name}\"?",
+                "deleted": "Đã xoá.",
+                "deleteError": "Không xoá được."
+            }
+        },
+        "bundles": {
+            "stats": {
+                "total": "Tổng combo",
+                "active": "Đang bán",
+                "savings": "Tổng tiết kiệm",
+                "avgServices": "TB số DV/combo"
+            },
+            "empty": {
+                "none": "Chưa có combo",
+                "noneDesc": "Tạo combo để gộp nhiều dịch vụ bán theo giá ưu đãi."
+            },
+            "card": {
+                "original": "Gốc",
+                "combo": "Combo",
+                "savings": "Tiết kiệm",
+                "includes": "Gồm {count} dịch vụ"
+            },
+            "toast": {
+                "loadError": "Không tải được bundle.",
+                "deleteConfirm": "Xoá bundle \"{name}\"?",
+                "deleted": "Đã xoá.",
+                "deleteError": "Không xoá được."
+            }
+        }
     },
     "paymentGateway": {
         "title": "Cổng thanh toán",

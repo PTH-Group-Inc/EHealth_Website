@@ -22,11 +22,13 @@ interface EInvoice {
     note?: string;
 }
 
-const STATUS_META: Record<DocStatus, { label: string; color: string; icon: string }> = {
-    DRAFT: { label: "Nháp", color: "amber", icon: "edit_note" },
-    ISSUED: { label: "Đã phát hành", color: "emerald", icon: "check_circle" },
-    SENT: { label: "Đã gửi KH", color: "blue", icon: "send" },
-    CANCELLED: { label: "Đã huỷ", color: "red", icon: "cancel" },
+type StatusKey = "draft" | "issued" | "sent" | "cancelled";
+
+const STATUS_META: Record<DocStatus, { labelKey: StatusKey; color: string; icon: string }> = {
+    DRAFT: { labelKey: "draft", color: "amber", icon: "edit_note" },
+    ISSUED: { labelKey: "issued", color: "emerald", icon: "check_circle" },
+    SENT: { labelKey: "sent", color: "blue", icon: "send" },
+    CANCELLED: { labelKey: "cancelled", color: "red", icon: "cancel" },
 };
 
 function normalizeStatus(raw: any): DocStatus {
@@ -94,17 +96,17 @@ export default function EInvoicesPage() {
         } catch (err: any) {
             const code = err?.response?.status;
             if (code === 404) {
-                setError("Endpoint hoá đơn điện tử chưa được BE triển khai.");
+                setError(t("toast.loadError404"));
             } else if (code === 403 || code === 401) {
-                setError("Không đủ quyền xem hoá đơn điện tử.");
+                setError(t("toast.loadErrorForbidden"));
             } else {
-                setError(err?.response?.data?.message ?? "Không tải được hoá đơn điện tử.");
+                setError(err?.response?.data?.message ?? t("toast.loadError"));
             }
             setItems([]);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -125,24 +127,24 @@ export default function EInvoicesPage() {
     }), [items]);
 
     const handleIssue = async (it: EInvoice) => {
-        if (!confirm(`Phát hành hoá đơn ${it.code}?`)) return;
+        if (!confirm(t("toast.issueConfirm", { code: it.code }))) return;
         try {
             await axiosClient.patch(BILLING_DOCUMENT_ENDPOINTS.ISSUE_E_INVOICE(it.id));
-            toast.success("Đã phát hành.");
+            toast.success(t("toast.issued"));
             await load();
         } catch {
-            toast.error("Không phát hành được.");
+            toast.error(t("toast.issueError"));
         }
     };
 
     const handleSend = async (it: EInvoice) => {
-        if (!confirm(`Gửi hoá đơn ${it.code} cho khách hàng?`)) return;
+        if (!confirm(t("toast.sendConfirm", { code: it.code }))) return;
         try {
             await axiosClient.patch(BILLING_DOCUMENT_ENDPOINTS.SEND_E_INVOICE(it.id));
-            toast.success("Đã gửi.");
+            toast.success(t("toast.sent"));
             await load();
         } catch {
-            toast.error("Không gửi được.");
+            toast.error(t("toast.sendError"));
         }
     };
 
@@ -160,19 +162,19 @@ export default function EInvoicesPage() {
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Tổng HĐ" value={stats.total} icon="receipt_long" color="blue" loading={loading} />
-                <StatCard label="Đã phát hành" value={stats.issued} icon="check_circle" color="emerald" loading={loading} />
-                <StatCard label="Nháp" value={stats.draft} icon="edit_note" color="amber" loading={loading} />
-                <StatCard label="Tổng giá trị" value={formatVND(stats.amount)} icon="payments" color="violet" loading={loading} />
+                <StatCard label={t("stats.total")} value={stats.total} icon="receipt_long" color="blue" loading={loading} />
+                <StatCard label={t("stats.issued")} value={stats.issued} icon="check_circle" color="emerald" loading={loading} />
+                <StatCard label={t("stats.draft")} value={stats.draft} icon="edit_note" color="amber" loading={loading} />
+                <StatCard label={t("stats.amount")} value={formatVND(stats.amount)} icon="payments" color="violet" loading={loading} />
             </div>
 
             <FilterBar
-                searchPlaceholder="Tìm mã HĐ, KH, MST..."
+                searchPlaceholder={t("filter.searchPlaceholder")}
                 searchValue={search}
                 onSearchChange={setSearch}
                 filters={[{
-                    key: "status", label: "Trạng thái", value: statusFilter, onChange: setStatusFilter,
-                    options: [{ value: "all", label: "Tất cả" }, ...Object.entries(STATUS_META).map(([k, v]) => ({ value: k, label: v.label }))],
+                    key: "status", label: tc("filter.status"), value: statusFilter, onChange: setStatusFilter,
+                    options: [{ value: "all", label: tc("filter.all") }, ...Object.entries(STATUS_META).map(([k, v]) => ({ value: k, label: t(`statusLabel.${v.labelKey}`) }))],
                 }]}
                 onReset={() => { setSearch(""); setStatusFilter("all"); }}
             />
@@ -187,20 +189,20 @@ export default function EInvoicesPage() {
             {loading ? (
                 <div className="space-y-3">{[0, 1, 2, 3].map((i) => <div key={i} className="h-16 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />)}</div>
             ) : filtered.length === 0 ? (
-                <EmptyState icon="receipt_long" title="Chưa có hoá đơn điện tử" description={items.length === 0 ? "Hoá đơn sẽ được tạo từ trang Thanh toán." : "Không khớp bộ lọc."} />
+                <EmptyState icon="receipt_long" title={t("empty.none")} description={items.length === 0 ? t("empty.noneDesc") : t("empty.noMatchDesc")} />
             ) : (
                 <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead className="bg-[#f8f9fa] dark:bg-[#13191f] border-b border-[#dde0e4] dark:border-[#2d353e]">
                                 <tr>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">Mã HĐ</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">Khách hàng</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">MST</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">Số tiền</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">Trạng thái</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">Thời gian</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">Thao tác</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{t("table.code")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{t("table.customer")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{t("table.taxCode")}</th>
+                                    <th className="text-right px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{t("table.amount")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{t("table.status")}</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{t("table.issuedAt")}</th>
+                                    <th className="text-right px-4 py-3 font-semibold text-[#687582] dark:text-gray-400">{tc("table.actions")}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -220,22 +222,22 @@ export default function EInvoicesPage() {
                                                     "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
                                                 }`}>
                                                     <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>{meta.icon}</span>
-                                                    {meta.label}
+                                                    {t(`statusLabel.${meta.labelKey}`)}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-xs text-[#687582] dark:text-gray-400">{formatDT(it.issuedAt)}</td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center justify-end gap-1">
-                                                    <button onClick={() => handleDownload(it)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/[0.1] rounded-md" title="Tải PDF">
+                                                    <button onClick={() => handleDownload(it)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/[0.1] rounded-md" title={t("table.downloadTitle")}>
                                                         <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>download</span>
                                                     </button>
                                                     {it.status === "DRAFT" && (
-                                                        <button onClick={() => handleIssue(it)} className="px-2 py-1 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md" title="Phát hành">
+                                                        <button onClick={() => handleIssue(it)} className="px-2 py-1 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md" title={t("table.issueTitle")}>
                                                             <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>publish</span>
                                                         </button>
                                                     )}
                                                     {it.status === "ISSUED" && (
-                                                        <button onClick={() => handleSend(it)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/10 rounded-md" title="Gửi KH">
+                                                        <button onClick={() => handleSend(it)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/10 rounded-md" title={t("table.sendTitle")}>
                                                             <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>send</span>
                                                         </button>
                                                     )}

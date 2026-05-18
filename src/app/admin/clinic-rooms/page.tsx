@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import {
     MEDICAL_ROOM_MANAGEMENT_ENDPOINTS,
@@ -45,10 +46,12 @@ interface FormState {
 
 const EMPTY_FORM: FormState = { name: "", floor: "", capacity: "", departmentId: "", branchId: "", note: "" };
 
-const STATUS_META: Record<RoomStatus, { label: string; bg: string; color: string }> = {
-    ACTIVE: { label: "Hoạt động", bg: "from-emerald-500 to-teal-500", color: "emerald" },
-    INACTIVE: { label: "Tạm dừng", bg: "from-gray-400 to-gray-500", color: "gray" },
-    MAINTENANCE: { label: "Bảo trì", bg: "from-amber-500 to-orange-500", color: "amber" },
+type StatusKey = "active" | "inactive" | "maintenance";
+
+const STATUS_META: Record<RoomStatus, { labelKey: StatusKey; bg: string; color: string }> = {
+    ACTIVE: { labelKey: "active", bg: "from-emerald-500 to-teal-500", color: "emerald" },
+    INACTIVE: { labelKey: "inactive", bg: "from-gray-400 to-gray-500", color: "gray" },
+    MAINTENANCE: { labelKey: "maintenance", bg: "from-amber-500 to-orange-500", color: "amber" },
 };
 
 function normalizeStatus(s: any): RoomStatus {
@@ -84,6 +87,8 @@ function mapService(s: any): MedicalServiceLite {
 
 export default function ClinicRoomsAdminPage() {
     const toast = useToast();
+    const t = useTranslations("pages.clinicRooms");
+    const tc = useTranslations("common");
     const [rooms, setRooms] = useState<Room[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [branches, setBranches] = useState<Branch[]>([]);
@@ -131,12 +136,12 @@ export default function ClinicRoomsAdminPage() {
             const { data } = unwrapList<any>(res);
             setRooms(data.map(mapRoom));
         } catch {
-            setError("Không tải được danh sách phòng khám.");
+            setError(t("toast.loadError"));
             setRooms([]);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         loadDepts();
@@ -181,7 +186,7 @@ export default function ClinicRoomsAdminPage() {
 
     const handleSave = async () => {
         if (!form.name.trim()) {
-            toast.warning("Vui lòng nhập tên phòng.");
+            toast.warning(t("toast.requiredName"));
             return;
         }
         setSaving(true);
@@ -197,15 +202,15 @@ export default function ClinicRoomsAdminPage() {
 
             if (form.id) {
                 await axiosClient.put(MEDICAL_ROOM_MANAGEMENT_ENDPOINTS.UPDATE(form.id), payload);
-                toast.success("Đã cập nhật phòng khám.");
+                toast.success(t("toast.updated"));
             } else {
                 await axiosClient.post(MEDICAL_ROOM_MANAGEMENT_ENDPOINTS.CREATE, payload);
-                toast.success("Đã tạo phòng khám.");
+                toast.success(t("toast.created"));
             }
             setShowModal(false);
             await load();
         } catch (err: any) {
-            toast.error(err?.response?.data?.message || "Không lưu được phòng khám.");
+            toast.error(err?.response?.data?.message || t("toast.saveError"));
         } finally {
             setSaving(false);
         }
@@ -215,21 +220,21 @@ export default function ClinicRoomsAdminPage() {
         const next: RoomStatus = r.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
         try {
             await axiosClient.patch(MEDICAL_ROOM_MANAGEMENT_ENDPOINTS.STATUS(r.id), { status: next });
-            toast.success(`Đã đổi trạng thái: ${STATUS_META[next].label}`);
+            toast.success(t("toast.statusChanged", { label: t(`statusLabel.${STATUS_META[next].labelKey}`) }));
             await load();
         } catch {
-            toast.error("Không đổi được trạng thái.");
+            toast.error(t("toast.toggleFailed"));
         }
     };
 
     const handleDelete = async (r: Room) => {
-        if (!confirm(`Bạn chắc chắn xoá phòng "${r.name}"?`)) return;
+        if (!confirm(tc("confirm.deleteNamed", { name: r.name }))) return;
         try {
             await axiosClient.delete(MEDICAL_ROOM_MANAGEMENT_ENDPOINTS.DELETE(r.id));
-            toast.success("Đã xoá phòng.");
+            toast.success(t("toast.deleted"));
             await load();
         } catch (err: any) {
-            toast.error(err?.response?.data?.message || "Không xoá được phòng.");
+            toast.error(err?.response?.data?.message || t("toast.deleteError"));
         }
     };
 
@@ -250,7 +255,7 @@ export default function ClinicRoomsAdminPage() {
         } catch {
             setAssignedServices([]);
             setMasterServices([]);
-            toast.error("Không tải được dịch vụ.");
+            toast.error(t("toast.loadServicesError"));
         } finally {
             setAssignLoading(false);
         }
@@ -266,12 +271,12 @@ export default function ClinicRoomsAdminPage() {
         if (!assignFor || !pendingServiceId) return;
         try {
             await axiosClient.post(MEDICAL_ROOM_MANAGEMENT_ENDPOINTS.ASSIGN_SERVICES(assignFor.id), { service_id: pendingServiceId });
-            toast.success("Đã gán dịch vụ vào phòng.");
+            toast.success(t("toast.assigned"));
             const added = masterServices.find((s) => s.id === pendingServiceId);
             if (added) setAssignedServices((prev) => [...prev, added]);
             setPendingServiceId("");
         } catch (err: any) {
-            toast.error(err?.response?.data?.message || "Không gán được dịch vụ.");
+            toast.error(err?.response?.data?.message || t("toast.assignError"));
         }
     };
 
@@ -280,46 +285,46 @@ export default function ClinicRoomsAdminPage() {
         try {
             await axiosClient.delete(MEDICAL_ROOM_MANAGEMENT_ENDPOINTS.REMOVE_SERVICE(assignFor.id, serviceId));
             setAssignedServices((prev) => prev.filter((s) => s.id !== serviceId));
-            toast.success("Đã bỏ gán dịch vụ.");
+            toast.success(t("toast.unassigned"));
         } catch (err: any) {
-            toast.error(err?.response?.data?.message || "Không bỏ gán được dịch vụ.");
+            toast.error(err?.response?.data?.message || t("toast.unassignError"));
         }
     };
 
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Phòng khám"
-                subtitle="Quản lý phòng chức năng và gán dịch vụ thực hiện trong từng phòng"
+                title={t("title")}
+                subtitle={t("subtitle")}
                 icon="meeting_room"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Phòng khám" }]}
+                breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <button onClick={openCreate} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md transition-all inline-flex items-center gap-1">
                         <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
-                        Tạo phòng
+                        {t("addButton")}
                     </button>
                 }
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Tổng phòng" value={stats.total} icon="meeting_room" color="blue" loading={loading} />
-                <StatCard label="Hoạt động" value={stats.active} icon="check_circle" color="emerald" loading={loading} />
-                <StatCard label="Bảo trì" value={stats.maintenance} icon="build" color="amber" loading={loading} />
-                <StatCard label="Khoa phòng" value={stats.departments} icon="domain" color="violet" loading={loading} />
+                <StatCard label={t("stats.total")} value={stats.total} icon="meeting_room" color="blue" loading={loading} />
+                <StatCard label={t("stats.active")} value={stats.active} icon="check_circle" color="emerald" loading={loading} />
+                <StatCard label={t("stats.maintenance")} value={stats.maintenance} icon="build" color="amber" loading={loading} />
+                <StatCard label={t("stats.departments")} value={stats.departments} icon="domain" color="violet" loading={loading} />
             </div>
 
             <FilterBar
-                searchPlaceholder="Tìm theo mã, tên, tầng, khoa..."
+                searchPlaceholder={t("filter.searchPlaceholder")}
                 searchValue={search}
                 onSearchChange={setSearch}
                 filters={[
                     {
-                        key: "dept", label: "Khoa", value: deptFilter, onChange: setDeptFilter,
-                        options: [{ value: "all", label: "Mọi khoa" }, ...departments.map((d) => ({ value: d.id, label: d.name }))],
+                        key: "dept", label: t("filter.deptLabel"), value: deptFilter, onChange: setDeptFilter,
+                        options: [{ value: "all", label: t("filter.allDepts") }, ...departments.map((d) => ({ value: d.id, label: d.name }))],
                     },
                     {
-                        key: "status", label: "Trạng thái", value: statusFilter, onChange: setStatusFilter,
-                        options: [{ value: "all", label: "Mọi trạng thái" }, ...Object.entries(STATUS_META).map(([k, v]) => ({ value: k, label: v.label }))],
+                        key: "status", label: t("filter.statusLabel"), value: statusFilter, onChange: setStatusFilter,
+                        options: [{ value: "all", label: t("filter.allStatuses") }, ...Object.entries(STATUS_META).map(([k, v]) => ({ value: k, label: t(`statusLabel.${v.labelKey}`) }))],
                     },
                 ]}
                 onReset={() => { setSearch(""); setDeptFilter("all"); setStatusFilter("all"); }}
@@ -339,11 +344,11 @@ export default function ClinicRoomsAdminPage() {
             ) : filtered.length === 0 ? (
                 <EmptyState
                     icon="meeting_room"
-                    title="Chưa có phòng khám"
-                    description={rooms.length === 0 ? "Tạo phòng đầu tiên để bắt đầu gán dịch vụ." : "Không có phòng phù hợp bộ lọc."}
+                    title={t("empty.none")}
+                    description={rooms.length === 0 ? t("empty.noneDesc") : t("empty.noMatchDesc")}
                     action={rooms.length === 0 ? (
                         <button onClick={openCreate} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl">
-                            + Tạo phòng
+                            {t("empty.createFirst")}
                         </button>
                     ) : undefined}
                 />
@@ -369,7 +374,7 @@ export default function ClinicRoomsAdminPage() {
                                             meta.color === "emerald" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" :
                                             meta.color === "amber" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" :
                                             "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                                        }`}>{meta.label}</span>
+                                        }`}>{t(`statusLabel.${meta.labelKey}`)}</span>
                                     </div>
 
                                     <div className="space-y-1 text-xs text-[#687582] dark:text-gray-400 mb-3">
@@ -382,10 +387,10 @@ export default function ClinicRoomsAdminPage() {
                                         {(r.floor || r.capacity != null) && (
                                             <div className="flex items-center gap-3">
                                                 {r.floor && (
-                                                    <span className="flex items-center gap-1"><span className="material-symbols-outlined" style={{ fontSize: "14px" }}>stacks</span>Tầng {r.floor}</span>
+                                                    <span className="flex items-center gap-1"><span className="material-symbols-outlined" style={{ fontSize: "14px" }}>stacks</span>{t("card.floor", { floor: r.floor })}</span>
                                                 )}
                                                 {r.capacity != null && (
-                                                    <span className="flex items-center gap-1"><span className="material-symbols-outlined" style={{ fontSize: "14px" }}>groups</span>{r.capacity} chỗ</span>
+                                                    <span className="flex items-center gap-1"><span className="material-symbols-outlined" style={{ fontSize: "14px" }}>groups</span>{t("card.capacity", { count: r.capacity })}</span>
                                                 )}
                                             </div>
                                         )}
@@ -394,17 +399,17 @@ export default function ClinicRoomsAdminPage() {
                                     <div className="flex items-center gap-1 pt-3 border-t border-gray-50 dark:border-gray-800">
                                         <button onClick={() => openAssign(r)} className="flex-1 px-3 py-1.5 text-xs font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 dark:bg-violet-900/20 dark:text-violet-300 rounded-lg transition-colors inline-flex items-center justify-center gap-1">
                                             <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>assignment</span>
-                                            Dịch vụ
+                                            {t("card.services")}
                                         </button>
                                         <button onClick={() => handleToggleStatus(r)} className={`px-2 py-1 text-xs rounded-lg ${
                                             r.status === "ACTIVE" ? "text-amber-700 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-300" : "text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300"
-                                        }`} title={r.status === "ACTIVE" ? "Tạm dừng" : "Kích hoạt"}>
+                                        }`} title={r.status === "ACTIVE" ? t("card.pause") : t("card.activate")}>
                                             <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>{r.status === "ACTIVE" ? "pause" : "play_arrow"}</span>
                                         </button>
-                                        <button onClick={() => openEdit(r)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/[0.1] rounded-lg" title="Sửa">
+                                        <button onClick={() => openEdit(r)} className="px-2 py-1 text-[#3C81C6] hover:bg-[#3C81C6]/[0.1] rounded-lg" title={tc("table.editTitle")}>
                                             <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>edit</span>
                                         </button>
-                                        <button onClick={() => handleDelete(r)} className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" title="Xoá">
+                                        <button onClick={() => handleDelete(r)} className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" title={tc("table.deleteTitle")}>
                                             <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>delete</span>
                                         </button>
                                     </div>
@@ -420,54 +425,54 @@ export default function ClinicRoomsAdminPage() {
                     <div className="bg-white dark:bg-[#1e242b] rounded-2xl shadow-xl max-w-lg w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-lg font-bold text-[#121417] dark:text-white mb-4 flex items-center gap-2">
                             <span className="material-symbols-outlined text-[#3C81C6]">{form.id ? "edit" : "add"}</span>
-                            {form.id ? "Sửa phòng khám" : "Tạo phòng khám mới"}
+                            {form.id ? t("modal.titleEdit") : t("modal.titleCreate")}
                         </h3>
                         <div className="space-y-3">
                             <div>
-                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên phòng *</label>
-                                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="VD: Phòng khám 101" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.name")} *</label>
+                                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("modal.namePlaceholder")} className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Khoa</label>
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.department")}</label>
                                     <CustomSelect
-                                        options={[{ id: "", name: "— Chọn khoa —" }, ...departments.map((d) => ({ id: d.id, name: d.name }))]}
+                                        options={[{ id: "", name: t("modal.departmentPlaceholder") }, ...departments.map((d) => ({ id: d.id, name: d.name }))]}
                                         value={form.departmentId}
                                         onChange={(value) => setForm({ ...form, departmentId: String(value) })}
-                                        placeholder="— Chọn khoa —"
+                                        placeholder={t("modal.departmentPlaceholder")}
                                         icon="workspaces"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Chi nhánh</label>
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.branch")}</label>
                                     <CustomSelect
-                                        options={[{ id: "", name: "— Chọn chi nhánh —" }, ...branches.map((b) => ({ id: b.id, name: b.name }))]}
+                                        options={[{ id: "", name: t("modal.branchPlaceholder") }, ...branches.map((b) => ({ id: b.id, name: b.name }))]}
                                         value={form.branchId}
                                         onChange={(value) => setForm({ ...form, branchId: String(value) })}
-                                        placeholder="— Chọn chi nhánh —"
+                                        placeholder={t("modal.branchPlaceholder")}
                                         icon="apartment"
                                     />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tầng</label>
-                                    <input value={form.floor} onChange={(e) => setForm({ ...form, floor: e.target.value })} placeholder="VD: 1" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.floor")}</label>
+                                    <input value={form.floor} onChange={(e) => setForm({ ...form, floor: e.target.value })} placeholder={t("modal.floorPlaceholder")} className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Sức chứa</label>
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.capacity")}</label>
                                     <input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: e.target.value })} placeholder="0" className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Ghi chú</label>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">{t("modal.note")}</label>
                                 <textarea rows={2} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white" />
                             </div>
                         </div>
                         <div className="flex items-center justify-end gap-2 mt-5 pt-4 border-t border-[#dde0e4] dark:border-[#2d353e]">
-                            <button onClick={() => setShowModal(false)} disabled={saving} className="px-4 py-2 text-sm text-[#687582] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl disabled:opacity-50">Huỷ</button>
+                            <button onClick={() => setShowModal(false)} disabled={saving} className="px-4 py-2 text-sm text-[#687582] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl disabled:opacity-50">{tc("actions.cancel")}</button>
                             <button onClick={handleSave} disabled={saving} className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50 inline-flex items-center gap-1">
-                                {saving ? (<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Đang lưu...</>) : (<><span className="material-symbols-outlined" style={{ fontSize: "18px" }}>save</span>Lưu</>)}
+                                {saving ? (<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />{tc("form.saving")}</>) : (<><span className="material-symbols-outlined" style={{ fontSize: "18px" }}>save</span>{tc("actions.save")}</>)}
                             </button>
                         </div>
                     </div>
@@ -481,9 +486,9 @@ export default function ClinicRoomsAdminPage() {
                             <div>
                                 <h3 className="text-lg font-bold text-[#121417] dark:text-white flex items-center gap-2">
                                     <span className="material-symbols-outlined text-violet-600">assignment</span>
-                                    Dịch vụ tại {assignFor.name}
+                                    {t("assign.title", { name: assignFor.name })}
                                 </h3>
-                                <p className="text-xs text-[#687582] dark:text-gray-500 mt-0.5">Chọn dịch vụ master để gán, hoặc bỏ gán dịch vụ đã có.</p>
+                                <p className="text-xs text-[#687582] dark:text-gray-500 mt-0.5">{t("assign.subtitle")}</p>
                             </div>
                             <button onClick={() => setAssignFor(null)} className="text-[#687582] hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg p-1.5">
                                 <span className="material-symbols-outlined">close</span>
@@ -492,11 +497,11 @@ export default function ClinicRoomsAdminPage() {
 
                         <div className="p-5 flex-1 overflow-y-auto space-y-4">
                             <div>
-                                <h4 className="text-xs font-bold text-[#121417] dark:text-white uppercase mb-2">Đã gán ({assignedServices.length})</h4>
+                                <h4 className="text-xs font-bold text-[#121417] dark:text-white uppercase mb-2">{t("assign.assignedHeader", { count: assignedServices.length })}</h4>
                                 {assignLoading ? (
                                     <div className="h-16 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
                                 ) : assignedServices.length === 0 ? (
-                                    <p className="text-xs text-[#687582] dark:text-gray-500 py-3">Chưa gán dịch vụ nào.</p>
+                                    <p className="text-xs text-[#687582] dark:text-gray-500 py-3">{t("assign.noneAssigned")}</p>
                                 ) : (
                                     <div className="flex flex-wrap gap-2">
                                         {assignedServices.map((s) => (
@@ -512,16 +517,16 @@ export default function ClinicRoomsAdminPage() {
                             </div>
 
                             <div>
-                                <h4 className="text-xs font-bold text-[#121417] dark:text-white uppercase mb-2">Thêm dịch vụ</h4>
+                                <h4 className="text-xs font-bold text-[#121417] dark:text-white uppercase mb-2">{t("assign.addHeader")}</h4>
                                 <input
                                     value={assignSearch}
                                     onChange={(e) => setAssignSearch(e.target.value)}
-                                    placeholder="Tìm dịch vụ master..."
+                                    placeholder={t("assign.searchPlaceholder")}
                                     className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:text-white mb-2"
                                 />
                                 <div className="max-h-52 overflow-y-auto border border-[#dde0e4] dark:border-[#2d353e] rounded-xl">
                                     {availableServices.length === 0 ? (
-                                        <p className="text-xs text-[#687582] dark:text-gray-500 p-4 text-center">Không còn dịch vụ chưa gán.</p>
+                                        <p className="text-xs text-[#687582] dark:text-gray-500 p-4 text-center">{t("assign.noneAvailable")}</p>
                                     ) : (
                                         availableServices.slice(0, 50).map((s) => (
                                             <label key={s.id} className="flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border-b border-gray-50 dark:border-gray-800 last:border-b-0">
@@ -536,10 +541,10 @@ export default function ClinicRoomsAdminPage() {
                         </div>
 
                         <div className="p-4 border-t border-[#dde0e4] dark:border-[#2d353e] flex items-center justify-end gap-2">
-                            <button onClick={() => setAssignFor(null)} className="px-4 py-2 text-sm text-[#687582] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl">Đóng</button>
+                            <button onClick={() => setAssignFor(null)} className="px-4 py-2 text-sm text-[#687582] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl">{t("assign.close")}</button>
                             <button onClick={handleAddService} disabled={!pendingServiceId} className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50 inline-flex items-center gap-1">
                                 <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
-                                Gán dịch vụ
+                                {t("assign.addButton")}
                             </button>
                         </div>
                     </div>

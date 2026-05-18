@@ -135,13 +135,145 @@
     },
     "clinicRooms": {
         "title": "诊室",
-        "subtitle": "管理诊室及服务分配",
-        "addButton": "添加诊室"
+        "subtitle": "管理功能科室房间并分配各诊室提供的服务",
+        "addButton": "创建房间",
+        "stats": {
+            "total": "房间总数",
+            "active": "使用中",
+            "maintenance": "维护中",
+            "departments": "科室"
+        },
+        "filter": {
+            "searchPlaceholder": "按编号、名称、楼层、科室搜索...",
+            "deptLabel": "科室",
+            "allDepts": "所有科室",
+            "statusLabel": "状态",
+            "allStatuses": "所有状态"
+        },
+        "statusLabel": {
+            "active": "使用中",
+            "inactive": "暂停",
+            "maintenance": "维护中"
+        },
+        "empty": {
+            "none": "暂无诊室",
+            "noneDesc": "创建第一个房间以开始分配服务。",
+            "noMatch": "无匹配房间",
+            "noMatchDesc": "没有符合筛选条件的房间。",
+            "createFirst": "+ 创建房间"
+        },
+        "card": {
+            "services": "服务",
+            "pause": "暂停",
+            "activate": "启用",
+            "floor": "{floor}层",
+            "capacity": "{count}个座位"
+        },
+        "modal": {
+            "titleCreate": "创建新诊室",
+            "titleEdit": "编辑诊室",
+            "name": "房间名称",
+            "namePlaceholder": "如:诊室 101",
+            "department": "科室",
+            "departmentPlaceholder": "— 选择科室 —",
+            "branch": "分支",
+            "branchPlaceholder": "— 选择分支 —",
+            "floor": "楼层",
+            "floorPlaceholder": "如:1",
+            "capacity": "容量",
+            "note": "备注"
+        },
+        "assign": {
+            "title": "{name} 的服务",
+            "subtitle": "选择主服务进行分配,或取消已有的分配。",
+            "assignedHeader": "已分配 ({count})",
+            "noneAssigned": "尚未分配任何服务。",
+            "addHeader": "添加服务",
+            "searchPlaceholder": "搜索主服务...",
+            "noneAvailable": "没有未分配的服务。",
+            "close": "关闭",
+            "addButton": "分配服务"
+        },
+        "toast": {
+            "requiredName": "请输入房间名称。",
+            "loadError": "无法加载诊室列表。",
+            "created": "已创建诊室。",
+            "updated": "已更新诊室。",
+            "saveError": "无法保存诊室。",
+            "deleted": "已删除房间。",
+            "deleteError": "无法删除房间。",
+            "statusChanged": "状态已更改:{label}",
+            "toggleFailed": "无法更改状态。",
+            "loadServicesError": "无法加载服务。",
+            "assigned": "已将服务分配到房间。",
+            "assignError": "无法分配服务。",
+            "unassigned": "已取消分配服务。",
+            "unassignError": "无法取消分配服务。"
+        }
     },
     "equipment": {
         "title": "医疗设备",
         "subtitle": "管理设备和维护计划",
-        "addButton": "添加设备"
+        "addButton": "添加设备",
+        "stats": {
+            "total": "设备总数",
+            "active": "正常运行",
+            "maintenance": "维护中",
+            "broken": "已损坏"
+        },
+        "filter": {
+            "searchPlaceholder": "按编号、名称、型号、品牌、房间搜索...",
+            "statusLabel": "状态",
+            "allStatuses": "所有状态",
+            "roomLabel": "房间",
+            "allRooms": "所有房间"
+        },
+        "statusLabel": {
+            "active": "正常运行",
+            "inactive": "已停用",
+            "maintenance": "维护中",
+            "broken": "已损坏"
+        },
+        "empty": {
+            "none": "暂无设备",
+            "noneDesc": "添加第一台设备以开始资产管理。",
+            "noMatchDesc": "没有符合筛选条件的设备。",
+            "createFirst": "+ 添加设备"
+        },
+        "card": {
+            "warrantySoon": "保修即将到期",
+            "detail": "详情"
+        },
+        "modal": {
+            "titleCreate": "添加新设备",
+            "titleEdit": "编辑设备",
+            "name": "设备名称",
+            "namePlaceholder": "如:数字 X 光机",
+            "type": "类型",
+            "typePlaceholder": "X 光、超声波、...",
+            "manufacturer": "品牌",
+            "manufacturerPlaceholder": "西门子、飞利浦、...",
+            "model": "型号",
+            "modelPlaceholder": "如:DR-3000",
+            "room": "安装房间",
+            "roomUnassigned": "— 未分配 —",
+            "roomPlaceholder": "— 选择房间 —",
+            "purchaseDate": "购买日期",
+            "warrantyUntil": "保修截止",
+            "note": "备注"
+        },
+        "toast": {
+            "requiredName": "请输入设备名称。",
+            "loadError": "无法加载设备列表。",
+            "created": "新设备已创建。",
+            "updated": "已更新设备。",
+            "saveError": "无法保存设备。",
+            "deleted": "已删除设备。",
+            "deleteError": "无法删除设备。",
+            "deleteConfirm": "确定删除设备 \"{name}\" 吗?",
+            "statusChanged": "状态已更改:{label}",
+            "toggleFailed": "无法更改状态。"
+        }
     },
     "beds": {
         "title": "病床",
@@ -333,19 +465,233 @@
     },
     "billingInvoices": {
         "title": "发票",
-        "subtitle": "管理所有患者账单发票"
+        "subtitle": "管理所有患者账单发票",
+        "stats": {
+            "total": "发票总数",
+            "pending": "未付款",
+            "paid": "已付款",
+            "totalRevenue": "总收入"
+        },
+        "alert": {
+            "totalDueLabel": "未收账款"
+        },
+        "filter": {
+            "searchPlaceholder": "搜索发票号、患者、就诊..."
+        },
+        "statusLabel": {
+            "draft": "草稿",
+            "pending": "待付款",
+            "partiallyPaid": "部分付款",
+            "paid": "已付款",
+            "cancelled": "已取消"
+        },
+        "empty": {
+            "none": "暂无发票",
+            "noneDesc": "发票将从就诊或手动生成创建。",
+            "noMatchDesc": "未匹配筛选条件。"
+        },
+        "table": {
+            "code": "发票号",
+            "patient": "患者",
+            "encounter": "就诊",
+            "total": "总额",
+            "paid": "已付",
+            "due": "欠款",
+            "status": "状态",
+            "issuedAt": "日期",
+            "cancelTitle": "取消"
+        },
+        "toast": {
+            "loadError": "无法加载发票列表。",
+            "cancelPrompt": "取消发票原因:",
+            "cancelled": "已取消。",
+            "cancelError": "无法取消。"
+        }
     },
     "pricingPolicies": {
         "title": "服务定价策略",
-        "subtitle": "按机构和生效期配置医疗服务定价"
+        "subtitle": "按机构和生效期配置医疗服务定价",
+        "stats": {
+            "total": "策略总数",
+            "active": "执行中",
+            "avg": "平均价格",
+            "expiring": "即将过期"
+        },
+        "header": {
+            "facilityLabel": "机构:",
+            "facilityPlaceholder": "— 选择 —",
+            "expiringOnly": "仅显示即将过期"
+        },
+        "filter": {
+            "searchPlaceholder": "搜索服务..."
+        },
+        "statusLabel": {
+            "active": "执行中",
+            "inactive": "已暂停"
+        },
+        "empty": {
+            "none": "暂无定价策略",
+            "noneDesc": "该机构尚未设置任何定价策略。",
+            "noMatchDesc": "未匹配筛选条件。"
+        },
+        "table": {
+            "service": "服务",
+            "basePrice": "基础价格",
+            "effective": "生效期",
+            "status": "状态",
+            "deleteTitle": "删除"
+        },
+        "toast": {
+            "loadError": "无法加载定价策略。",
+            "deleteConfirm": "删除 \"{name}\" 的定价策略?",
+            "deleted": "已删除。",
+            "deleteError": "无法删除。"
+        }
     },
     "eInvoices": {
         "title": "电子发票",
-        "subtitle": "向患者签发和发送电子发票"
+        "subtitle": "向患者签发和发送电子发票",
+        "stats": {
+            "total": "发票总数",
+            "issued": "已签发",
+            "draft": "草稿",
+            "amount": "总金额"
+        },
+        "filter": {
+            "searchPlaceholder": "搜索发票号、客户、税号..."
+        },
+        "statusLabel": {
+            "draft": "草稿",
+            "issued": "已签发",
+            "sent": "已发送",
+            "cancelled": "已取消"
+        },
+        "empty": {
+            "none": "暂无电子发票",
+            "noneDesc": "发票将从付款页面创建。",
+            "noMatchDesc": "未匹配筛选条件。"
+        },
+        "table": {
+            "code": "发票号",
+            "customer": "客户",
+            "taxCode": "税号",
+            "amount": "金额",
+            "status": "状态",
+            "issuedAt": "时间",
+            "downloadTitle": "下载 PDF",
+            "issueTitle": "签发",
+            "sendTitle": "发送给客户"
+        },
+        "toast": {
+            "loadError": "无法加载电子发票。",
+            "loadError404": "电子发票接口尚未在后端实现。",
+            "loadErrorForbidden": "无权查看电子发票。",
+            "issueConfirm": "签发发票 {code}?",
+            "issued": "已签发。",
+            "issueError": "无法签发。",
+            "sendConfirm": "将发票 {code} 发送给客户?",
+            "sent": "已发送。",
+            "sendError": "无法发送。"
+        }
     },
     "promotions": {
         "title": "促销",
-        "subtitle": "折扣、优惠券和套餐服务"
+        "subtitle": "折扣、优惠券和套餐服务",
+        "tabs": {
+            "discounts": "折扣",
+            "vouchers": "优惠券",
+            "bundles": "套餐"
+        },
+        "discounts": {
+            "description": "自动应用的折扣列表",
+            "addButton": "添加促销",
+            "stats": {
+                "total": "折扣总数",
+                "active": "执行中",
+                "percentType": "百分比类型",
+                "usedCount": "使用次数"
+            },
+            "empty": {
+                "none": "暂无折扣",
+                "noneDesc": "点击添加促销以创建新折扣。"
+            },
+            "table": {
+                "nameCode": "名称 / 代码",
+                "value": "数值",
+                "effective": "有效期",
+                "usedCount": "已用",
+                "deleteTitle": "删除"
+            },
+            "modal": {
+                "title": "添加新折扣",
+                "name": "折扣名称",
+                "namePlaceholder": "如:满 500K 减 10%",
+                "code": "代码 (可选)",
+                "codePlaceholder": "如:SUMMER10",
+                "type": "类型",
+                "typePercent": "百分比 (%)",
+                "typeAmount": "金额 (₫)",
+                "value": "数值",
+                "validFrom": "有效起",
+                "validTo": "有效止",
+                "submitButton": "添加折扣"
+            },
+            "toast": {
+                "requiredName": "请输入折扣名称。",
+                "requiredValue": "折扣值必须大于 0。",
+                "loadError": "无法加载折扣列表。",
+                "created": "已添加折扣。",
+                "createError": "无法添加折扣。",
+                "deleteConfirm": "删除折扣 \"{name}\"?",
+                "deleted": "已删除。",
+                "deleteError": "无法删除。"
+            }
+        },
+        "vouchers": {
+            "stats": {
+                "total": "优惠券总数",
+                "active": "执行中",
+                "usedCount": "已用",
+                "remaining": "剩余"
+            },
+            "empty": {
+                "none": "暂无优惠券",
+                "noneDesc": "创建优惠券,客户可输入代码享受折扣。"
+            },
+            "card": {
+                "usedLabel": "已用:"
+            },
+            "toast": {
+                "loadError": "无法加载优惠券。",
+                "deleteConfirm": "删除优惠券 \"{name}\"?",
+                "deleted": "已删除。",
+                "deleteError": "无法删除。"
+            }
+        },
+        "bundles": {
+            "stats": {
+                "total": "套餐总数",
+                "active": "在售中",
+                "savings": "总节省",
+                "avgServices": "平均服务/套餐"
+            },
+            "empty": {
+                "none": "暂无套餐",
+                "noneDesc": "创建套餐以打包多项服务并以优惠价销售。"
+            },
+            "card": {
+                "original": "原价",
+                "combo": "套餐价",
+                "savings": "节省",
+                "includes": "包含 {count} 项服务"
+            },
+            "toast": {
+                "loadError": "无法加载套餐。",
+                "deleteConfirm": "删除套餐 \"{name}\"?",
+                "deleted": "已删除。",
+                "deleteError": "无法删除。"
+            }
+        }
     },
     "paymentGateway": {
         "title": "支付网关",
