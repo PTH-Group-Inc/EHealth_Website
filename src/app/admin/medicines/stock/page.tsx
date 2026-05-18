@@ -131,60 +131,60 @@ export default function MedicineStockPage() {
                         <option value="OUT">Het hang</option>
                     </select>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="border-b border-[#dde0e4] bg-gray-50/50 dark:border-[#2d353e] dark:bg-gray-800/50">
-                            <tr>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ma</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ten thuoc</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ton kho</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Muc ton</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">So lo</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Han dung</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Trang thai</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#dde0e4] dark:divide-[#2d353e]">
-                            {filtered.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="py-12 text-center text-[#687582] dark:text-gray-400">
-                                        <span className="material-symbols-outlined mb-2 block text-4xl">inbox</span>
-                                        Chua co du lieu
-                                    </td>
-                                </tr>
-                            ) : filtered.map((item) => {
-                                const style = getStockStyle(item.stockLevel);
-                                const pct = item.maxStock > 0 ? Math.min(100, Math.round((item.currentStock / item.maxStock) * 100)) : 0;
-
-                                return (
-                                    <tr
-                                        key={item.id}
-                                        onClick={() => router.push(`/admin/medicines/stock/${item.id}`)}
-                                        className="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                                    >
-                                        <td className="px-6 py-3 text-sm font-bold text-[#3C81C6]">{item.code}</td>
-                                        <td className="px-6 py-3 text-sm text-[#121417] dark:text-white">{item.name}</td>
-                                        <td className="px-6 py-3">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm font-bold text-[#121417] dark:text-white">{(item.currentStock ?? 0).toLocaleString("vi-VN")}</span>
-                                                <span className="text-xs text-[#687582]">/ {(item.maxStock ?? 0).toLocaleString("vi-VN")}</span>
+                {filtered.length === 0 ? (
+                    <div className="py-12 text-center text-[#687582] dark:text-gray-400">
+                        <span className="material-symbols-outlined mb-2 block text-4xl">inbox</span>
+                        Chua co du lieu
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {filtered.map((item) => {
+                            const style = getStockStyle(item.stockLevel);
+                            const pct = item.maxStock > 0 ? Math.min(100, Math.round((item.currentStock / item.maxStock) * 100)) : 0;
+                            return (
+                                <div
+                                    key={item.id}
+                                    onClick={() => router.push(`/admin/medicines/stock/${item.id}`)}
+                                    className="cursor-pointer rounded-2xl border border-[#dde0e4] bg-white dark:bg-[#1e242b] dark:border-[#2d353e] p-4 shadow-sm transition-all hover:shadow-md hover:border-[#3C81C6]"
+                                >
+                                    <div className="flex items-start justify-between gap-2 mb-3">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs font-mono text-[#3C81C6] font-bold">{item.code}</p>
+                                            <h3 className="text-sm font-bold text-[#121417] dark:text-white truncate" title={item.name}>{item.name}</h3>
+                                        </div>
+                                        <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${style.bg} ${style.text}`}>{style.label}</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="flex items-end justify-between">
+                                            <div>
+                                                <p className="text-[10px] text-[#687582] uppercase tracking-wider">Ton kho</p>
+                                                <p className="text-2xl font-black text-[#121417] dark:text-white leading-tight">
+                                                    {(item.currentStock ?? 0).toLocaleString("vi-VN")}
+                                                    <span className="text-xs text-[#687582] font-normal"> / {(item.maxStock ?? 0).toLocaleString("vi-VN")}</span>
+                                                </p>
                                             </div>
-                                            <div className="mt-1 h-1.5 w-20 rounded-full bg-gray-200 dark:bg-gray-700">
-                                                <div className={`h-full rounded-full ${style.bar}`} style={{ width: `${pct}%` }} />
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-3 text-sm text-[#687582]">Min: {item.minStock}</td>
-                                        <td className="px-6 py-3 text-sm text-[#687582]">{item.batchNumber || "-"}</td>
-                                        <td className="px-6 py-3 text-sm text-[#687582]">{item.expiryDate || "-"}</td>
-                                        <td className="px-6 py-3">
-                                            <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${style.bg} ${style.text}`}>{style.label}</span>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                                            <span className="text-xs font-semibold text-[#687582]">{pct}%</span>
+                                        </div>
+                                        <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                                            <div className={`h-full rounded-full ${style.bar} transition-all`} style={{ width: `${pct}%` }} />
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs text-[#687582] pt-2 border-t border-gray-100 dark:border-gray-700">
+                                            <span className="inline-flex items-center gap-1">
+                                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>tag</span>
+                                                {item.batchNumber || "—"}
+                                            </span>
+                                            <span className="inline-flex items-center gap-1">
+                                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>schedule</span>
+                                                {item.expiryDate || "—"}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-[#687582]">Min: {item.minStock}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </>
     );

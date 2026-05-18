@@ -375,6 +375,23 @@ export default function MedicinesPage() {
                         {UI_TEXT.ADMIN.MEDICINES.SUBTITLE}
                     </p>
                 </div>
+                <nav className="flex flex-wrap items-center gap-1 rounded-xl bg-[#f8f9fa] dark:bg-[#13191f] p-1 border border-[#dde0e4] dark:border-[#2d353e]">
+                    <a href="/admin/medicines" className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm inline-flex items-center gap-1">
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>medication</span>Danh mục thuốc
+                    </a>
+                    <a href="/admin/medicines/import" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-[#687582] hover:bg-white dark:hover:bg-[#1e242b] inline-flex items-center gap-1">
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>input</span>Nhập kho
+                    </a>
+                    <a href="/admin/medicines/export" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-[#687582] hover:bg-white dark:hover:bg-[#1e242b] inline-flex items-center gap-1">
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>output</span>Xuất kho
+                    </a>
+                    <a href="/admin/medicines/stock" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-[#687582] hover:bg-white dark:hover:bg-[#1e242b] inline-flex items-center gap-1">
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>inventory</span>Tồn kho
+                    </a>
+                    <a href="/admin/suppliers" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-[#687582] hover:bg-white dark:hover:bg-[#1e242b] inline-flex items-center gap-1">
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>local_shipping</span>Nhà cung cấp
+                    </a>
+                </nav>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => {
