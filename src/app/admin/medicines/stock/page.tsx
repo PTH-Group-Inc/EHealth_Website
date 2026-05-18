@@ -166,8 +166,8 @@ export default function MedicineStockPage() {
                                         <td className="px-6 py-3 text-sm text-[#121417] dark:text-white">{item.name}</td>
                                         <td className="px-6 py-3">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm font-bold text-[#121417] dark:text-white">{item.currentStock.toLocaleString("vi-VN")}</span>
-                                                <span className="text-xs text-[#687582]">/ {item.maxStock.toLocaleString("vi-VN")}</span>
+                                                <span className="text-sm font-bold text-[#121417] dark:text-white">{(item.currentStock ?? 0).toLocaleString("vi-VN")}</span>
+                                                <span className="text-xs text-[#687582]">/ {(item.maxStock ?? 0).toLocaleString("vi-VN")}</span>
                                             </div>
                                             <div className="mt-1 h-1.5 w-20 rounded-full bg-gray-200 dark:bg-gray-700">
                                                 <div className={`h-full rounded-full ${style.bar}`} style={{ width: `${pct}%` }} />

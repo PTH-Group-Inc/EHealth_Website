@@ -176,7 +176,7 @@ export default function StockBatchDetailPage() {
                 </div>
                 <div className="rounded-xl border border-[#dde0e4] bg-white p-4 dark:border-[#2d353e] dark:bg-[#1e242b]">
                     <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Gia nhap</p>
-                    <p className="text-sm font-bold text-[#3C81C6]">{batch.unitPrice.toLocaleString("vi-VN")}d/{batch.unit}</p>
+                    <p className="text-sm font-bold text-[#3C81C6]">{(batch.unitPrice ?? 0).toLocaleString("vi-VN")}d/{batch.unit}</p>
                 </div>
             </div>
 
@@ -242,7 +242,7 @@ export default function StockBatchDetailPage() {
                                 >
                                     <td className="px-5 py-3 text-sm text-[#687582]">{item.date}</td>
                                     <td className="px-5 py-3 text-sm text-[#121417] dark:text-white">{item.type === "import" ? "Nhap" : "Xuat"}</td>
-                                    <td className="px-5 py-3 text-right text-sm font-bold text-[#121417] dark:text-white">{item.quantity.toLocaleString("vi-VN")}</td>
+                                    <td className="px-5 py-3 text-right text-sm font-bold text-[#121417] dark:text-white">{(item.quantity ?? 0).toLocaleString("vi-VN")}</td>
                                     <td className="px-5 py-3 text-sm font-medium text-[#3C81C6]">{item.refCode}</td>
                                     <td className="px-5 py-3 text-sm text-[#687582]">{item.note}</td>
                                     <td className="px-5 py-3 text-sm text-[#687582]">{item.user}</td>

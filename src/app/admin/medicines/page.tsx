@@ -619,12 +619,12 @@ export default function MedicinesPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <p className="text-sm font-semibold text-[#121417] dark:text-white">
-                                                {medicine.price.toLocaleString("vi-VN")}d
+                                                {(medicine.price ?? 0).toLocaleString("vi-VN")}d
                                             </p>
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center rounded-lg px-2 py-1 text-xs font-medium ${getStockStyle(medicine.stockLevel)}`}>
-                                                {medicine.stock.toLocaleString("vi-VN")}
+                                                {(medicine.stock ?? 0).toLocaleString("vi-VN")}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">

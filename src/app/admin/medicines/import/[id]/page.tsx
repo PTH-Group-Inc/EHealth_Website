@@ -259,7 +259,7 @@ export default function StockInDetailPage() {
                 </div>
                 <div className="rounded-xl border border-[#dde0e4] bg-white p-4 dark:border-[#2d353e] dark:bg-[#1e242b]">
                     <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Tong gia tri</p>
-                    <p className="text-sm font-bold text-[#3C81C6]">{totalValue.toLocaleString("vi-VN")}d</p>
+                    <p className="text-sm font-bold text-[#3C81C6]">{(totalValue ?? 0).toLocaleString("vi-VN")}d</p>
                 </div>
             </div>
 
@@ -315,9 +315,9 @@ export default function StockInDetailPage() {
                                 <tr key={item.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                     <td className="px-5 py-3 text-sm text-[#687582]">{index + 1}</td>
                                     <td className="px-5 py-3 text-sm font-medium text-[#121417] dark:text-white">{item.drugName}</td>
-                                    <td className="px-5 py-3 text-right text-sm font-bold text-[#121417] dark:text-white">{item.quantity.toLocaleString("vi-VN")}</td>
+                                    <td className="px-5 py-3 text-right text-sm font-bold text-[#121417] dark:text-white">{(item.quantity ?? 0).toLocaleString("vi-VN")}</td>
                                     <td className="px-5 py-3 text-sm text-[#687582]">{item.unit}</td>
-                                    <td className="px-5 py-3 text-right text-sm text-[#121417] dark:text-white">{item.unitPrice.toLocaleString("vi-VN")}d</td>
+                                    <td className="px-5 py-3 text-right text-sm text-[#121417] dark:text-white">{(item.unitPrice ?? 0).toLocaleString("vi-VN")}d</td>
                                     <td className="px-5 py-3 text-right text-sm font-bold text-[#3C81C6]">{(item.quantity * item.unitPrice).toLocaleString("vi-VN")}d</td>
                                     <td className="px-5 py-3 text-sm text-[#687582]">{item.lotNumber || "-"}</td>
                                     <td className="px-5 py-3 text-sm text-[#687582]">{item.expiryDate || "-"}</td>

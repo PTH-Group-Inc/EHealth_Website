@@ -213,7 +213,7 @@ export default function MedicineExportPage() {
                                         <td className="px-6 py-3 text-sm text-[#121417] dark:text-white">{record.warehouseName}</td>
                                         <td className="px-6 py-3 text-sm text-[#687582] dark:text-gray-400">{record.destination}</td>
                                         <td className="px-6 py-3 text-sm text-[#687582] dark:text-gray-400">{record.reason}</td>
-                                        <td className="px-6 py-3 text-sm font-medium text-[#121417] dark:text-white">{record.totalQuantity.toLocaleString("vi-VN")}</td>
+                                        <td className="px-6 py-3 text-sm font-medium text-[#121417] dark:text-white">{(record.totalQuantity ?? 0).toLocaleString("vi-VN")}</td>
                                         <td className="px-6 py-3 text-sm text-[#687582] dark:text-gray-400">{record.date || "-"}</td>
                                         <td className="px-6 py-3">
                                             <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${status.bg} ${status.text}`}>

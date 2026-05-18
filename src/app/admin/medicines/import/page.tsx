@@ -187,7 +187,7 @@ export default function MedicineImportPage() {
                                         <td className="px-6 py-3 text-sm font-bold text-[#3C81C6]">{record.code}</td>
                                         <td className="px-6 py-3 text-sm text-[#121417] dark:text-white">{record.supplier}</td>
                                         <td className="px-6 py-3 text-sm text-[#687582] dark:text-gray-400">{record.warehouseName}</td>
-                                        <td className="px-6 py-3 text-sm font-medium text-[#121417] dark:text-white">{record.totalAmount.toLocaleString("vi-VN")}d</td>
+                                        <td className="px-6 py-3 text-sm font-medium text-[#121417] dark:text-white">{(record.totalAmount ?? 0).toLocaleString("vi-VN")}d</td>
                                         <td className="px-6 py-3 text-sm text-[#687582] dark:text-gray-400">{record.createdBy}</td>
                                         <td className="px-6 py-3 text-sm text-[#687582] dark:text-gray-400">{record.date || "-"}</td>
                                         <td className="px-6 py-3">

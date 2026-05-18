@@ -121,7 +121,7 @@ export default function MedicineDetailPage() {
                 </div>
                 <div className="bg-white dark:bg-[#1e242b] p-4 rounded-xl border border-[#dde0e4] dark:border-[#2d353e]">
                     <p className="text-xs text-[#687582] dark:text-gray-400 font-medium uppercase tracking-wider mb-1">Giá bán</p>
-                    <p className="text-sm font-bold text-[#3C81C6]">{drug.price.toLocaleString("vi-VN")}₫/{drug.unit}</p>
+                    <p className="text-sm font-bold text-[#3C81C6]">{(drug.price ?? 0).toLocaleString("vi-VN")}₫/{drug.unit}</p>
                 </div>
             </div>
 
