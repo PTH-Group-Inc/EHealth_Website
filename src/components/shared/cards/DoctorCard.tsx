@@ -5,6 +5,7 @@
  * Hiển thị avatar, tên, chuyên khoa, rating, status.
  */
 
+import Image from "next/image";
 import { getInitials, getImageUrl } from "@/utils/helpers";
 
 export interface DoctorCardProps {
@@ -78,8 +79,8 @@ export function DoctorCard({
                 <div className="flex items-start gap-3">
                     <div className="relative flex-shrink-0">
                         {avatarUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={getImageUrl(avatarUrl)} alt={fullName}
+                            <Image src={getImageUrl(avatarUrl)} alt={fullName}
+                                width={64} height={64}
                                 className="w-16 h-16 rounded-2xl object-cover border border-gray-100 dark:border-gray-800" />
                         ) : (
                             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3C81C6] to-[#1d4ed8] flex items-center justify-center text-white font-bold text-lg">

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -495,7 +496,7 @@ export default function PatientProfilesPage() {
                                     <div className="flex items-center gap-4">
                                         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#3C81C6] to-[#2563eb] text-white shadow-md">
                                             {displayAvatar ? (
-                                                <img src={displayAvatar} alt="Ảnh hồ sơ bệnh nhân" className="h-full w-full object-cover" />
+                                                <Image src={displayAvatar} alt="Ảnh hồ sơ bệnh nhân" width={64} height={64} className="h-full w-full object-cover" />
                                             ) : (
                                                 <span className="material-symbols-outlined" style={{ fontSize: "28px" }}>person</span>
                                             )}
@@ -712,7 +713,7 @@ function ProfileCard({
                 <div className="flex items-start gap-4">
                     <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#3C81C6] to-[#2563eb] text-white shadow-lg shadow-[#3C81C6]/20 sm:h-14 sm:w-14">
                         {profile.avatar ? (
-                            <img src={getImageUrl(profile.avatar)} alt={profile.fullName} className="h-full w-full object-cover" />
+                            <Image src={getImageUrl(profile.avatar)} alt={profile.fullName} width={56} height={56} className="h-full w-full object-cover" />
                         ) : (
                             <span className="material-symbols-outlined" style={{ fontSize: "26px" }}>
                                 {RELATIONSHIP_OPTIONS.find((item) => item.value === profile.relationship)?.icon || "person"}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Modal } from "@/components/ui/modal";
 import { ROLES, ROLE_LABELS, type Role } from "@/constants/roles";
 import { UI_TEXT } from "@/constants/ui-text";
@@ -271,7 +272,7 @@ export function UserFormModal({
                     <div className="relative group cursor-pointer mb-6" onClick={() => fileInputRef.current?.click()}>
                         <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-[#1e242b] shadow-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
                             {avatarPreview ? (
-                                <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
+                                <Image src={avatarPreview} alt="Avatar preview" width={128} height={128} className="w-full h-full object-cover" />
                             ) : (
                                 <span className="material-symbols-outlined text-5xl text-gray-300 dark:text-gray-600">person</span>
                             )}

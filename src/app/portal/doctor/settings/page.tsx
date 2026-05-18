@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PageHeader, EmptyState } from "@/components/shared/layout";
 import { profileService, type MyProfile, type ProfileSession } from "@/services/profileService";
@@ -71,7 +72,7 @@ function ProfileTab() {
             <div className="lg:col-span-1 bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-5 text-center">
                 <div className="w-32 h-32 mx-auto rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden mb-3">
                     {(me as any).avatarUrl || (me as any).avatar_url ? (
-                        <img src={(me as any).avatarUrl ?? (me as any).avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                        <Image src={(me as any).avatarUrl ?? (me as any).avatar_url} alt="avatar" width={128} height={128} className="w-full h-full object-cover" />
                     ) : (
                         <span className="material-symbols-outlined text-[80px] text-gray-400 leading-[128px]">person</span>
                     )}

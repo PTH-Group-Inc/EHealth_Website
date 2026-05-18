@@ -21,6 +21,10 @@ const nextConfig = {
             { protocol: "https", hostname: "dev.thanhhaishopwebsite.id.vn" },
             // Cloudinary (avatar upload)
             { protocol: "https", hostname: "res.cloudinary.com" },
+            // Avatar fallback (booking page)
+            { protocol: "https", hostname: "ui-avatars.com" },
+            // QR code service (booking confirmation)
+            { protocol: "https", hostname: "api.qrserver.com" },
         ],
     },
 

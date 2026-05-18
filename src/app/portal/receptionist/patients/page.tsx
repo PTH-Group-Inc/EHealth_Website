@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { getPatients, Patient, PatientGender, PatientStatus } from "@/services/patientService";
@@ -369,7 +370,7 @@ export default function ReceptionistPatients() {
                                                             <div className="flex items-center gap-3">
                                                                 <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#3C81C6] to-[#2a6da8] text-sm font-semibold text-white">
                                                                     {getPrimaryAvatarUrl(p) ? (
-                                                                        <img src={getPrimaryAvatarUrl(p)} alt={p.full_name} className="h-full w-full object-cover" />
+                                                                        <Image src={getPrimaryAvatarUrl(p)} alt={p.full_name} width={40} height={40} className="h-full w-full object-cover" />
                                                                     ) : (
                                                                         p.full_name.charAt(0)
                                                                     )}

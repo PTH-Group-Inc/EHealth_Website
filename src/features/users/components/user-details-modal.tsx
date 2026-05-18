@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Modal } from "@/components/ui/modal";
 import { ROLE_LABELS } from "@/constants/roles";
 import { getImageUrl } from "@/utils/helpers";
@@ -62,7 +63,7 @@ export function UserDetailsModal({
                 <div className="flex items-center gap-6 p-6 rounded-2xl bg-gray-50/50 dark:bg-[#1a2027]/50 border border-[#dde0e4] dark:border-[#2d353e]">
                     <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white dark:border-[#1e242b] shadow-lg flex-shrink-0 bg-gray-200 dark:bg-gray-700">
                         {user.avatar ? (
-                            <img src={getImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+                            <Image src={getImageUrl(user.avatar)} alt="Avatar" width={96} height={96} className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
                                 <span className="material-symbols-outlined text-4xl">person</span>

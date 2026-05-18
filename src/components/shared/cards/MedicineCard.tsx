@@ -5,6 +5,7 @@
  * Hiển thị tên, đơn vị, tồn kho, hạn dùng, giá, cảnh báo.
  */
 
+import Image from "next/image";
 import { formatDate } from "@/utils/formatters";
 
 export interface MedicineCardProps {
@@ -76,8 +77,8 @@ export function MedicineCard({
             <div className="p-4">
                 <div className="flex items-start gap-3 mb-3">
                     {imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={imageUrl} alt={name}
+                        <Image src={imageUrl} alt={name}
+                            width={56} height={56}
                             className="w-14 h-14 rounded-xl object-cover border border-gray-100 dark:border-gray-800 flex-shrink-0" />
                     ) : (
                         <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/10 flex items-center justify-center text-emerald-600 flex-shrink-0">

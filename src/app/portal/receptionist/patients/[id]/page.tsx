@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -478,7 +479,7 @@ export default function PatientDetailPage() {
                             {/* Avatar */}
                             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#3C81C6] to-[#2a6da8] flex items-center justify-center overflow-hidden text-white text-xl font-bold flex-shrink-0">
                                 {getPrimaryAvatarUrl(patient) ? (
-                                    <img src={getPrimaryAvatarUrl(patient)} alt={patient.full_name} className="h-full w-full object-cover" />
+                                    <Image src={getPrimaryAvatarUrl(patient)} alt={patient.full_name} width={56} height={56} className="h-full w-full object-cover" />
                                 ) : (
                                     patient.full_name.charAt(0)
                                 )}

@@ -5,6 +5,7 @@
  * Hiển thị avatar, tên, thông tin cơ bản, BHYT, thao tác nhanh.
  */
 
+import Image from "next/image";
 import { getInitials, getImageUrl } from "@/utils/helpers";
 import { formatDate } from "@/utils/formatters";
 
@@ -59,8 +60,8 @@ export function PatientCard({
             <div className="p-4">
                 <div className="flex items-start gap-3">
                     {avatarUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={getImageUrl(avatarUrl)} alt={fullName}
+                        <Image src={getImageUrl(avatarUrl)} alt={fullName}
+                            width={56} height={56}
                             className="w-14 h-14 rounded-xl object-cover flex-shrink-0 border border-gray-100 dark:border-gray-800" />
                     ) : (
                         <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${genderColor} flex items-center justify-center text-white font-bold flex-shrink-0 shadow-sm`}>

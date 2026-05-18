@@ -19,6 +19,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import Image from "next/image";
 import { getAppointmentPaymentStatus } from "@/services/appointmentService";
 
 export interface PreBookingPaymentModalProps {
@@ -45,8 +46,7 @@ function QrImage({ src }: { src: string }) {
         ? src
         : `data:image/png;base64,${src}`;
     return (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={finalSrc} alt="QR thanh toán" className="w-full max-w-[260px] mx-auto rounded-lg border border-[#e5e7eb]" />
+        <Image src={finalSrc} alt="QR thanh toán" width={260} height={260} unoptimized className="w-full max-w-[260px] h-auto mx-auto rounded-lg border border-[#e5e7eb]" />
     );
 }
 

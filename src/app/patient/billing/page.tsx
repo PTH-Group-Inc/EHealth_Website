@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { Invoice, Transaction, ServicePrice } from "@/types/patient-portal";
 import { billingService } from "@/services/billingService";
@@ -1083,7 +1084,7 @@ export default function BillingPage() {
                                             </p>
                                             <div className="p-2 border-2 border-blue-200 rounded-xl bg-white">
                                                 {qrImage ? (
-                                                    <img src={qrImage} alt="QR Code" className="w-[180px] h-[180px] object-contain" />
+                                                    <Image src={qrImage} alt="QR Code" width={180} height={180} unoptimized className="w-[180px] h-[180px] object-contain" />
                                                 ) : (
                                                     <div className="w-[180px] h-[180px] flex items-center justify-center bg-gray-50 rounded-lg">
                                                         <span className="material-symbols-outlined text-[#3C81C6]" style={{ fontSize: "64px" }}>qr_code_2</span>

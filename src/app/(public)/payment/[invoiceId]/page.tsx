@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, Suspense } from "react";
+import Image from "next/image";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { 
     getAppointmentPaymentStatus, 
@@ -20,8 +21,7 @@ function QrImage({ src }: { src: string }) {
         ? src
         : `data:image/png;base64,${src}`;
     return (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={finalSrc} alt="QR thanh toán" className="w-full max-w-[260px] mx-auto rounded-lg border border-[#e5e7eb]" />
+        <Image src={finalSrc} alt="QR thanh toán" width={260} height={260} unoptimized className="w-full max-w-[260px] h-auto mx-auto rounded-lg border border-[#e5e7eb]" />
     );
 }
 

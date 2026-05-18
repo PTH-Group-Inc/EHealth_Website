@@ -4,6 +4,7 @@
  * UserCard — card user/account cho admin users list.
  */
 
+import Image from "next/image";
 import { getInitials, getImageUrl } from "@/utils/helpers";
 import { formatRelativeTime } from "@/utils/formatters";
 
@@ -69,8 +70,8 @@ export function UserCard({
             <div className="p-4">
                 <div className="flex items-start gap-3">
                     {avatarUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={getImageUrl(avatarUrl)} alt={fullName}
+                        <Image src={getImageUrl(avatarUrl)} alt={fullName}
+                            width={48} height={48}
                             className="w-12 h-12 rounded-xl object-cover border border-gray-100 dark:border-gray-800 flex-shrink-0" />
                     ) : (
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3C81C6] to-[#1d4ed8] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">

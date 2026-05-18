@@ -6,6 +6,7 @@
  */
 
 import { useState, useCallback } from "react";
+import Image from "next/image";
 import { PageHeader, EmptyState } from "@/components/shared/layout";
 import { billingService } from "@/services/billingService";
 import axiosClient from "@/api/axiosClient";
@@ -86,7 +87,7 @@ export default function ReceptionistPaymentsPage() {
                     {!qrUrl ? <EmptyState icon="qr_code_2" title="Chưa có QR" description="Tạo QR mới để hiển thị." compact />
                     : (
                         <div className="text-center space-y-3">
-                            <img src={qrUrl} alt="Payment QR" className="mx-auto max-w-xs rounded-lg border" />
+                            <Image src={qrUrl} alt="Payment QR" width={320} height={320} unoptimized className="mx-auto max-w-xs h-auto rounded-lg border" />
                             <p className="text-xs text-[#687582] font-mono">Order: {orderId}</p>
                             <p className="text-sm">
                                 Trạng thái: <span className={status === "PAID" ? "text-emerald-600 font-bold" : status === "CANCELLED" ? "text-rose-600 font-bold" : "text-amber-600 font-bold"}>{status}</span>
