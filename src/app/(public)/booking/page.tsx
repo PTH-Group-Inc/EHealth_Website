@@ -548,12 +548,9 @@ function BookingPageInner() {
             if (selectedFacility) params.facility_id = selectedFacility;
             if (selectedBranch) params.branch_id = selectedBranch;
             const res = await doctorService.getList(params);
-            if (res.data && res.data.length > 0) setDoctors(res.data);
-            else {
-                const mock = filterMockDoctors({ departmentId: selectedSpecialty, limit: 20 });
-                setDoctors(mock.data);
-            }
-        } catch {
+            setDoctors(res.data ?? []);
+        } catch (err) {
+            console.warn("[booking] doctor API down, dùng mock fallback:", err);
             const mock = filterMockDoctors({ departmentId: selectedSpecialty, limit: 20 });
             setDoctors(mock.data);
         }
