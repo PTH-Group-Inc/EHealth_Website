@@ -146,6 +146,9 @@ function DiscountsTab() {
     const [items, setItems] = useState<Discount[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showAdd, setShowAdd] = useState(false);
+    const [form, setForm] = useState({ name: "", code: "", discountType: "PERCENT" as "PERCENT" | "AMOUNT", discountValue: "10", validFrom: "", validTo: "" });
+    const [saving, setSaving] = useState(false);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -164,6 +167,30 @@ function DiscountsTab() {
 
     useEffect(() => { load(); }, [load]);
 
+    const handleAdd = async () => {
+        if (!form.name.trim()) { toast.warning("Vui lòng nhập tên chiết khấu."); return; }
+        const value = Number(form.discountValue);
+        if (Number.isNaN(value) || value <= 0) { toast.warning("Giá trị giảm phải lớn hơn 0."); return; }
+        setSaving(true);
+        try {
+            await axiosClient.post(BILLING_PRICING_POLICY_ENDPOINTS.CREATE_DISCOUNT, {
+                name: form.name.trim(),
+                code: form.code.trim() || undefined,
+                discount_type: form.discountType,
+                discount_value: value,
+                valid_from: form.validFrom || undefined,
+                valid_to: form.validTo || undefined,
+                is_active: true,
+            });
+            toast.success("Đã thêm chiết khấu.");
+            setShowAdd(false);
+            setForm({ name: "", code: "", discountType: "PERCENT", discountValue: "10", validFrom: "", validTo: "" });
+            await load();
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message ?? "Không thêm được chiết khấu.");
+        } finally { setSaving(false); }
+    };
+
     const handleDelete = async (d: Discount) => {
         if (!confirm(`Xoá chiết khấu "${d.name}"?`)) return;
         try {
@@ -177,6 +204,14 @@ function DiscountsTab() {
 
     return (
         <>
+            <div className="flex items-center justify-between">
+                <p className="text-sm text-[#687582] dark:text-gray-400">Danh sách chiết khấu áp dụng tự động</p>
+                <button onClick={() => setShowAdd(true)} className="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md inline-flex items-center gap-1">
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
+                    Thêm khuyến mãi
+                </button>
+            </div>
+
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard label="Tổng chiết khấu" value={items.length} icon="discount" color="blue" loading={loading} />
                 <StatCard label="Đang áp dụng" value={items.filter((d) => d.isActive).length} icon="check_circle" color="emerald" loading={loading} />
@@ -189,7 +224,7 @@ function DiscountsTab() {
             {loading ? (
                 <div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className="h-16 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />)}</div>
             ) : items.length === 0 ? (
-                <EmptyState icon="discount" title="Chưa có chiết khấu" description="Tạo chiết khấu để áp dụng tự động cho khách hàng." />
+                <EmptyState icon="discount" title="Chưa có chiết khấu" description="Bấm Thêm khuyến mãi để tạo chiết khấu mới." />
             ) : (
                 <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
@@ -219,6 +254,64 @@ function DiscountsTab() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            )}
+
+            {showAdd && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => !saving && setShowAdd(false)}>
+                    <div className="bg-white dark:bg-[#1e242b] rounded-2xl shadow-xl max-w-md w-full p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-[#121417] dark:text-white mb-4 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[#3C81C6]">discount</span>
+                            Thêm chiết khấu mới
+                        </h3>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Tên chiết khấu *</label>
+                                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                    placeholder="VD: Giảm 10% cho hóa đơn trên 500k"
+                                    className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Mã (tuỳ chọn)</label>
+                                <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })}
+                                    placeholder="VD: SUMMER10"
+                                    className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm font-mono dark:text-white" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Loại</label>
+                                    <select value={form.discountType} onChange={(e) => setForm({ ...form, discountType: e.target.value as "PERCENT" | "AMOUNT" })}
+                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white">
+                                        <option value="PERCENT">Phần trăm (%)</option>
+                                        <option value="AMOUNT">Số tiền (₫)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Giá trị *</label>
+                                    <input type="number" min={0} step={form.discountType === "PERCENT" ? 1 : 1000} value={form.discountValue} onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Hiệu lực từ</label>
+                                    <input type="date" value={form.validFrom} onChange={(e) => setForm({ ...form, validFrom: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Hiệu lực đến</label>
+                                    <input type="date" value={form.validTo} onChange={(e) => setForm({ ...form, validTo: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-end gap-2 mt-5 pt-4 border-t border-[#dde0e4] dark:border-[#2d353e]">
+                            <button onClick={() => setShowAdd(false)} disabled={saving} className="px-4 py-2 text-sm text-[#687582] hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl">Hủy</button>
+                            <button onClick={handleAdd} disabled={saving} className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-xl shadow-sm hover:shadow-md disabled:opacity-50">
+                                {saving ? "Đang lưu..." : "Thêm chiết khấu"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

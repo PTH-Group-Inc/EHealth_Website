@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { BILLING_DOCUMENT_ENDPOINTS } from "@/api/endpoints";
-import { unwrapList } from "@/api/response";
 import { useToast } from "@/contexts/ToastContext";
 import { PageHeader, FilterBar, EmptyState, StatCard } from "@/components/shared/layout";
 
@@ -79,10 +78,28 @@ export default function EInvoicesPage() {
         setError(null);
         try {
             const res = await axiosClient.get(BILLING_DOCUMENT_ENDPOINTS.E_INVOICES, { params: { limit: 200 } });
-            const { data } = unwrapList<any>(res);
-            setItems(data.map(mapDoc));
-        } catch {
-            setError("Không tải được hoá đơn điện tử.");
+            const raw: any = res.data;
+            const arr: any[] =
+                Array.isArray(raw?.data?.items) ? raw.data.items :
+                Array.isArray(raw?.data?.data) ? raw.data.data :
+                Array.isArray(raw?.data) ? raw.data :
+                Array.isArray(raw?.items) ? raw.items :
+                Array.isArray(raw?.invoices) ? raw.invoices :
+                Array.isArray(raw?.documents) ? raw.documents :
+                Array.isArray(raw) ? raw : [];
+            setItems(arr.map(mapDoc));
+            if (arr.length === 0 && raw) {
+                console.warn("[e-invoices] BE response không khớp shape mong đợi:", raw);
+            }
+        } catch (err: any) {
+            const code = err?.response?.status;
+            if (code === 404) {
+                setError("Endpoint hoá đơn điện tử chưa được BE triển khai.");
+            } else if (code === 403 || code === 401) {
+                setError("Không đủ quyền xem hoá đơn điện tử.");
+            } else {
+                setError(err?.response?.data?.message ?? "Không tải được hoá đơn điện tử.");
+            }
             setItems([]);
         } finally {
             setLoading(false);
