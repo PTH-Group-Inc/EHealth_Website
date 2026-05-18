@@ -191,7 +191,7 @@ export default function StaffSchedulePage() {
                             <button onClick={() => setView("calendar")}
                                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${view === "calendar" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] dark:text-gray-400"}`}>
                                 <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>calendar_month</span>
-                                Calendar
+                                Lịch
                             </button>
                             <button onClick={() => setView("list")}
                                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors inline-flex items-center gap-1 ${view === "list" ? "bg-white dark:bg-[#1e242b] text-[#3C81C6] shadow-sm" : "text-[#687582] dark:text-gray-400"}`}>

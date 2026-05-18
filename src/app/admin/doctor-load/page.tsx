@@ -115,7 +115,7 @@ export default function DoctorLoadDashboardPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Tải bác sĩ (Doctor Load)"
+                title="Tải bác sĩ"
                 subtitle="Theo dõi cân bằng tải khám của từng bác sĩ trong ngày"
                 icon="monitoring"
                 breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Tải bác sĩ" }]}
