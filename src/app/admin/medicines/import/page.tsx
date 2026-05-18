@@ -90,13 +90,13 @@ export default function MedicineImportPage() {
     const getStatusStyle = (status: ImportRecord["status"]) => {
         switch (status) {
             case "received":
-                return { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", label: "Da nhap" };
+                return { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", label: "Đã nhập" };
             case "confirmed":
-                return { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", label: "Da xac nhan" };
+                return { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", label: "Đã xác nhận" };
             case "cancelled":
-                return { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", label: "Da huy" };
+                return { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", label: "Đã hủy" };
             default:
-                return { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-400", label: "Ban nhap" };
+                return { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-400", label: "Bản nháp" };
         }
     };
 
@@ -104,8 +104,8 @@ export default function MedicineImportPage() {
         <>
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div className="space-y-1">
-                    <h1 className="text-3xl font-black tracking-tight text-[#121417] dark:text-white">Nhap kho</h1>
-                    <p className="text-[#687582] dark:text-gray-400">Quan ly phieu nhap kho thuoc va vat tu y te</p>
+                    <h1 className="text-3xl font-black tracking-tight text-[#121417] dark:text-white">Nhập kho</h1>
+                    <p className="text-[#687582] dark:text-gray-400">Quản lý phiếu nhập kho thuốc và vật tư y tế</p>
                 </div>
             </div>
 
@@ -115,7 +115,7 @@ export default function MedicineImportPage() {
                         <span className="material-symbols-outlined">inventory</span>
                     </div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Tong phieu nhap</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Tổng phiếu nhập</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{records.length}</p>
                     </div>
                 </div>
@@ -124,7 +124,7 @@ export default function MedicineImportPage() {
                         <span className="material-symbols-outlined">check_circle</span>
                     </div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Da nhap kho</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Đã nhập kho</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{records.filter((record) => record.status === "received").length}</p>
                     </div>
                 </div>
@@ -133,7 +133,7 @@ export default function MedicineImportPage() {
                         <span className="material-symbols-outlined">pending</span>
                     </div>
                     <div>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Dang cho xu ly</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Đang chờ xử lý</p>
                         <p className="text-xl font-bold text-[#121417] dark:text-white">{records.filter((record) => record.status === "draft" || record.status === "confirmed").length}</p>
                     </div>
                 </div>
@@ -150,7 +150,7 @@ export default function MedicineImportPage() {
                             value={searchQuery}
                             onChange={(event) => setSearchQuery(event.target.value)}
                             className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm transition-all placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3C81C6]/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                            placeholder="Tim theo ma phieu, nha cung cap, kho..."
+                            placeholder="Tìm theo mã phiếu, nhà cung cấp, kho..."
                         />
                     </div>
                 </div>
@@ -158,13 +158,13 @@ export default function MedicineImportPage() {
                     <table className="w-full text-left">
                         <thead className="border-b border-[#dde0e4] bg-gray-50/50 dark:border-[#2d353e] dark:bg-gray-800/50">
                             <tr>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ma phieu</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Nha cung cap</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Kho nhan</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Tong gia tri</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Nguoi tao</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ngay tao</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Trang thai</th>
+                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Mã phiếu</th>
+                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Nhà cung cấp</th>
+                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Kho nhận</th>
+                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Tổng giá trị</th>
+                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Người tạo</th>
+                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ngày tạo</th>
+                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#dde0e4] dark:divide-[#2d353e]">
@@ -172,7 +172,7 @@ export default function MedicineImportPage() {
                                 <tr>
                                     <td colSpan={7} className="py-12 text-center text-[#687582] dark:text-gray-400">
                                         <span className="material-symbols-outlined mb-2 block text-4xl">inbox</span>
-                                        Chua co du lieu
+                                        Chưa có dữ liệu
                                     </td>
                                 </tr>
                             ) : filtered.map((record) => {

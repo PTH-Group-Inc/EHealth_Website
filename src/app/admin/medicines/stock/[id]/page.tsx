@@ -63,7 +63,7 @@ export default function StockBatchDetailPage() {
                     expiryDate: formatDate(res.expiry_date ?? res.expiryDate),
                     currentStock: Number(res.stock_quantity ?? res.quantity ?? res.currentStock ?? 0),
                     minStock: Number(res.low_stock_threshold ?? res.min_quantity ?? res.minQuantity ?? 0),
-                    unit: res.dispensing_unit ?? res.unit ?? "Don vi",
+                    unit: res.dispensing_unit ?? res.unit ?? "Đơn vị",
                     warehouseName: res.warehouse_name ?? res.warehouse?.name ?? res.warehouseName ?? "-",
                     supplier: res.supplier_name ?? res.supplier?.name ?? res.supplierName ?? "-",
                     importDate: formatDate(res.created_at ?? res.import_date ?? res.importDate),
@@ -88,9 +88,9 @@ export default function StockBatchDetailPage() {
         return (
             <div className="flex flex-col items-center justify-center py-20">
                 <span className="material-symbols-outlined mb-4 text-5xl text-gray-300">inventory_2</span>
-                <p className="mb-4 text-lg text-gray-500">Khong tim thay thong tin ton kho</p>
+                <p className="mb-4 text-lg text-gray-500">Không tìm thấy thông tin tồn kho</p>
                 <button onClick={() => router.back()} className="rounded-xl bg-[#3C81C6] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#2a6da8]">
-                    Quay lai
+                    Quay lại
                 </button>
             </div>
         );
@@ -99,10 +99,10 @@ export default function StockBatchDetailPage() {
     const stockPercent = batch.minStock > 0 ? Math.min((batch.currentStock / batch.minStock) * 100, 100) : 100;
     const stockLevel = batch.currentStock === 0 ? "OUT" : batch.currentStock < batch.minStock ? "LOW" : batch.currentStock > batch.minStock * 3 ? "HIGH" : "NORMAL";
     const stockLevelMap = {
-        HIGH: { label: "Day du", color: "text-blue-600", bg: "bg-blue-100 dark:bg-blue-900/30", bar: "bg-blue-500" },
-        NORMAL: { label: "Binh thuong", color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-900/30", bar: "bg-emerald-500" },
-        LOW: { label: "Sap het", color: "text-amber-600", bg: "bg-amber-100 dark:bg-amber-900/30", bar: "bg-amber-500" },
-        OUT: { label: "Het hang", color: "text-red-600", bg: "bg-red-100 dark:bg-red-900/30", bar: "bg-red-500" },
+        HIGH: { label: "Đầy đủ", color: "text-blue-600", bg: "bg-blue-100 dark:bg-blue-900/30", bar: "bg-blue-500" },
+        NORMAL: { label: "Bình thường", color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-900/30", bar: "bg-emerald-500" },
+        LOW: { label: "Sắp hết", color: "text-amber-600", bg: "bg-amber-100 dark:bg-amber-900/30", bar: "bg-amber-500" },
+        OUT: { label: "Hết hàng", color: "text-red-600", bg: "bg-red-100 dark:bg-red-900/30", bar: "bg-red-500" },
     } as const;
     const sl = stockLevelMap[stockLevel];
 
@@ -116,9 +116,9 @@ export default function StockBatchDetailPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-[#687582]">
-                    <Link href="/admin/medicines" className="transition-colors hover:text-[#3C81C6]">Danh muc thuoc</Link>
+                    <Link href="/admin/medicines" className="transition-colors hover:text-[#3C81C6]">Danh mục thuốc</Link>
                     <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                    <Link href="/admin/medicines/stock" className="transition-colors hover:text-[#3C81C6]">Ton kho</Link>
+                    <Link href="/admin/medicines/stock" className="transition-colors hover:text-[#3C81C6]">Tồn kho</Link>
                     <span className="material-symbols-outlined text-[16px]">chevron_right</span>
                     <span className="font-medium text-[#121417] dark:text-white">{batch.drugName}</span>
                 </div>
@@ -127,7 +127,7 @@ export default function StockBatchDetailPage() {
                     className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-[#1e242b] dark:hover:bg-gray-800"
                 >
                     <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                    Quay lai
+                    Quay lại
                 </button>
             </div>
 
@@ -139,43 +139,43 @@ export default function StockBatchDetailPage() {
                             {sl.label}
                         </span>
                     </div>
-                    <p className="text-sm text-[#687582] dark:text-gray-400">Ma: {batch.drugCode} | Lo: {batch.lotNumber}</p>
+                    <p className="text-sm text-[#687582] dark:text-gray-400">Mã: {batch.drugCode} | Lô: {batch.lotNumber}</p>
                 </div>
                 <button
                     onClick={() => router.push("/admin/medicines/import")}
                     className="flex items-center gap-2 rounded-xl bg-[#3C81C6] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#3C81C6]/20 transition-colors hover:bg-[#2a6da8]"
                 >
                     <span className="material-symbols-outlined text-[18px]">add</span>
-                    Nhap them
+                    Nhập thêm
                 </button>
             </div>
 
             <div className="rounded-xl border border-[#dde0e4] bg-white p-5 dark:border-[#2d353e] dark:bg-[#1e242b]">
                 <div className="mb-3 flex items-center justify-between">
-                    <p className="text-sm font-bold text-[#121417] dark:text-white">Muc ton kho</p>
+                    <p className="text-sm font-bold text-[#121417] dark:text-white">Mức tồn kho</p>
                     <p className={`text-sm font-bold ${sl.color}`}>{batch.currentStock}/{Math.max(batch.minStock, 0)} {batch.unit}</p>
                 </div>
                 <div className="h-3 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
                     <div className={`h-full rounded-full ${sl.bar}`} style={{ width: `${stockPercent}%` }} />
                 </div>
-                <p className="mt-2 text-xs text-[#687582]">Muc toi thieu: {batch.minStock} {batch.unit}</p>
+                <p className="mt-2 text-xs text-[#687582]">Mức tối thiểu: {batch.minStock} {batch.unit}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <div className="rounded-xl border border-[#dde0e4] bg-white p-4 dark:border-[#2d353e] dark:bg-[#1e242b]">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Nhom thuoc</p>
+                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Nhóm thuốc</p>
                     <p className="text-sm font-bold text-[#121417] dark:text-white">{batch.category}</p>
                 </div>
                 <div className="rounded-xl border border-[#dde0e4] bg-white p-4 dark:border-[#2d353e] dark:bg-[#1e242b]">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Nha cung cap</p>
+                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Nhà cung cấp</p>
                     <p className="text-sm font-bold text-[#121417] dark:text-white">{batch.supplier}</p>
                 </div>
                 <div className="rounded-xl border border-[#dde0e4] bg-white p-4 dark:border-[#2d353e] dark:bg-[#1e242b]">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Kho luu tru</p>
+                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Kho lưu trữ</p>
                     <p className="text-sm font-bold text-[#121417] dark:text-white">{batch.warehouseName}</p>
                 </div>
                 <div className="rounded-xl border border-[#dde0e4] bg-white p-4 dark:border-[#2d353e] dark:bg-[#1e242b]">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Gia nhap</p>
+                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Giá nhập</p>
                     <p className="text-sm font-bold text-[#3C81C6]">{(batch.unitPrice ?? 0).toLocaleString("vi-VN")}d/{batch.unit}</p>
                 </div>
             </div>
@@ -186,7 +186,7 @@ export default function StockBatchDetailPage() {
                         <span className="material-symbols-outlined text-blue-600">calendar_month</span>
                     </div>
                     <div>
-                        <p className="text-xs font-medium text-[#687582] dark:text-gray-400">Ngay nhap kho</p>
+                        <p className="text-xs font-medium text-[#687582] dark:text-gray-400">Ngày nhập kho</p>
                         <p className="text-sm font-bold text-[#121417] dark:text-white">{batch.importDate || "-"}</p>
                     </div>
                 </div>
@@ -195,12 +195,12 @@ export default function StockBatchDetailPage() {
                         <span className={`material-symbols-outlined ${expiryWarning ? "text-red-600" : "text-amber-600"}`}>event_busy</span>
                     </div>
                     <div>
-                        <p className={`text-xs font-medium ${expiryWarning ? "text-red-600" : "text-[#687582] dark:text-gray-400"}`}>Han su dung</p>
+                        <p className={`text-xs font-medium ${expiryWarning ? "text-red-600" : "text-[#687582] dark:text-gray-400"}`}>Hạn sử dụng</p>
                         <p className={`text-sm font-bold ${expiryWarning ? "text-red-700 dark:text-red-400" : "text-[#121417] dark:text-white"}`}>
                             {batch.expiryDate || "-"}
                             {Number.isFinite(daysToExpiry) && expiryWarning && (
                                 <span className="ml-2 text-xs font-normal">
-                                    ({daysToExpiry > 0 ? `con ${daysToExpiry} ngay` : "da het han"})
+                                    ({daysToExpiry > 0 ? `còn ${daysToExpiry} ngày` : "đã hết hạn"})
                                 </span>
                             )}
                         </p>
@@ -212,26 +212,26 @@ export default function StockBatchDetailPage() {
                 <div className="border-b border-[#dde0e4] p-4 dark:border-[#2d353e]">
                     <h2 className="flex items-center gap-2 text-lg font-bold text-[#121417] dark:text-white">
                         <span className="material-symbols-outlined text-[#3C81C6]">history</span>
-                        Lich su nhap xuat
+                        Lịch sử nhập xuất
                     </h2>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="border-b border-[#dde0e4] bg-gray-50/50 dark:border-[#2d353e] dark:bg-gray-800/50">
                             <tr>
-                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Ngay</th>
-                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Loai</th>
-                                <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-[#687582]">So luong</th>
-                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Ma phieu</th>
-                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Ghi chu</th>
-                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Nguoi thuc hien</th>
+                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Ngày</th>
+                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Loại</th>
+                                <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-[#687582]">Số lượng</th>
+                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Mã phiếu</th>
+                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Ghi chú</th>
+                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Người thực hiện</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#dde0e4] dark:divide-[#2d353e]">
                             {history.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="py-10 text-center text-[#687582] dark:text-gray-400">
-                                        Chua co lich su nhap xuat cho lo thuoc nay
+                                        Chưa có lịch sử nhập xuất cho lô thuốc này
                                     </td>
                                 </tr>
                             ) : history.map((item) => (
@@ -241,7 +241,7 @@ export default function StockBatchDetailPage() {
                                     className="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
                                 >
                                     <td className="px-5 py-3 text-sm text-[#687582]">{item.date}</td>
-                                    <td className="px-5 py-3 text-sm text-[#121417] dark:text-white">{item.type === "import" ? "Nhap" : "Xuat"}</td>
+                                    <td className="px-5 py-3 text-sm text-[#121417] dark:text-white">{item.type === "import" ? "Nhập" : "Xuất"}</td>
                                     <td className="px-5 py-3 text-right text-sm font-bold text-[#121417] dark:text-white">{(item.quantity ?? 0).toLocaleString("vi-VN")}</td>
                                     <td className="px-5 py-3 text-sm font-medium text-[#3C81C6]">{item.refCode}</td>
                                     <td className="px-5 py-3 text-sm text-[#687582]">{item.note}</td>

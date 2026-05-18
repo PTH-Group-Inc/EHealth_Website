@@ -50,22 +50,22 @@ const normalizeStatus = (value: unknown): StockOutStatus => {
 const mapReasonType = (value: unknown): string => {
     switch (String(value ?? "").trim().toUpperCase()) {
         case "RETURN_SUPPLIER":
-            return "Tra nha cung cap";
+            return "Trả nhà cung cấp";
         case "TRANSFER":
-            return "Chuyen kho";
+            return "Chuyển kho";
         case "DISPOSAL":
-            return "Huy bo";
+            return "Hủy bỏ";
         case "OTHER":
-            return "Khac";
+            return "Khác";
         default:
             return "-";
     }
 };
 
 const STATUS_MAP: Record<StockOutStatus, { label: string; bg: string; text: string; icon: string }> = {
-    DRAFT: { label: "Ban nhap", bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-400", icon: "pending" },
-    CONFIRMED: { label: "Da xuat", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", icon: "check_circle" },
-    CANCELLED: { label: "Da huy", bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", icon: "cancel" },
+    DRAFT: { label: "Bản nháp", bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-400", icon: "pending" },
+    CONFIRMED: { label: "Đã xuất", bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", icon: "check_circle" },
+    CANCELLED: { label: "Đã hủy", bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", icon: "cancel" },
 };
 
 export default function StockOutDetailPage() {
@@ -114,7 +114,7 @@ export default function StockOutDetailPage() {
                     id: item.stock_out_detail_id ?? item.id ?? String(index + 1),
                     drugName: item.brand_name ?? item.drug_name ?? item.drugName ?? "-",
                     quantity: Number(item.quantity ?? 0),
-                    unit: item.dispensing_unit ?? item.unit ?? "Don vi",
+                    unit: item.dispensing_unit ?? item.unit ?? "Đơn vị",
                     lotNumber: item.batch_number ?? item.lot_number ?? "",
                     expiryDate: formatDate(item.expiry_date ?? item.expiryDate),
                     note: item.reason_note ?? item.note ?? "",
@@ -133,7 +133,7 @@ export default function StockOutDetailPage() {
             await inventoryService.confirmStockOut(orderId);
             setDetail((current) => current ? { ...current, status: "CONFIRMED", confirmedAt: formatDate(new Date().toISOString()) } : current);
         } catch {
-            alert("Khong the xac nhan phieu xuat. Vui long thu lai.");
+            alert("Không thể xác nhận phiếu xuất. Vui lòng thử lại.");
         } finally {
             setActionLoading("");
         }
@@ -149,7 +149,7 @@ export default function StockOutDetailPage() {
             await inventoryService.cancelStockOut(orderId, cancelReason);
             setDetail((current) => current ? { ...current, status: "CANCELLED", cancelReason } : current);
         } catch {
-            alert("Khong the huy phieu xuat. Vui long thu lai.");
+            alert("Không thể hủy phiếu xuất. Vui lòng thử lại.");
         } finally {
             setActionLoading("");
             setShowCancelModal(false);
@@ -169,9 +169,9 @@ export default function StockOutDetailPage() {
         return (
             <div className="flex flex-col items-center justify-center py-20">
                 <span className="material-symbols-outlined mb-4 text-5xl text-gray-300">outbox</span>
-                <p className="mb-4 text-lg text-gray-500">Khong tim thay phieu xuat</p>
+                <p className="mb-4 text-lg text-gray-500">Không tìm thấy phiếu xuất</p>
                 <button onClick={() => router.back()} className="rounded-xl bg-[#3C81C6] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#2a6da8]">
-                    Quay lai
+                    Quay lại
                 </button>
             </div>
         );
@@ -183,9 +183,9 @@ export default function StockOutDetailPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-[#687582]">
-                    <Link href="/admin/medicines" className="transition-colors hover:text-[#3C81C6]">Danh muc thuoc</Link>
+                    <Link href="/admin/medicines" className="transition-colors hover:text-[#3C81C6]">Danh mục thuốc</Link>
                     <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                    <Link href="/admin/medicines/export" className="transition-colors hover:text-[#3C81C6]">Xuat kho</Link>
+                    <Link href="/admin/medicines/export" className="transition-colors hover:text-[#3C81C6]">Xuất kho</Link>
                     <span className="material-symbols-outlined text-[16px]">chevron_right</span>
                     <span className="font-medium text-[#121417] dark:text-white">{detail.code}</span>
                 </div>
@@ -194,20 +194,20 @@ export default function StockOutDetailPage() {
                     className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-[#1e242b] dark:hover:bg-gray-800"
                 >
                     <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                    Quay lai
+                    Quay lại
                 </button>
             </div>
 
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
                 <div>
                     <div className="mb-2 flex items-center gap-3">
-                        <h1 className="text-2xl font-black tracking-tight text-[#121417] dark:text-white">Phieu xuat {detail.code}</h1>
+                        <h1 className="text-2xl font-black tracking-tight text-[#121417] dark:text-white">Phiếu xuất {detail.code}</h1>
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${status.bg} ${status.text}`}>
                             <span className="material-symbols-outlined text-[14px]">{status.icon}</span>
                             {status.label}
                         </span>
                     </div>
-                    <p className="text-sm text-[#687582] dark:text-gray-400">Tao luc {detail.createdAt || "-"} boi {detail.createdBy}</p>
+                    <p className="text-sm text-[#687582] dark:text-gray-400">Tạo lúc {detail.createdAt || "-"} bởi {detail.createdBy}</p>
                 </div>
 
                 {(detail.status === "DRAFT" || detail.status === "CONFIRMED") && (
@@ -219,7 +219,7 @@ export default function StockOutDetailPage() {
                                 className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                             >
                                 {actionLoading === "confirm" ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <span className="material-symbols-outlined text-[18px]">check_circle</span>}
-                                Xac nhan xuat
+                                Xác nhận xuất
                             </button>
                         )}
                         <button
@@ -228,7 +228,7 @@ export default function StockOutDetailPage() {
                             className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
                         >
                             <span className="material-symbols-outlined text-[18px]">cancel</span>
-                            Huy phieu
+                            Hủy phiếu
                         </button>
                     </div>
                 )}
@@ -236,19 +236,19 @@ export default function StockOutDetailPage() {
 
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <div className="rounded-xl border border-[#dde0e4] bg-white p-4 dark:border-[#2d353e] dark:bg-[#1e242b]">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Kho xuat</p>
+                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Kho xuất</p>
                     <p className="text-sm font-bold text-[#121417] dark:text-white">{detail.warehouseName}</p>
                 </div>
                 <div className="rounded-xl border border-[#dde0e4] bg-white p-4 dark:border-[#2d353e] dark:bg-[#1e242b]">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Noi nhan</p>
+                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Nơi nhận</p>
                     <p className="text-sm font-bold text-[#121417] dark:text-white">{detail.destination}</p>
                 </div>
                 <div className="rounded-xl border border-[#dde0e4] bg-white p-4 dark:border-[#2d353e] dark:bg-[#1e242b]">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Ly do xuat</p>
+                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Lý do xuất</p>
                     <p className="text-sm font-bold text-[#121417] dark:text-white">{detail.reason}</p>
                 </div>
                 <div className="rounded-xl border border-[#dde0e4] bg-white p-4 dark:border-[#2d353e] dark:bg-[#1e242b]">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Tong so luong</p>
+                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Tổng số lượng</p>
                     <p className="text-sm font-bold text-[#121417] dark:text-white">{(detail.totalQuantity ?? 0).toLocaleString("vi-VN")}</p>
                 </div>
             </div>
@@ -257,7 +257,7 @@ export default function StockOutDetailPage() {
                 <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20">
                     <div className="mb-1 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[18px] text-purple-600">info</span>
-                        <p className="text-sm font-bold text-purple-700 dark:text-purple-400">Ghi chu</p>
+                        <p className="text-sm font-bold text-purple-700 dark:text-purple-400">Ghi chú</p>
                     </div>
                     <p className="text-sm text-purple-600 dark:text-purple-300">{detail.note}</p>
                 </div>
@@ -267,7 +267,7 @@ export default function StockOutDetailPage() {
                 <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
                     <div className="mb-1 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[18px] text-red-600">error</span>
-                        <p className="text-sm font-bold text-red-700 dark:text-red-400">Ly do huy</p>
+                        <p className="text-sm font-bold text-red-700 dark:text-red-400">Lý do hủy</p>
                     </div>
                     <p className="text-sm text-red-600 dark:text-red-300">{detail.cancelReason}</p>
                 </div>
@@ -277,7 +277,7 @@ export default function StockOutDetailPage() {
                 <div className="border-b border-[#dde0e4] p-4 dark:border-[#2d353e]">
                     <h2 className="flex items-center gap-2 text-lg font-bold text-[#121417] dark:text-white">
                         <span className="material-symbols-outlined text-[#3C81C6]">medication</span>
-                        Danh sach thuoc xuat ({items.length})
+                        Danh sách thuốc xuất ({items.length})
                     </h2>
                 </div>
                 <div className="overflow-x-auto">
@@ -285,19 +285,19 @@ export default function StockOutDetailPage() {
                         <thead className="border-b border-[#dde0e4] bg-gray-50/50 dark:border-[#2d353e] dark:bg-gray-800/50">
                             <tr>
                                 <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">#</th>
-                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Ten thuoc</th>
-                                <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-[#687582]">So luong</th>
-                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Don vi</th>
-                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">So lo</th>
+                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Tên thuốc</th>
+                                <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-[#687582]">Số lượng</th>
+                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Đơn vị</th>
+                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Số lô</th>
                                 <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">HSD</th>
-                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Ghi chu</th>
+                                <th className="px-5 py-3 text-xs font-semibold uppercase text-[#687582]">Ghi chú</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#dde0e4] dark:divide-[#2d353e]">
                             {items.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="py-10 text-center text-[#687582] dark:text-gray-400">
-                                        Chua co dong thuoc nao trong phieu
+                                        Chưa có dòng thuốc nào trong phiếu
                                     </td>
                                 </tr>
                             ) : items.map((item, index) => (
@@ -321,9 +321,9 @@ export default function StockOutDetailPage() {
                     <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-[18px] text-emerald-600">verified</span>
                         <p className="text-sm text-emerald-700 dark:text-emerald-400">
-                            <span className="font-bold">Da xuat kho</span>
-                            {detail.confirmedBy !== "-" ? ` boi ${detail.confirmedBy}` : ""}
-                            {detail.confirmedAt ? ` luc ${detail.confirmedAt}` : ""}
+                            <span className="font-bold">Đã xuất kho</span>
+                            {detail.confirmedBy !== "-" ? ` bởi ${detail.confirmedBy}` : ""}
+                            {detail.confirmedAt ? ` lúc ${detail.confirmedAt}` : ""}
                         </p>
                     </div>
                 </div>
@@ -337,17 +337,17 @@ export default function StockOutDetailPage() {
                                 <span className="material-symbols-outlined text-red-600">warning</span>
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold text-[#121417] dark:text-white">Huy phieu xuat</h3>
-                                <p className="text-sm text-[#687582]">Hanh dong nay khong the hoan tac</p>
+                                <h3 className="text-lg font-bold text-[#121417] dark:text-white">Hủy phiếu xuất</h3>
+                                <p className="text-sm text-[#687582]">Hành động này không thể hoàn tác</p>
                             </div>
                         </div>
                         <div className="mb-4">
-                            <label className="mb-1.5 block text-sm font-medium text-[#121417] dark:text-gray-300">Ly do huy *</label>
+                            <label className="mb-1.5 block text-sm font-medium text-[#121417] dark:text-gray-300">Lý do hủy *</label>
                             <textarea
                                 value={cancelReason}
                                 onChange={(event) => setCancelReason(event.target.value)}
                                 rows={3}
-                                placeholder="Nhap ly do huy phieu xuat..."
+                                placeholder="Nhập lý do hủy phiếu xuất..."
                                 className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                             />
                         </div>
@@ -359,7 +359,7 @@ export default function StockOutDetailPage() {
                                 }}
                                 className="rounded-xl bg-gray-100 px-4 py-2.5 text-sm font-medium text-[#687582] transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
                             >
-                                Dong
+                                Đóng
                             </button>
                             <button
                                 onClick={handleCancel}
@@ -367,7 +367,7 @@ export default function StockOutDetailPage() {
                                 className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
                             >
                                 {actionLoading === "cancel" ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <span className="material-symbols-outlined text-[18px]">delete</span>}
-                                Xac nhan huy
+                                Xác nhận hủy
                             </button>
                         </div>
                     </div>

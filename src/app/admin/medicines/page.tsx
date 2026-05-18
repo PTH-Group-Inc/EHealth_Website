@@ -16,14 +16,14 @@ import { MedicineCard } from "@/components/shared/cards";
 import { EmptyState } from "@/components/shared/layout";
 
 const MEDICINE_CATEGORIES = [
-    "Khang sinh",
-    "Giam dau",
-    "Vitamin va Khoang chat",
-    "Ho hap",
-    "Tieu hoa",
-    "Tim mach",
-    "Than kinh",
-    "Da lieu",
+    "Kháng sinh",
+    "Giảm đau",
+    "Vitamin và Khoáng chất",
+    "Hô hấp",
+    "Tiêu hóa",
+    "Tim mạch",
+    "Thần kinh",
+    "Da liễu",
 ];
 
 type SortField = "code" | "name" | "price" | "stock" | "status";
@@ -31,7 +31,7 @@ type SortOrder = "asc" | "desc";
 
 function formatCurrency(num: number): string {
     if (num >= 1_000_000_000) {
-        return `${(num / 1_000_000_000).toFixed(1)} Ty`;
+        return `${(num / 1_000_000_000).toFixed(1)} Tỷ`;
     }
     return `${num.toLocaleString("vi-VN")}d`;
 }
@@ -203,7 +203,7 @@ export default function MedicinesPage() {
             link.click();
             URL.revokeObjectURL(url);
         } catch {
-            const headers = ["Ma", "Ten", "Hoat chat", "Don vi", "Gia", "Ton kho", "Trang thai"];
+            const headers = ["Mã", "Tên", "Hoạt chất", "Đơn vị", "Giá", "Tồn kho", "Trạng thái"];
             const rows = filteredMedicines.map((medicine) => [
                 medicine.code,
                 medicine.name,
@@ -230,7 +230,7 @@ export default function MedicinesPage() {
     };
 
     const handleDeleteMedicine = async (medicineId: string) => {
-        if (!confirm("Ban co chac chan muon xoa thuoc nay?")) {
+        if (!confirm("Bạn có chắc chắn muốn xóa thuốc này?")) {
             return;
         }
 
@@ -411,10 +411,10 @@ export default function MedicinesPage() {
                                 try {
                                     const { importDrugs } = await import("@/services/medicineService");
                                     const result = await importDrugs(file);
-                                    alert(`Nhap thanh cong${result?.imported ? `: ${result.imported} thuoc` : ""}!`);
+                                    alert(`Nhập thành công${result?.imported ? `: ${result.imported} thuốc` : ""}!`);
                                     await loadMedicines();
                                 } catch {
-                                    alert("Nhap file that bai. Vui long thu lai.");
+                                    alert("Nhập file thất bại. Vui lòng thử lại.");
                                 }
                             };
                             input.click();
@@ -520,7 +520,7 @@ export default function MedicinesPage() {
                         <button
                             onClick={handleExport}
                             className="rounded-xl border border-gray-200 p-2.5 text-[#687582] transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-                            title="Xuat du lieu"
+                            title="Xuất dữ liệu"
                         >
                             <span className="material-symbols-outlined text-[20px]">download</span>
                         </button>
@@ -530,7 +530,7 @@ export default function MedicinesPage() {
                                 setCategoryFilter("all");
                             }}
                             className="rounded-xl border border-gray-200 p-2.5 text-[#687582] transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-                            title="Xoa bo loc"
+                            title="Xóa bộ lọc"
                         >
                             <span className="material-symbols-outlined text-[20px]">filter_list_off</span>
                         </button>
@@ -573,33 +573,33 @@ export default function MedicinesPage() {
                             <tr>
                                 <th onClick={() => toggleSort("code")} className="cursor-pointer select-none px-6 py-4 text-xs font-semibold uppercase text-[#687582] hover:text-[#3C81C6] dark:text-gray-400">
                                     <span className="flex items-center gap-1">
-                                        Ma thuoc
+                                        Mã thuốc
                                         {sortField === "code" && <span className="material-symbols-outlined text-[14px]">{sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}</span>}
                                     </span>
                                 </th>
                                 <th onClick={() => toggleSort("name")} className="cursor-pointer select-none px-6 py-4 text-xs font-semibold uppercase text-[#687582] hover:text-[#3C81C6] dark:text-gray-400">
                                     <span className="flex items-center gap-1">
-                                        Ten thuoc
+                                        Tên thuốc
                                         {sortField === "name" && <span className="material-symbols-outlined text-[14px]">{sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}</span>}
                                     </span>
                                 </th>
-                                <th className="px-6 py-4 text-xs font-semibold uppercase text-[#687582] dark:text-gray-400">Hoat chat</th>
-                                <th className="px-6 py-4 text-xs font-semibold uppercase text-[#687582] dark:text-gray-400">Don vi</th>
+                                <th className="px-6 py-4 text-xs font-semibold uppercase text-[#687582] dark:text-gray-400">Hoạt chất</th>
+                                <th className="px-6 py-4 text-xs font-semibold uppercase text-[#687582] dark:text-gray-400">Đơn vị</th>
                                 <th onClick={() => toggleSort("price")} className="cursor-pointer select-none px-6 py-4 text-xs font-semibold uppercase text-[#687582] hover:text-[#3C81C6] dark:text-gray-400">
                                     <span className="flex items-center gap-1">
-                                        Gia ban
+                                        Giá bán
                                         {sortField === "price" && <span className="material-symbols-outlined text-[14px]">{sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}</span>}
                                     </span>
                                 </th>
                                 <th onClick={() => toggleSort("stock")} className="cursor-pointer select-none px-6 py-4 text-xs font-semibold uppercase text-[#687582] hover:text-[#3C81C6] dark:text-gray-400">
                                     <span className="flex items-center gap-1">
-                                        Ton kho
+                                        Tồn kho
                                         {sortField === "stock" && <span className="material-symbols-outlined text-[14px]">{sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}</span>}
                                     </span>
                                 </th>
                                 <th onClick={() => toggleSort("status")} className="cursor-pointer select-none px-6 py-4 text-xs font-semibold uppercase text-[#687582] hover:text-[#3C81C6] dark:text-gray-400">
                                     <span className="flex items-center gap-1">
-                                        Trang thai
+                                        Trạng thái
                                         {sortField === "status" && <span className="material-symbols-outlined text-[14px]">{sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}</span>}
                                     </span>
                                 </th>
@@ -653,17 +653,17 @@ export default function MedicinesPage() {
                                             <DropdownMenu
                                                 items={[
                                                     {
-                                                        label: "Chinh sua",
+                                                        label: "Chỉnh sửa",
                                                         icon: "edit",
                                                         onClick: () => handleEditMedicine(medicine),
                                                     },
                                                     {
-                                                        label: "Nhap them kho",
+                                                        label: "Nhập thêm kho",
                                                         icon: "add_box",
                                                         onClick: () => handleAddStock(medicine),
                                                     },
                                                     {
-                                                        label: "Xoa",
+                                                        label: "Xóa",
                                                         icon: "delete",
                                                         onClick: () => handleDeleteMedicine(medicine.id),
                                                         variant: "danger",
