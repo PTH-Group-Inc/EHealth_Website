@@ -43,7 +43,7 @@ export function MedicineAlerts({ data }: { data: MedicineAlert[] }) {
                 {data.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10 text-center">
                         <span className="material-symbols-outlined mb-2 text-4xl text-gray-300 dark:text-gray-600">inbox</span>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Chua co du lieu</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Chưa có dữ liệu</p>
                     </div>
                 ) : data.map((item) => {
                     const style = ALERT_STYLES[item.alertType] || ALERT_STYLES.low_stock;

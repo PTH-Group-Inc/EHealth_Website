@@ -34,7 +34,7 @@ export function DepartmentStatus({ departments }: { departments: DeptDistributio
                 {departments.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10 text-center">
                         <span className="material-symbols-outlined mb-2 text-4xl text-gray-300 dark:text-gray-600">inbox</span>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Chua co du lieu</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Chưa có dữ liệu</p>
                     </div>
                 ) : departments.map((department) => {
                     const dutyPct = department.totalDoctors > 0 ? Math.round((department.onDuty / department.totalDoctors) * 100) : 0;

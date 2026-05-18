@@ -123,7 +123,7 @@ export default function MedicineExportPage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div className="space-y-1">
                     <h1 className="text-3xl font-black tracking-tight text-[#121417] dark:text-white">Xuất kho</h1>
-                    <p className="text-[#687582] dark:text-gray-400">Quan ly phieu xuat kho, cap phat va huy thuoc</p>
+                    <p className="text-[#687582] dark:text-gray-400">Quản lý phiếu xuất kho, cấp phát và huỷ thuốc</p>
                 </div>
                 <button
                     onClick={() => router.push("/admin/medicines/export/create")}
@@ -188,7 +188,7 @@ export default function MedicineExportPage() {
                                 <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Noi nhan</th>
                                 <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ly do</th>
                                 <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">So luong</th>
-                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ngay tao</th>
+                                <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Ngày tạo</th>
                                 <th className="px-6 py-3 text-xs font-semibold uppercase text-[#687582]">Trạng thái</th>
                             </tr>
                         </thead>

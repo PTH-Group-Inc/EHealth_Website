@@ -45,7 +45,7 @@ export function RevenueChart({ data }: { data: RevenueData[] }) {
             <div className="px-4 pt-2">
                 <div className="flex items-end justify-between gap-2">
                     <div>
-                        <p className="mb-0.5 text-xs text-[#687582] dark:text-gray-500">Tong cong</p>
+                        <p className="mb-0.5 text-xs text-[#687582] dark:text-gray-500">Tổng cộng</p>
                         <p className="text-2xl font-extrabold text-[#121417] dark:text-white">{totalFormatted}</p>
                     </div>
                     <div className={`flex items-center gap-1 text-xs font-bold ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
@@ -60,7 +60,7 @@ export function RevenueChart({ data }: { data: RevenueData[] }) {
                 {data.length === 0 ? (
                     <div className="flex h-28 flex-col items-center justify-center text-center">
                         <span className="material-symbols-outlined mb-2 text-4xl text-gray-300 dark:text-gray-600">inbox</span>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Chua co du lieu</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Chưa có dữ liệu</p>
                     </div>
                 ) : (
                     <div className="flex h-28 items-end gap-[4px]">

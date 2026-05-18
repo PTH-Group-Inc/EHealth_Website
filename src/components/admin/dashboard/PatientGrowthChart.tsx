@@ -45,7 +45,7 @@ export function PatientGrowthChart({ data, highlightIndex = 7 }: { data: Patient
                 {data.length === 0 ? (
                     <div className="flex h-36 flex-col items-center justify-center text-center">
                         <span className="material-symbols-outlined mb-2 text-4xl text-gray-300 dark:text-gray-600">inbox</span>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Chua co du lieu</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Chưa có dữ liệu</p>
                     </div>
                 ) : (
                     <div className="relative h-36">
@@ -94,7 +94,7 @@ export function PatientGrowthChart({ data, highlightIndex = 7 }: { data: Patient
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="h-2.5 w-2.5 rounded-sm bg-[#3C81C6]/15" />
-                        <span className="text-[11px] text-[#687582] dark:text-gray-500">Benh nhan moi</span>
+                        <span className="text-[11px] text-[#687582] dark:text-gray-500">Bệnh nhân mới</span>
                     </div>
                 </div>
             </div>

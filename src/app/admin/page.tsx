@@ -62,7 +62,7 @@ export default function AdminDashboard() {
                             <span className="material-symbols-outlined text-[20px] text-green-600">timeline</span>
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-[#121417] dark:text-white">Hoat dong gan day</h3>
+                            <h3 className="text-sm font-bold text-[#121417] dark:text-white">Hoạt động gần đây</h3>
                             <p className="text-xs text-[#687582]">Realtime feed</p>
                         </div>
                         <span className="ml-auto flex items-center gap-1 text-[10px] font-bold text-green-600">
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
                     <div className="max-h-[320px] divide-y divide-[#f0f1f3] overflow-y-auto dark:divide-[#2d353e]">
                         <div className="flex flex-col items-center justify-center py-10 text-center">
                             <span className="material-symbols-outlined mb-2 text-4xl text-gray-300 dark:text-gray-600">inbox</span>
-                            <p className="text-sm text-[#687582] dark:text-gray-400">Chua co du lieu</p>
+                            <p className="text-sm text-[#687582] dark:text-gray-400">Chưa có dữ liệu</p>
                         </div>
                     </div>
                 </div>
@@ -84,13 +84,13 @@ export default function AdminDashboard() {
                             <span className="material-symbols-outlined text-[20px] text-rose-500">analytics</span>
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-[#121417] dark:text-white">Top benh ly thang</h3>
-                            <p className="text-xs text-[#687582]">Thong ke chan doan</p>
+                            <h3 className="text-sm font-bold text-[#121417] dark:text-white">Top bệnh lý tháng</h3>
+                            <p className="text-xs text-[#687582]">Thống kê chẩn đoán</p>
                         </div>
                     </div>
                     <div className="flex flex-col items-center justify-center p-5 py-10 text-center">
                         <span className="material-symbols-outlined mb-2 text-4xl text-gray-300 dark:text-gray-600">inbox</span>
-                        <p className="text-sm text-[#687582] dark:text-gray-400">Chua co du lieu</p>
+                        <p className="text-sm text-[#687582] dark:text-gray-400">Chưa có dữ liệu</p>
                     </div>
                 </div>
 
