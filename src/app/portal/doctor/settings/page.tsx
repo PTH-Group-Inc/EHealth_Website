@@ -33,7 +33,9 @@ function ProfileTab() {
     const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
-        profileService.getMe().then(p => { setMe(p); setForm(p); }).catch(() => {});
+        profileService.getMe()
+            .then(p => { setMe(p); setForm(p); })
+            .catch(err => { console.error("Load profile failed:", err); });
     }, []);
 
     const onSave = async () => {
@@ -232,7 +234,7 @@ function SettingsTab() {
             setTheme(s.theme ?? "light");
             setLanguage(s.language ?? "vi");
             setEmailNotif(s.email_notification ?? true);
-        }).catch(() => {});
+        }).catch(err => { console.error("Load settings failed:", err); });
     }, []);
 
     const onSave = async () => {
@@ -295,12 +297,12 @@ function NotificationsTab() {
 
     const onMarkRead = async (id: string) => {
         try { await axiosClient.put(`/api/notifications/inbox/${id}/read`); await load(); }
-        catch {}
+        catch (err: any) { alert(err?.response?.data?.message ?? err?.message ?? "Không thể đánh dấu đã đọc."); }
     };
 
     const onMarkAllRead = async () => {
         try { await axiosClient.put(`/api/notifications/inbox/read-all`); await load(); }
-        catch {}
+        catch (err: any) { alert(err?.response?.data?.message ?? err?.message ?? "Không thể đánh dấu đã đọc."); }
     };
 
     return (

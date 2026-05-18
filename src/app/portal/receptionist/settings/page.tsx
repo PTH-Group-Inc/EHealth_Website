@@ -29,7 +29,11 @@ function ProfileTab() {
     const [form, setForm] = useState<Partial<MyProfile>>({});
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => { profileService.getMe().then(p => { setMe(p); setForm(p); }).catch(() => {}); }, []);
+    useEffect(() => {
+        profileService.getMe()
+            .then(p => { setMe(p); setForm(p); })
+            .catch(err => { console.error("Load profile failed:", err); });
+    }, []);
 
     const onSave = async () => {
         setSaving(true);
@@ -139,7 +143,7 @@ function SettingsTab() {
         profileService.getMe().then((p: any) => {
             const s = p?.settings ?? {};
             setTheme(s.theme ?? "light"); setLanguage(s.language ?? "vi"); setEmailNotif(s.email_notification ?? true);
-        }).catch(() => {});
+        }).catch(err => { console.error("Load settings failed:", err); });
     }, []);
 
     const onSave = async () => {
@@ -179,8 +183,14 @@ function NotificationsTab() {
 
     useEffect(() => { load(); }, [load]);
 
-    const onMarkAllRead = async () => { try { await axiosClient.put("/api/notifications/inbox/read-all"); await load(); } catch {} };
-    const onMarkRead = async (id: string) => { try { await axiosClient.put(`/api/notifications/inbox/${id}/read`); await load(); } catch {} };
+    const onMarkAllRead = async () => {
+        try { await axiosClient.put("/api/notifications/inbox/read-all"); await load(); }
+        catch (err: any) { alert(err?.response?.data?.message ?? err?.message ?? "Không thể đánh dấu đã đọc."); }
+    };
+    const onMarkRead = async (id: string) => {
+        try { await axiosClient.put(`/api/notifications/inbox/${id}/read`); await load(); }
+        catch (err: any) { alert(err?.response?.data?.message ?? err?.message ?? "Không thể đánh dấu đã đọc."); }
+    };
 
     return (
         <div className="bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl overflow-hidden">

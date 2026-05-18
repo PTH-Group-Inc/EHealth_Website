@@ -28,7 +28,11 @@ function ProfileTab() {
     const [form, setForm] = useState<Partial<MyProfile>>({});
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => { profileService.getMe().then(p => { setMe(p); setForm(p); }).catch(() => {}); }, []);
+    useEffect(() => {
+        profileService.getMe()
+            .then(p => { setMe(p); setForm(p); })
+            .catch(err => { console.error("Load profile failed:", err); });
+    }, []);
 
     const onSave = async () => {
         setSaving(true);
@@ -112,7 +116,12 @@ function SessionsTab() {
 
 function SettingsTab() {
     const [theme, setTheme] = useState("light"); const [language, setLanguage] = useState("vi"); const [email, setEmail] = useState(true); const [saving, setSaving] = useState(false);
-    useEffect(() => { profileService.getMe().then((p: any) => { const s = p?.settings ?? {}; setTheme(s.theme ?? "light"); setLanguage(s.language ?? "vi"); setEmail(s.email_notification ?? true); }).catch(() => {}); }, []);
+    useEffect(() => {
+        profileService.getMe().then((p: any) => {
+            const s = p?.settings ?? {};
+            setTheme(s.theme ?? "light"); setLanguage(s.language ?? "vi"); setEmail(s.email_notification ?? true);
+        }).catch(err => { console.error("Load settings failed:", err); });
+    }, []);
     const onSave = async () => { setSaving(true); try { await profileService.updateSettings({ theme, language, email_notification: email }); alert("Đã lưu."); } catch (e: any) { alert(e?.message); } finally { setSaving(false); } };
     return (
         <div className="max-w-xl bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-5 space-y-4">
@@ -132,7 +141,10 @@ function NotificationsTab() {
     return (
         <div className="bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-[#e5e7eb] dark:border-[#2d353e] flex justify-end">
-                <button onClick={async () => { await axiosClient.put("/api/notifications/inbox/read-all").catch(() => {}); await load(); }} className="px-3 py-1.5 text-xs rounded bg-blue-50 text-blue-700">Đã đọc tất cả</button>
+                <button onClick={async () => {
+                    try { await axiosClient.put("/api/notifications/inbox/read-all"); await load(); }
+                    catch (err: any) { alert(err?.response?.data?.message ?? err?.message ?? "Không thể đánh dấu đã đọc."); }
+                }} className="px-3 py-1.5 text-xs rounded bg-blue-50 text-blue-700">Đã đọc tất cả</button>
             </div>
             {loading ? <p className="p-4 text-center text-xs text-[#687582]">Đang tải…</p>
             : items.length === 0 ? <EmptyState icon="notifications" title="Không có thông báo" />
@@ -146,7 +158,10 @@ function NotificationsTab() {
                                 <p className="text-sm text-[#687582]">{n.body ?? n.content}</p>
                                 <p className="text-xs text-[#687582] mt-1">{fmtDateTime(n.created_at)}</p>
                             </div>
-                            {!(n.read_at || n.is_read) && <button onClick={async () => { await axiosClient.put(`/api/notifications/inbox/${n.id}/read`).catch(() => {}); await load(); }} className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-800">Đã đọc</button>}
+                            {!(n.read_at || n.is_read) && <button onClick={async () => {
+                                try { await axiosClient.put(`/api/notifications/inbox/${n.id}/read`); await load(); }
+                                catch (err: any) { alert(err?.response?.data?.message ?? err?.message ?? "Không thể đánh dấu đã đọc."); }
+                            }} className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-800">Đã đọc</button>}
                         </li>
                     ))}
                 </ul>

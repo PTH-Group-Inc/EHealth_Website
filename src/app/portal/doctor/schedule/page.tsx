@@ -62,7 +62,8 @@ export default function DoctorSchedulePage() {
         setLoading(true);
         // Chỉ gọi staff-schedules (chạy theo user_id).
         // doctor-availability endpoints cần doctors_id (DOC_xxx) riêng + tham số khác → không phù hợp list view.
-        const s = await staffScheduleService.getByStaff(user.id, { from, to }).catch(() => null);
+        const s = await staffScheduleService.getByStaff(user.id, { from, to })
+            .catch(err => { console.error("Load schedules failed:", err); return null; });
         const arr = (s as any)?.data ?? [];
         const rows = (arr as any[]).map((r: any, idx: number) => ({
             id: String(r.id ?? r.staff_schedule_id ?? `row-${idx}`),

@@ -24,13 +24,18 @@ export default function ChangeHistoryPage() {
     const load = useCallback(async () => {
         setLoading(true);
         const reqs: Promise<any>[] = [
-            axiosClient.get("/api/appointment-changes/stats").then(r => ({ stats: r?.data?.data ?? r?.data })).catch(() => null),
-            axiosClient.get("/api/appointment-changes/recent").then(r => ({ recent: r?.data?.data ?? r?.data ?? [] })).catch(() => null),
+            axiosClient.get("/api/appointment-changes/stats")
+                .then(r => ({ stats: r?.data?.data ?? r?.data }))
+                .catch(err => { console.error("Load stats failed:", err); return null; }),
+            axiosClient.get("/api/appointment-changes/recent")
+                .then(r => ({ recent: r?.data?.data ?? r?.data ?? [] }))
+                .catch(err => { console.error("Load recent failed:", err); return null; }),
         ];
         if (appointmentId) {
             reqs.push(
                 axiosClient.get(`/api/appointment-changes/${appointmentId}/history`)
-                    .then(r => ({ history: r?.data?.data ?? r?.data ?? [] })).catch(() => null)
+                    .then(r => ({ history: r?.data?.data ?? r?.data ?? [] }))
+                    .catch(err => { console.error("Load history failed:", err); return null; })
             );
         }
         const results = await Promise.all(reqs);

@@ -36,7 +36,10 @@ export default function ReceptionistPaymentsPage() {
         try {
             const r = await billingService.getQRStatus(orderId);
             setStatus((r?.data?.data ?? r?.data)?.status ?? "UNKNOWN");
-        } catch {}
+        } catch (err) {
+            // silent: background polling QR status, lỗi tạm thời sẽ retry, không cần UI feedback.
+            console.error("Check QR status failed:", err);
+        }
     }, [orderId]);
 
     const onCancel = async () => {

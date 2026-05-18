@@ -36,7 +36,7 @@ export default function DispensingPage() {
                 const data = res?.data ?? res;
                 if (data && data.id) setRx(data as RxData);
             })
-            .catch(() => { setRx(null); })
+            .catch(err => { console.error("Load prescription failed:", err); setRx(null); })
             .finally(() => setLoading(false));
     }, [prescriptionId]);
 

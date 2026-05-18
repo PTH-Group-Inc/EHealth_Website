@@ -40,7 +40,7 @@ export default function NewAppointmentPage() {
                     setDeptIdMap(idMap);
                 }
             })
-            .catch(() => {});
+            .catch(err => { console.error("Load departments failed:", err); setDeptList([]); });
         staffService.getList({ limit: 200 })
             .then((res: any) => {
                 const items: any[] = res?.data ?? res ?? [];
@@ -54,7 +54,7 @@ export default function NewAppointmentPage() {
                     setDoctorsByDept(byDept);
                 }
             })
-            .catch(() => {});
+            .catch(err => { console.error("Load doctors failed:", err); setDoctorsByDept({}); });
     }, []);
 
     // Load available slots when doctor or date changes

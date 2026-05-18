@@ -106,17 +106,21 @@ export default function ManageSlotsPage() {
                         startTime: s.startTime,
                         endTime: s.endTime,
                         maxPatients: parseInt(s.maxPatients) || 20,
-                    }).catch(() => {
+                    }).catch(err => {
+                        console.error("doctorAvailabilityService.create failed, fallback to scheduleService:", err);
                         // Fallback: scheduleService
-                        scheduleService.create({
+                        return scheduleService.create({
                             doctorId: user.id,
                             date: dateStr,
                             shift: s.startTime < "12:00" ? "MORNING" : s.startTime < "17:00" ? "AFTERNOON" : "NIGHT",
-                        } as any).catch(() => {});
+                        } as any).catch(fbErr => { console.error("scheduleService.create fallback failed:", fbErr); });
                     });
                 }
             }
-        } catch { /* ignore */ }
+        } catch (err: any) {
+            console.error("Save slots failed:", err);
+            alert(err?.response?.data?.message ?? err?.message ?? "Lưu khung giờ thất bại. Vui lòng thử lại.");
+        }
         setSaving(false);
         router.push("/portal/doctor/appointments");
     };

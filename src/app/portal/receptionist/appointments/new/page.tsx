@@ -33,7 +33,8 @@ export default function NewAppointmentPage() {
                 const items: any[] = (res as any)?.data?.data ?? (res as any)?.data ?? res ?? [];
                 setDeptList(items.map((d: any) => ({ id: d.id ?? "", name: d.name ?? "" })));
             })
-            .catch(() => {
+            .catch(err => {
+                console.error("Load departments failed:", err);
                 setDeptList([]);
             });
 
@@ -51,7 +52,10 @@ export default function NewAppointmentPage() {
                     setDoctorsByDept(byDept);
                 }
             })
-            .catch(() => {});
+            .catch(err => {
+                console.error("Load doctors failed:", err);
+                setDoctorsByDept({});
+            });
     }, []);
 
     const handlePatientSearch = async () => {

@@ -429,8 +429,9 @@ export default function ExaminationPage() {
 
             // 2. Sign-off nếu có encounter
             if (eid) {
-                await encounterService.draftSign(eid).catch(() => {});
-                await encounterService.officialSign(eid).catch(() => {});
+                // silent: sign best-effort, outer try-catch + status update đã có toast nếu fail.
+                await encounterService.draftSign(eid).catch(err => { console.error("draftSign failed:", err); });
+                await encounterService.officialSign(eid).catch(err => { console.error("officialSign failed:", err); });
                 await encounterService.updateStatus(eid, 'COMPLETED', {
                     followUpDate: followUp || undefined,
                     doctorNote: doctorNote || undefined,
@@ -455,7 +456,8 @@ export default function ExaminationPage() {
                 } else {
                     await emrService.update(currentEmrId, { ...payload, status: "COMPLETED" });
                 }
-                if (currentEmrId) await emrService.sign(currentEmrId).catch(() => {});
+                // silent: sign best-effort, outer try-catch đã có toast nếu lưu chính fail.
+                if (currentEmrId) await emrService.sign(currentEmrId).catch(err => { console.error("emrService.sign failed:", err); });
             }
 
             if (sendToPharmacy && meds.length > 0) {

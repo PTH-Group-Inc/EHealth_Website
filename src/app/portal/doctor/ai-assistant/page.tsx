@@ -225,7 +225,9 @@ export default function AIAssistantPage() {
 
     const startNewSession = async () => {
         if (sessionId) {
-            try { await aiService.completeHealthChatSession(sessionId); } catch {}
+            // silent: best-effort close session cũ, không nên block tạo session mới nếu BE fail.
+            try { await aiService.completeHealthChatSession(sessionId); }
+            catch (err) { console.error("Complete chat session failed:", err); }
         }
         setSessionId(null);
         localStorage.removeItem(DOCTOR_SESSION_KEY);

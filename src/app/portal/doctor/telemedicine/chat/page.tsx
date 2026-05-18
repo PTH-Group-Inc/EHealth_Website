@@ -46,7 +46,9 @@ export default function MedicalChatPage() {
             const r = await axiosClient.get(`/api/teleconsultation/medical-chat/conversations/${conversationId}/messages`);
             const d = r?.data?.data ?? r?.data ?? [];
             setMessages(Array.isArray(d) ? d : []);
-            await axiosClient.put(`/api/teleconsultation/medical-chat/conversations/${conversationId}/messages/read`).catch(() => {});
+            // silent: auto-mark-read là background side-effect, không cần UI feedback nếu fail.
+            await axiosClient.put(`/api/teleconsultation/medical-chat/conversations/${conversationId}/messages/read`)
+                .catch(err => { console.error("Mark messages read failed:", err); });
         } catch { setMessages([]); }
     }, []);
 

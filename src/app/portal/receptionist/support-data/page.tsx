@@ -26,7 +26,10 @@ function fetchData(url: string): Promise<any[]> {
             return Object.values(d).flat();
         }
         return [];
-    }).catch(() => []);
+    }).catch(err => {
+        console.error(`Fetch ${url} failed:`, err);
+        return [];
+    });
 }
 
 function DoctorsTab() {
@@ -94,7 +97,9 @@ function CoordinationTab() {
         setLoading(true);
         Promise.allSettled([
             fetchData(`/api/appointment-coordination/doctor-load?date=${date}`),
-            axiosClient.get(`/api/appointment-coordination/balance-overview?date=${date}`).then(r => r?.data?.data ?? r?.data).catch(() => null),
+            axiosClient.get(`/api/appointment-coordination/balance-overview?date=${date}`)
+                .then(r => r?.data?.data ?? r?.data)
+                .catch(err => { console.error("Load balance failed:", err); return null; }),
         ]).then(([l, b]) => {
             if (l.status === "fulfilled") setLoad(l.value);
             if (b.status === "fulfilled") setBalance(b.value);
@@ -195,7 +200,7 @@ function BookingConfigTab() {
         setLoading(true);
         axiosClient.get(`/api/booking-configs/branch/${branchId}`)
             .then(r => setConfig(r?.data?.data ?? r?.data))
-            .catch(() => setConfig(null))
+            .catch(err => { console.error("Load booking config failed:", err); setConfig(null); })
             .finally(() => setLoading(false));
     }, [branchId]);
 
@@ -269,7 +274,9 @@ function OperatingTab() {
             fetchData("/api/shifts"),
             fetchData("/api/operating-hours"),
             fetchData("/api/holidays"),
-            facilityId ? axiosClient.get(`/api/facility-status/today?facility_id=${facilityId}`).then(r => r?.data?.data ?? r?.data).catch(() => null) : Promise.resolve(null),
+            facilityId ? axiosClient.get(`/api/facility-status/today?facility_id=${facilityId}`)
+                .then(r => r?.data?.data ?? r?.data)
+                .catch(err => { console.error("Load facility status failed:", err); return null; }) : Promise.resolve(null),
         ]).then(([s, sh, h, ho, t]) => {
             if (s.status === "fulfilled") setSlots(s.value);
             if (sh.status === "fulfilled") setShifts(sh.value);

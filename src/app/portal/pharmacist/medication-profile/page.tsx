@@ -52,7 +52,9 @@ export default function PharmacistMedicationProfilePage() {
     const [newAdherence, setNewAdherence] = useState("");
 
     useEffect(() => {
-        getPatients({ limit: 50 }).then((r: any) => setPatientOptions(r?.data?.items ?? (Array.isArray(r?.data) ? r.data : []))).catch(() => {});
+        getPatients({ limit: 50 })
+            .then((r: any) => setPatientOptions(r?.data?.items ?? (Array.isArray(r?.data) ? r.data : [])))
+            .catch(err => { console.error("Load patients failed:", err); setPatientOptions([]); });
     }, []);
 
     useEffect(() => {
@@ -63,8 +65,8 @@ export default function PharmacistMedicationProfilePage() {
             ehrService.getAllergies(patientId),
             ehrService.getMedicationTreatments(patientId),
             ehrService.getMedicationInteractionCheck(patientId),
-            axiosClient.get(`/api/ehr/patients/${patientId}/medication-adherence`).then(r => r?.data?.data ?? r?.data ?? []).catch(() => []),
-            axiosClient.get(`/api/ehr/patients/${patientId}/treatment-records`).then(r => r?.data?.data ?? r?.data ?? []).catch(() => []),
+            axiosClient.get(`/api/ehr/patients/${patientId}/medication-adherence`).then(r => r?.data?.data ?? r?.data ?? []).catch(err => { console.error("Load medication-adherence failed:", err); return []; }),
+            axiosClient.get(`/api/ehr/patients/${patientId}/treatment-records`).then(r => r?.data?.data ?? r?.data ?? []).catch(err => { console.error("Load treatment-records failed:", err); return []; }),
         ]).then(([p, c, a, h, i, ad, tr]) => {
             if (p.status === "fulfilled") setProfile(p.value);
             if (c.status === "fulfilled") setCurrent(unwrapArr(c.value));
