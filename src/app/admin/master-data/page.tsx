@@ -109,17 +109,17 @@ export default function MasterDataPage() {
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Master Data"
-                subtitle="Danh mục hệ thống + items (dùng chung cho toàn hệ thống)"
+                title="Dữ liệu hệ thống"
+                subtitle="Danh mục hệ thống và mục con (dùng chung cho toàn hệ thống)"
                 icon="database"
-                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Master Data" }]}
+                breadcrumbs={[{ label: "Quản trị", href: "/admin" }, { label: "Dữ liệu hệ thống" }]}
             />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard label="Tổng danh mục" value={categories.length} icon="folder" color="blue" loading={loading} />
-                <StatCard label="Tổng items" value={categories.reduce((s, c) => s + (c.itemCount ?? 0), 0)} icon="list" color="emerald" loading={loading} />
+                <StatCard label="Tổng mục" value={categories.reduce((s, c) => s + (c.itemCount ?? 0), 0)} icon="list" color="emerald" loading={loading} />
                 <StatCard label="Danh mục đang xem" value={items.length} icon="visibility" color="violet" loading={loading} />
-                <StatCard label="Active" value={items.filter((i) => i.isActive).length} icon="check_circle" color="amber" loading={loading} />
+                <StatCard label="Đang hoạt động" value={items.filter((i) => i.isActive).length} icon="check_circle" color="amber" loading={loading} />
             </div>
 
             {error && <div className="px-4 py-3 rounded-xl bg-amber-50 text-sm text-amber-800">{error}</div>}
@@ -158,20 +158,20 @@ export default function MasterDataPage() {
 
                 {/* Items */}
                 <div className="lg:col-span-3 space-y-4">
-                    <FilterBar searchPlaceholder="Tìm item theo code hoặc label..." searchValue={search} onSearchChange={setSearch} onReset={() => setSearch("")} />
+                    <FilterBar searchPlaceholder="Tìm mục theo mã hoặc tên..." searchValue={search} onSearchChange={setSearch} onReset={() => setSearch("")} />
 
                     {!selectedCat ? (
-                        <EmptyState icon="folder_open" title="Chọn danh mục" description="Chọn một danh mục ở cột trái để xem items." />
+                        <EmptyState icon="folder_open" title="Chọn danh mục" description="Chọn một danh mục ở cột trái để xem các mục bên trong." />
                     ) : filteredItems.length === 0 ? (
-                        <EmptyState icon="list" title="Danh mục rỗng" description={items.length === 0 ? "Chưa có item nào." : "Không khớp bộ lọc."} />
+                        <EmptyState icon="list" title="Danh mục rỗng" description={items.length === 0 ? "Chưa có mục nào." : "Không khớp bộ lọc."} />
                     ) : (
                         <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm overflow-hidden">
                             <table className="w-full text-sm">
                                 <thead className="bg-[#f8f9fa] dark:bg-[#13191f] border-b border-[#dde0e4] dark:border-[#2d353e]">
                                     <tr>
-                                        <th className="text-left px-4 py-3 font-semibold text-[#687582]">Code</th>
-                                        <th className="text-left px-4 py-3 font-semibold text-[#687582]">Label</th>
-                                        <th className="text-right px-4 py-3 font-semibold text-[#687582]">Order</th>
+                                        <th className="text-left px-4 py-3 font-semibold text-[#687582]">Mã</th>
+                                        <th className="text-left px-4 py-3 font-semibold text-[#687582]">Tên</th>
+                                        <th className="text-right px-4 py-3 font-semibold text-[#687582]">Thứ tự</th>
                                         <th className="text-left px-4 py-3 font-semibold text-[#687582]">Trạng thái</th>
                                         <th className="text-right px-4 py-3 font-semibold text-[#687582]">Thao tác</th>
                                     </tr>
@@ -184,7 +184,7 @@ export default function MasterDataPage() {
                                             <td className="px-4 py-2.5 text-right font-mono text-xs">{it.order ?? 0}</td>
                                             <td className="px-4 py-2.5">
                                                 <div className={`inline-flex text-[10px] font-bold px-2 py-1 rounded-md ${it.isActive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-700"}`}>
-                                                    {it.isActive ? "Active" : "Inactive"}
+                                                    {it.isActive ? "Hoạt động" : "Tạm ngưng"}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-2.5 text-right">

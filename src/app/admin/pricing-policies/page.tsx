@@ -189,7 +189,7 @@ export default function PricingPoliciesPage() {
                                                 <td className="px-4 py-3 text-xs text-[#687582] dark:text-gray-400">{formatDate(p.effectiveFrom)} → {formatDate(p.effectiveTo)}</td>
                                                 <td className="px-4 py-3">
                                                     <div className={`inline-flex text-[10px] font-bold px-2 py-1 rounded-md ${p.isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"}`}>
-                                                        {p.isActive ? "Đang áp dụng" : "Ngưng"}
+                                                        {p.isActive ? "Đang áp dụng" : "Tạm ngưng"}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3">

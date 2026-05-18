@@ -153,7 +153,7 @@ function OnlineTab() {
         <>
             <div className="flex items-center justify-end gap-2">
                 <button onClick={handleTestGateway} className="px-3 py-1.5 text-xs text-[#3C81C6] border border-[#3C81C6]/40 hover:bg-[#3C81C6]/10 rounded-lg inline-flex items-center gap-1">
-                    <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>network_check</span>Test gateway
+                    <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>network_check</span>Kiểm tra cổng
                 </button>
                 <button onClick={() => setShowConfig(true)} className="px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] rounded-lg inline-flex items-center gap-1">
                     <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>settings</span>Cấu hình
@@ -248,17 +248,17 @@ function GatewayConfigModal({ onClose }: { onClose: () => void }) {
                 ) : (
                     <div className="space-y-3">
                         <div>
-                            <label className="block text-sm font-medium mb-1.5 dark:text-gray-300">Bank account</label>
+                            <label className="block text-sm font-medium mb-1.5 dark:text-gray-300">Số tài khoản ngân hàng</label>
                             <input value={config.bank_account ?? ""} onChange={(e) => setConfig({ ...config, bank_account: e.target.value })}
                                 className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium mb-1.5 dark:text-gray-300">Bank code</label>
+                            <label className="block text-sm font-medium mb-1.5 dark:text-gray-300">Mã ngân hàng</label>
                             <input value={config.bank_code ?? ""} onChange={(e) => setConfig({ ...config, bank_code: e.target.value })}
                                 className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm dark:text-white" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium mb-1.5 dark:text-gray-300">Webhook secret</label>
+                            <label className="block text-sm font-medium mb-1.5 dark:text-gray-300">Khoá Webhook</label>
                             <input type="password" value={config.webhook_secret ?? ""} onChange={(e) => setConfig({ ...config, webhook_secret: e.target.value })}
                                 className="w-full px-4 py-2.5 bg-[#f8f9fa] dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm font-mono dark:text-white" />
                         </div>
@@ -347,7 +347,7 @@ function CashierTab() {
                                         <td className="px-4 py-3 text-xs text-[#687582]">{formatDT(p.lastShiftAt)}</td>
                                         <td className="px-4 py-3">
                                             <div className={`inline-flex text-[10px] font-bold px-2 py-1 rounded-md ${p.isActive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-700"}`}>
-                                                {p.isActive ? "Hoạt động" : "Ngưng"}
+                                                {p.isActive ? "Hoạt động" : "Tạm ngưng"}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-right">

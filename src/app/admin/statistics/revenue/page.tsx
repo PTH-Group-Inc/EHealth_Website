@@ -148,29 +148,29 @@ export default function RevenuePage() {
         [comparison]
     );
 
-    const periodLabel = period === "month" ? "thang truoc" : period === "quarter" ? "quy truoc" : "nam truoc";
-    const comparisonTitle = period === "month" ? "So sanh theo tuan" : period === "quarter" ? "So sanh theo thang" : "So sanh theo quy";
+    const periodLabel = period === "month" ? "tháng trước" : period === "quarter" ? "quý trước" : "năm trước";
+    const comparisonTitle = period === "month" ? "So sánh theo tuần" : period === "quarter" ? "So sánh theo tháng" : "So sánh theo quý";
 
     const handleExportPDF = () => {
-        const periodName = period === "month" ? "THANG" : period === "quarter" ? "QUY" : "NAM";
+        const periodName = period === "month" ? "THÁNG" : period === "quarter" ? "QUÝ" : "NĂM";
         const lines = [
-            `BAO CAO DOANH THU - THEO ${periodName}`,
-            `Ngay xuat: ${new Date().toLocaleDateString("vi-VN")}`,
+            `BÁO CÁO DOANH THU - THEO ${periodName}`,
+            `Ngày xuất: ${new Date().toLocaleDateString("vi-VN")}`,
             "",
-            `Tong doanh thu: ${summary.total} Trieu VND`,
-            `TB doanh thu/BS: ${summary.avgPerDoctor} Trieu VND`,
-            `Tong benh nhan: ${summary.totalPatients}`,
+            `Tổng doanh thu: ${summary.total} Triệu VND`,
+            `TB doanh thu/BS: ${summary.avgPerDoctor} Triệu VND`,
+            `Tổng bệnh nhân: ${summary.totalPatients}`,
             "",
-            "DOANH THU THEO CHUYEN KHOA",
-            "Khoa,Doanh thu (Tr),Benh nhan",
+            "DOANH THU THEO CHUYÊN KHOA",
+            "Khoa,Doanh thu (Tr),Bệnh nhân",
             ...deptData.map((item) => `${item.dept},${item.revenue},${item.patients}`),
             "",
             `${comparisonTitle.toUpperCase()}`,
-            "Ky,Doanh thu (Tr),Muc tieu (Tr),Dat",
-            ...comparison.map((item) => `${item.label},${item.revenue},${item.target},${item.revenue >= item.target ? "Dat" : "Chua dat"}`),
+            "Kỳ,Doanh thu (Tr),Mục tiêu (Tr),Đạt",
+            ...comparison.map((item) => `${item.label},${item.revenue},${item.target},${item.revenue >= item.target ? "Đạt" : "Chưa đạt"}`),
             "",
-            "TOP BAC SI THEO DOANH THU",
-            "#,Bac si,Chuyen khoa,Doanh thu (Tr),Benh nhan",
+            "TOP BÁC SĨ THEO DOANH THU",
+            "#,Bác sĩ,Chuyên khoa,Doanh thu (Tr),Bệnh nhân",
             ...doctors.map((doctor) => `${doctor.rank},${doctor.name},${doctor.dept},${doctor.revenue},${doctor.patients}`),
         ];
         const csv = lines.join("\n");
@@ -188,22 +188,22 @@ export default function RevenuePage() {
             <div>
                 <div className="mb-3 flex items-center gap-1.5 text-xs text-[#687582] dark:text-gray-500">
                     <span className="material-symbols-outlined text-[14px]">home</span>
-                    <span>Trang chu</span>
+                    <span>Trang chủ</span>
                     <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-                    <span>Thong ke</span>
+                    <span>Thống kê</span>
                     <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-                    <span className="font-medium text-[#121417] dark:text-white">Bao cao doanh thu</span>
+                    <span className="font-medium text-[#121417] dark:text-white">Báo cáo doanh thu</span>
                 </div>
                 <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <h1 className="text-2xl font-black tracking-tight text-[#121417] dark:text-white">Bao cao doanh thu</h1>
-                        <p className="mt-0.5 text-sm text-[#687582] dark:text-gray-400">Phan tich doanh thu theo khoa, bac si va thoi gian</p>
+                        <h1 className="text-2xl font-black tracking-tight text-[#121417] dark:text-white">Báo cáo doanh thu</h1>
+                        <p className="mt-0.5 text-sm text-[#687582] dark:text-gray-400">Phân tích doanh thu theo khoa, bác sĩ và thời gian</p>
                     </div>
                     <div className="flex items-center gap-2">
                         {([
-                            { key: "month" as const, label: "Thang" },
-                            { key: "quarter" as const, label: "Quy" },
-                            { key: "year" as const, label: "Nam" },
+                            { key: "month" as const, label: "Tháng" },
+                            { key: "quarter" as const, label: "Quý" },
+                            { key: "year" as const, label: "Năm" },
                         ]).map((option) => (
                             <button
                                 key={option.key}
@@ -218,7 +218,7 @@ export default function RevenuePage() {
                             className="ml-2 flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-[#687582] transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
                         >
                             <span className="material-symbols-outlined text-[16px]">download</span>
-                            Xuat bao cao
+                            Xuất báo cáo
                         </button>
                     </div>
                 </div>
@@ -226,13 +226,13 @@ export default function RevenuePage() {
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
                 <div className="rounded-2xl border border-[#dde0e4] bg-white p-5 shadow-sm dark:border-[#2d353e] dark:bg-[#1e242b]">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Tong doanh thu</p>
+                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Tổng doanh thu</p>
                     <p className="text-3xl font-extrabold text-[#121417] dark:text-white">
-                        {summary.total >= 1000 ? `${(summary.total / 1000).toFixed(1)}` : summary.total} <span className="text-lg text-[#687582]">{summary.total >= 1000 ? "Ty" : "Tr"}</span>
+                        {summary.total >= 1000 ? `${(summary.total / 1000).toFixed(1)}` : summary.total} <span className="text-lg text-[#687582]">{summary.total >= 1000 ? "Tỷ" : "Tr"}</span>
                     </p>
                     <div className={`mt-2 flex items-center gap-1 text-xs font-bold ${summary.totalChange >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                         <span className="material-symbols-outlined text-[14px]">{summary.totalChange >= 0 ? "trending_up" : "trending_down"}</span>
-                        {summary.totalChange >= 0 ? "+" : ""}{summary.totalChange}% so voi {periodLabel}
+                        {summary.totalChange >= 0 ? "+" : ""}{summary.totalChange}% so với {periodLabel}
                     </div>
                 </div>
                 <div className="rounded-2xl border border-[#dde0e4] bg-white p-5 shadow-sm dark:border-[#2d353e] dark:bg-[#1e242b]">
@@ -240,15 +240,15 @@ export default function RevenuePage() {
                     <p className="text-3xl font-extrabold text-[#121417] dark:text-white">{summary.avgPerDoctor} <span className="text-lg text-[#687582]">Tr</span></p>
                     <div className={`mt-2 flex items-center gap-1 text-xs font-bold ${summary.avgChange >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                         <span className="material-symbols-outlined text-[14px]">{summary.avgChange >= 0 ? "trending_up" : "trending_down"}</span>
-                        {summary.avgChange >= 0 ? "+" : ""}{summary.avgChange}% so voi {periodLabel}
+                        {summary.avgChange >= 0 ? "+" : ""}{summary.avgChange}% so với {periodLabel}
                     </div>
                 </div>
                 <div className="rounded-2xl border border-[#dde0e4] bg-white p-5 shadow-sm dark:border-[#2d353e] dark:bg-[#1e242b]">
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Tong benh nhan</p>
+                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-[#687582] dark:text-gray-400">Tổng bệnh nhân</p>
                     <p className="text-3xl font-extrabold text-[#121417] dark:text-white">{summary.totalPatients.toLocaleString("vi-VN")}</p>
                     <div className={`mt-2 flex items-center gap-1 text-xs font-bold ${summary.patientChange >= 0 ? "text-amber-600" : "text-red-500"}`}>
                         <span className="material-symbols-outlined text-[14px]">{summary.patientChange >= 0 ? "trending_up" : "trending_down"}</span>
-                        {summary.patientChange >= 0 ? "+" : ""}{summary.patientChange}% so voi {periodLabel}
+                        {summary.patientChange >= 0 ? "+" : ""}{summary.patientChange}% so với {periodLabel}
                     </div>
                 </div>
             </div>
@@ -260,17 +260,17 @@ export default function RevenuePage() {
                             <div className="rounded-lg bg-blue-50 p-1.5 dark:bg-blue-900/20">
                                 <span className="material-symbols-outlined text-[20px] text-blue-600">analytics</span>
                             </div>
-                            <h3 className="text-sm font-bold text-[#121417] dark:text-white">Doanh thu theo chuyen khoa</h3>
+                            <h3 className="text-sm font-bold text-[#121417] dark:text-white">Doanh thu theo chuyên khoa</h3>
                         </div>
                         <span className="rounded-lg bg-gray-50 px-2 py-1 text-xs text-[#687582] dark:bg-gray-800">
-                            {period === "month" ? "Thang nay" : period === "quarter" ? "Quy nay" : "Nam nay"}
+                            {period === "month" ? "Tháng này" : period === "quarter" ? "Quý này" : "Năm này"}
                         </span>
                     </div>
                     <div className="space-y-4 p-5">
                         {deptData.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-10 text-center">
                                 <span className="material-symbols-outlined mb-2 text-4xl text-gray-300 dark:text-gray-600">inbox</span>
-                                <p className="text-sm text-[#687582] dark:text-gray-400">Chua co du lieu</p>
+                                <p className="text-sm text-[#687582] dark:text-gray-400">Chưa có dữ liệu</p>
                             </div>
                         ) : deptData.map((item) => (
                             <div key={item.dept} className="flex items-center gap-4">
@@ -280,7 +280,7 @@ export default function RevenuePage() {
                                 <div className="min-w-0 flex-1">
                                     <div className="mb-1 flex items-center justify-between">
                                         <p className="text-sm font-semibold text-[#121417] dark:text-white">{item.dept}</p>
-                                        <p className="text-sm font-bold text-[#121417] dark:text-white">{item.revenue >= 1000 ? `${(item.revenue / 1000).toFixed(1)} Ty` : `${item.revenue} Tr`}</p>
+                                        <p className="text-sm font-bold text-[#121417] dark:text-white">{item.revenue >= 1000 ? `${(item.revenue / 1000).toFixed(1)} Tỷ` : `${item.revenue} Tr`}</p>
                                     </div>
                                     <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
                                         <div
@@ -288,7 +288,7 @@ export default function RevenuePage() {
                                             style={{ width: maxDeptRevenue > 0 ? `${(item.revenue / maxDeptRevenue) * 100}%` : "0%" }}
                                         />
                                     </div>
-                                    <p className="mt-0.5 text-[10px] text-[#687582] dark:text-gray-500">{item.patients} benh nhan</p>
+                                    <p className="mt-0.5 text-[10px] text-[#687582] dark:text-gray-500">{item.patients} bệnh nhân</p>
                                 </div>
                             </div>
                         ))}
@@ -306,7 +306,7 @@ export default function RevenuePage() {
                         {comparison.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-16 text-center">
                                 <span className="material-symbols-outlined mb-2 text-4xl text-gray-300 dark:text-gray-600">inbox</span>
-                                <p className="text-sm text-[#687582] dark:text-gray-400">Chua co du lieu</p>
+                                <p className="text-sm text-[#687582] dark:text-gray-400">Chưa có dữ liệu</p>
                             </div>
                         ) : (
                             <>
@@ -326,7 +326,7 @@ export default function RevenuePage() {
                                             </div>
                                             <span className="text-xs font-medium text-[#687582] dark:text-gray-500">{item.label}</span>
                                             <span className={`text-[10px] font-bold ${item.revenue >= item.target ? "text-emerald-600" : "text-red-500"}`}>
-                                                {item.revenue >= item.target ? "Dat" : "Chua dat"}
+                                                {item.revenue >= item.target ? "Đạt" : "Chưa đạt"}
                                             </span>
                                         </div>
                                     ))}
@@ -334,15 +334,15 @@ export default function RevenuePage() {
                                 <div className="mt-4 flex items-center gap-4 border-t border-[#f0f1f3] pt-3 dark:border-[#2d353e]">
                                     <div className="flex items-center gap-1.5">
                                         <div className="h-3 w-3 rounded-sm bg-[#3C81C6]/20" />
-                                        <span className="text-[11px] text-[#687582]">Muc tieu</span>
+                                        <span className="text-[11px] text-[#687582]">Mục tiêu</span>
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <div className="h-3 w-3 rounded-sm bg-emerald-500" />
-                                        <span className="text-[11px] text-[#687582]">Dat</span>
+                                        <span className="text-[11px] text-[#687582]">Đạt</span>
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <div className="h-3 w-3 rounded-sm bg-rose-500" />
-                                        <span className="text-[11px] text-[#687582]">Chua dat</span>
+                                        <span className="text-[11px] text-[#687582]">Chưa đạt</span>
                                     </div>
                                 </div>
                             </>
@@ -358,9 +358,9 @@ export default function RevenuePage() {
                             <span className="material-symbols-outlined text-[20px] text-amber-600">emoji_events</span>
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-[#121417] dark:text-white">Top Bac si theo doanh thu</h3>
+                            <h3 className="text-sm font-bold text-[#121417] dark:text-white">Top Bác sĩ theo doanh thu</h3>
                             <p className="text-xs text-[#687582] dark:text-gray-500">
-                                {period === "month" ? "Thang nay" : period === "quarter" ? "Quy nay" : "Nam nay"} - Don vi: Trieu VND
+                                {period === "month" ? "Tháng này" : period === "quarter" ? "Quý này" : "Năm này"} - Đơn vị: Triệu VND
                             </p>
                         </div>
                     </div>
@@ -370,10 +370,10 @@ export default function RevenuePage() {
                         <thead className="bg-[#f6f7f8] dark:bg-[#13191f]">
                             <tr>
                                 <th className="w-16 px-5 py-3 text-center text-xs font-bold uppercase text-[#687582]">#</th>
-                                <th className="px-5 py-3 text-left text-xs font-bold uppercase text-[#687582]">Bac si</th>
-                                <th className="px-5 py-3 text-left text-xs font-bold uppercase text-[#687582]">Chuyen khoa</th>
+                                <th className="px-5 py-3 text-left text-xs font-bold uppercase text-[#687582]">Bác sĩ</th>
+                                <th className="px-5 py-3 text-left text-xs font-bold uppercase text-[#687582]">Chuyên khoa</th>
                                 <th className="px-5 py-3 text-right text-xs font-bold uppercase text-[#687582]">Doanh thu</th>
-                                <th className="px-5 py-3 text-right text-xs font-bold uppercase text-[#687582]">Benh nhan</th>
+                                <th className="px-5 py-3 text-right text-xs font-bold uppercase text-[#687582]">Bệnh nhân</th>
                                 <th className="px-5 py-3 text-right text-xs font-bold uppercase text-[#687582]">DT/BN</th>
                             </tr>
                         </thead>
@@ -383,7 +383,7 @@ export default function RevenuePage() {
                                     <td colSpan={6} className="px-5 py-10 text-center">
                                         <div className="flex flex-col items-center gap-2">
                                             <span className="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600">inbox</span>
-                                            <p className="text-sm text-[#687582] dark:text-gray-400">Chua co du lieu</p>
+                                            <p className="text-sm text-[#687582] dark:text-gray-400">Chưa có dữ liệu</p>
                                         </div>
                                     </td>
                                 </tr>
