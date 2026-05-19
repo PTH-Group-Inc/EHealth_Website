@@ -416,7 +416,6 @@ export const ADMIN_MENU_ITEMS: AdminMenuItem[] = [
       { key: "doctors-list", href: ROUTES.ADMIN.DOCTORS, label: "Danh sách Bác sĩ" },
       { key: "users-roles", href: ROUTES.ADMIN.USERS_ROLES, label: "Vai trò" },
       { key: "permissions", href: ROUTES.ADMIN.PERMISSIONS, label: "Phân quyền / Menu" },
-      { key: "notifications", href: ROUTES.ADMIN.NOTIFICATIONS, label: "Thông báo" },
       { key: "catalogs", href: ROUTES.ADMIN.CATALOGS, label: "Danh mục hệ thống" },
       { key: "system_config", href: ROUTES.ADMIN.SYSTEM_CONFIG, label: "Cấu hình hệ thống" },
     ],
