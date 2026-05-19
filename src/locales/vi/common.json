@@ -177,12 +177,10 @@
             "expandSidebar": "Mở rộng thanh bên",
             "collapseSidebar": "Thu nhỏ thanh bên",
             "doctorGroup": {
-                "overview": "Tổng quan",
-                "schedule-shifts": "Lịch & Ca trực",
-                "examination": "Khám bệnh",
-                "treatment-records": "Điều trị & Hồ sơ",
-                "remote-ai": "Từ xa & AI",
-                "settings": "Cài đặt"
+                "today": "Hôm nay",
+                "history": "Lịch sử khám",
+                "work-schedule": "Lịch làm việc",
+                "support": "Hỗ trợ"
             },
             "doctor": {
                 "dashboard": "Trang chủ",
