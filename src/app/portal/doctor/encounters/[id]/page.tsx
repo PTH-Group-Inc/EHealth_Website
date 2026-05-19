@@ -1,11 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { encounterService } from "@/services/encounterService";
 import { PageHeader, EmptyState } from "@/components/shared/layout";
 import { formatDate, formatTime } from "@/utils/formatters";
+import MedicalRecordsTab from "./_tabs/MedicalRecordsTab";
+import PrescriptionsTab from "./_tabs/PrescriptionsTab";
+import MedicalOrdersTab from "./_tabs/MedicalOrdersTab";
+import TreatmentPlansTab from "./_tabs/TreatmentPlansTab";
 
 interface EncounterDetail {
     id: string;
@@ -286,31 +290,7 @@ export default function EncounterDetailPage() {
                 </div>
             )}
 
-            <div>
-                <h3 className="text-sm font-bold text-[#687582] dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#3C81C6]" style={{ fontSize: "18px" }}>hub</span>
-                    Hub điều hướng EMR
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {NAV_TILES.map((tile) => (
-                        <button
-                            key={tile.key}
-                            onClick={() => router.push(tile.path(detail.id))}
-                            className={`group bg-gradient-to-br ${tile.color} text-white rounded-2xl p-4 text-left shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all`}
-                        >
-                            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3">
-                                <span className="material-symbols-outlined text-white" style={{ fontSize: "22px" }}>{tile.icon}</span>
-                            </div>
-                            <h4 className="font-bold text-sm mb-1">{tile.label}</h4>
-                            <p className="text-[11px] opacity-90 leading-relaxed">{tile.desc}</p>
-                            <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold opacity-90 group-hover:opacity-100">
-                                Mở
-                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>arrow_forward</span>
-                            </div>
-                        </button>
-                    ))}
-                </div>
-            </div>
+            <EncounterTabs encounterId={detail.id} navTiles={NAV_TILES} router={router} />
         </div>
     );
 }
@@ -322,6 +302,74 @@ function InfoLine({ icon, label, value, primary, mono }: { icon: string; label: 
             <div className="min-w-0">
                 <p className="text-[11px] text-[#687582] dark:text-gray-500 uppercase tracking-wider">{label}</p>
                 <p className={`text-sm ${primary ? "font-semibold" : ""} ${mono ? "font-mono" : ""} text-[#121417] dark:text-white truncate`}>{value}</p>
+            </div>
+        </div>
+    );
+}
+
+function EncounterTabs({ encounterId, navTiles, router }: {
+    encounterId: string;
+    navTiles: typeof NAV_TILES;
+    router: ReturnType<typeof useRouter>;
+}) {
+    const searchParams = useSearchParams();
+    const activeTab = (searchParams.get("tab") as "overview" | "records" | "orders" | "rx" | "plans") ?? "overview";
+    const setTab = (t: string) => router.push(`/portal/doctor/encounters/${encounterId}?tab=${t}`);
+
+    const tabs = [
+        { key: "overview", label: "Tổng quan", icon: "hub" },
+        { key: "records", label: "Hồ sơ bệnh án", icon: "folder_shared" },
+        { key: "orders", label: "Chỉ định", icon: "science" },
+        { key: "rx", label: "Đơn thuốc", icon: "medication" },
+        { key: "plans", label: "Kế hoạch điều trị", icon: "checklist" },
+    ];
+
+    return (
+        <div className="space-y-4">
+            <div className="border-b border-[#e5e7eb] dark:border-[#2d353e]">
+                <nav className="flex gap-1 overflow-x-auto">
+                    {tabs.map((t) => (
+                        <button
+                            key={t.key}
+                            onClick={() => setTab(t.key)}
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                                activeTab === t.key
+                                    ? "border-[#3C81C6] text-[#3C81C6]"
+                                    : "border-transparent text-[#687582] hover:text-[#3C81C6]"
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[16px] align-middle mr-1">{t.icon}</span>
+                            {t.label}
+                        </button>
+                    ))}
+                </nav>
+            </div>
+
+            <div>
+                {activeTab === "overview" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {navTiles.map((tile) => (
+                            <button
+                                key={tile.key}
+                                onClick={() => router.push(tile.path(encounterId))}
+                                className={`group bg-gradient-to-br ${tile.color} text-white rounded-2xl p-4 text-left shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all`}
+                            >
+                                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3">
+                                    <span className="material-symbols-outlined text-white" style={{ fontSize: "22px" }}>{tile.icon}</span>
+                                </div>
+                                <h4 className="font-bold text-sm mb-1">{tile.label}</h4>
+                                <p className="text-[11px] opacity-90 leading-relaxed">{tile.desc}</p>
+                                <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold opacity-90 group-hover:opacity-100">
+                                    Mở<span className="material-symbols-outlined" style={{ fontSize: "14px" }}>arrow_forward</span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                )}
+                {activeTab === "records" && <MedicalRecordsTab encounterId={encounterId} />}
+                {activeTab === "orders" && <MedicalOrdersTab encounterId={encounterId} />}
+                {activeTab === "rx" && <PrescriptionsTab encounterId={encounterId} />}
+                {activeTab === "plans" && <TreatmentPlansTab encounterId={encounterId} />}
             </div>
         </div>
     );
