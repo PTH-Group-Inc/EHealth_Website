@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DOCTOR_MENU_GROUPS } from '@/constants/routes';
+import { DOCTOR_MENU_GROUPS, getDoctorMenuItemByHref } from '@/constants/routes';
 
 describe('DOCTOR_MENU_GROUPS — luồng nghiệp vụ rút gọn', () => {
     it('có đúng 4 nhóm chính', () => {
@@ -42,5 +42,21 @@ describe('DOCTOR_MENU_GROUPS — luồng nghiệp vụ rút gọn', () => {
         expect(allKeys).not.toContain('treatment-plans');
         expect(allKeys).not.toContain('tasks');
         expect(allKeys).not.toContain('alerts');
+    });
+});
+
+describe('getDoctorMenuItemByHref — breadcrumb lookup', () => {
+    it('tìm thấy child item theo href', () => {
+        const r = getDoctorMenuItemByHref('/portal/doctor/queue');
+        expect(r).toEqual({ key: 'queue', href: '/portal/doctor/queue', label: 'Hàng đợi' });
+    });
+
+    it('tìm thấy item của nhóm "history"', () => {
+        const r = getDoctorMenuItemByHref('/portal/doctor/encounters');
+        expect(r?.key).toBe('encounters');
+    });
+
+    it('trả undefined nếu href không match', () => {
+        expect(getDoctorMenuItemByHref('/portal/doctor/__nonexistent__')).toBeUndefined();
     });
 });

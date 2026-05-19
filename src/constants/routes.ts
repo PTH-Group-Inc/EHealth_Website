@@ -203,124 +203,6 @@ export const ROUTES = {
   },
 } as const;
 
-// Doctor sidebar menu items
-export const DOCTOR_MENU_ITEMS = [
-  {
-    key: "dashboard",
-    href: ROUTES.PORTAL.DOCTOR.DASHBOARD,
-    icon: "home",
-    label: "Trang chủ",
-  },
-  {
-    key: "tasks",
-    href: ROUTES.PORTAL.DOCTOR.TASKS,
-    icon: "checklist",
-    label: "Việc cần làm",
-  },
-  {
-    key: "alerts",
-    href: ROUTES.PORTAL.DOCTOR.ALERTS,
-    icon: "notifications_active",
-    label: "Cảnh báo",
-  },
-  {
-    key: "appointments",
-    href: ROUTES.PORTAL.DOCTOR.APPOINTMENTS,
-    icon: "calendar_month",
-    label: "Lịch hẹn",
-  },
-  {
-    key: "queue",
-    href: ROUTES.PORTAL.DOCTOR.QUEUE,
-    icon: "groups",
-    label: "Hàng đợi",
-  },
-  {
-    key: "schedule",
-    href: ROUTES.PORTAL.DOCTOR.SCHEDULE,
-    icon: "event_note",
-    label: "Lịch làm việc",
-  },
-  {
-    key: "leaves",
-    href: ROUTES.PORTAL.DOCTOR.LEAVES,
-    icon: "event_busy",
-    label: "Nghỉ phép",
-  },
-  {
-    key: "shift-swaps",
-    href: ROUTES.PORTAL.DOCTOR.SHIFT_SWAPS,
-    icon: "swap_horiz",
-    label: "Đổi ca",
-  },
-  {
-    key: "patients",
-    href: ROUTES.PORTAL.DOCTOR.PATIENTS,
-    icon: "people",
-    label: "Bệnh nhân",
-  },
-  {
-    key: "examination",
-    href: ROUTES.PORTAL.DOCTOR.EXAMINATION,
-    icon: "stethoscope",
-    label: "Khám bệnh",
-  },
-  {
-    key: "medical-orders",
-    href: ROUTES.PORTAL.DOCTOR.MEDICAL_ORDERS,
-    icon: "experiment",
-    label: "Chỉ định",
-  },
-  {
-    key: "medical-records",
-    href: ROUTES.PORTAL.DOCTOR.MEDICAL_RECORDS,
-    icon: "folder_shared",
-    label: "Hồ sơ bệnh án",
-  },
-  {
-    key: "sign-off",
-    href: ROUTES.PORTAL.DOCTOR.SIGN_OFF,
-    icon: "draw",
-    label: "Ký hồ sơ",
-  },
-  {
-    key: "ehr",
-    href: ROUTES.PORTAL.DOCTOR.EHR,
-    icon: "folder_special",
-    label: "Hồ sơ sức khoẻ",
-  },
-  {
-    key: "prescriptions",
-    href: ROUTES.PORTAL.DOCTOR.PRESCRIPTIONS,
-    icon: "pill",
-    label: "Kê đơn",
-  },
-  {
-    key: "treatment-plans",
-    href: ROUTES.PORTAL.DOCTOR.TREATMENT_PLANS,
-    icon: "medical_information",
-    label: "Kế hoạch điều trị",
-  },
-  {
-    key: "ai-assistant",
-    href: ROUTES.PORTAL.DOCTOR.AI_ASSISTANT,
-    icon: "smart_toy",
-    label: "Trợ lý AI",
-  },
-  {
-    key: "telemedicine",
-    href: ROUTES.PORTAL.DOCTOR.TELEMEDICINE,
-    icon: "videocam",
-    label: "Khám từ xa",
-  },
-  {
-    key: "settings",
-    href: ROUTES.PORTAL.DOCTOR.SETTINGS,
-    icon: "settings",
-    label: "Cài đặt",
-  },
-] as const;
-
 // Doctor sidebar menu — nhóm lại thành module cho dễ điều hướng
 export interface DoctorMenuGroup {
   key: string;
@@ -370,6 +252,20 @@ export const DOCTOR_MENU_GROUPS: DoctorMenuGroup[] = [
     ],
   },
 ];
+
+/**
+ * Flatten DOCTOR_MENU_GROUPS thành list {key, href, label} để dùng cho
+ * lookup breadcrumb / quick-find. Bao gồm cả group cha (nếu có href) lẫn
+ * tất cả children.
+ */
+export function getDoctorMenuItemByHref(href: string): { key: string; href: string; label: string } | undefined {
+  for (const group of DOCTOR_MENU_GROUPS) {
+    if (group.href === href) return { key: group.key, href: group.href, label: group.label };
+    const child = group.children?.find((c) => c.href === href);
+    if (child) return { key: child.key, href: child.href, label: child.label };
+  }
+  return undefined;
+}
 
 // Admin sidebar menu items — hỗ trợ nhóm + submenu
 export interface AdminMenuItem {
