@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
 import { STAFF_ENDPOINTS, STAFF_SCHEDULE_ENDPOINTS } from "@/api/endpoints";
-import { staffScheduleService, type StaffSchedule } from "@/services/staffScheduleService";
+import { type StaffSchedule } from "@/services/staffScheduleService";
 import { workShiftService, type WorkShift } from "@/services/workShiftService";
 import { useToast } from "@/contexts/ToastContext";
 import { PageHeader, FilterBar, EmptyState } from "@/components/shared/layout";
@@ -41,24 +42,28 @@ export default function StaffSchedulePage() {
             const m = month.getMonth() + 1;
             const y = month.getFullYear();
             const [scheds, sh] = await Promise.allSettled([
-                staffScheduleService.getCalendar(m, y).catch(() => staffScheduleService.getList({
-                    from: `${y}-${String(m).padStart(2, "0")}-01`,
-                    to: `${y}-${String(m).padStart(2, "0")}-31`,
-                })),
+                axiosClient.get(STAFF_SCHEDULE_ENDPOINTS.CALENDAR, { params: { month: m, year: y } }),
                 workShiftService.getList(),
             ]);
             if (scheds.status === "fulfilled") {
-                const data: any = scheds.value;
-                const items: any[] = Array.isArray(data) ? data : (data?.items ?? data?.data ?? []);
+                // BE trả: { success, data: { "YYYY-MM-DD": [...items], ... } }
+                const payload: any = scheds.value?.data?.data ?? scheds.value?.data ?? {};
+                let items: any[] = [];
+                if (Array.isArray(payload)) {
+                    items = payload;
+                } else if (payload && typeof payload === "object") {
+                    // Object keyed by date → flatten
+                    items = Object.values(payload).flat() as any[];
+                }
                 setSchedules(items.map(mapSchedule));
             } else {
                 setSchedules([]);
             }
             if (sh.status === "fulfilled") {
                 const data: any = sh.value;
-                const raw: any[] = Array.isArray(data?.data) ? data.data : [];
+                const raw: any[] = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
                 setShifts(raw.map((s) => ({
-                    id: String(s.shift_id ?? s.id ?? s.code ?? ""),
+                    id: String(s.shifts_id ?? s.shift_id ?? s.id ?? s.code ?? ""),
                     name: s.name ?? "",
                     startTime: (s.start_time ?? "").slice(0, 5),
                     endTime: (s.end_time ?? "").slice(0, 5),
@@ -116,8 +121,10 @@ export default function StaffSchedulePage() {
             const staffRes = await axiosClient.get(STAFF_ENDPOINTS.LIST, { params: { limit: 500, role: autoForm.role } });
             const raw: any[] = staffRes.data?.data?.items ?? staffRes.data?.data ?? staffRes.data?.items ?? staffRes.data ?? [];
             const staffList = (Array.isArray(raw) ? raw : []).filter((s: any) => {
+                if (autoForm.role === "ALL") return true;
+                const roles: string[] = Array.isArray(s.roles) ? s.roles.map((r: any) => String(r).toUpperCase()) : [];
                 const r = String(s.role ?? s.position ?? "").toUpperCase();
-                return r.includes(autoForm.role.toUpperCase()) || autoForm.role === "ALL";
+                return roles.includes(autoForm.role.toUpperCase()) || r.includes(autoForm.role.toUpperCase());
             });
             if (staffList.length === 0) { toast.warning(`Không có nhân sự role=${autoForm.role}.`); setAutoRunning(false); return; }
 
@@ -138,7 +145,7 @@ export default function StaffSchedulePage() {
                     const staff = staffList[staffIdx % staffList.length];
                     assignments.push({
                         workDate: day,
-                        staffId: String(staff.staffs_id ?? staff.staff_id ?? staff.id ?? ""),
+                        staffId: String(staff.users_id ?? staff.user_id ?? staff.staffs_id ?? staff.staff_id ?? staff.id ?? ""),
                         shiftId: shift.id,
                     });
                     staffIdx += 1;
@@ -151,10 +158,10 @@ export default function StaffSchedulePage() {
             for (const a of assignments) {
                 try {
                     await axiosClient.post(STAFF_SCHEDULE_ENDPOINTS.CREATE, {
-                        staff_id: a.staffId,
+                        user_id: a.staffId,
                         shift_id: a.shiftId,
-                        work_date: a.workDate,
-                        status: "SCHEDULED",
+                        working_date: a.workDate,
+                        status: "ACTIVE",
                     });
                     done += 1;
                 } catch {
@@ -182,6 +189,11 @@ export default function StaffSchedulePage() {
                 breadcrumbs={[{ label: tc("role.admin"), href: "/admin" }, { label: t("title") }]}
                 actions={
                     <div className="flex items-center gap-2">
+                        <Link href="/admin/schedules/new"
+                            className="inline-flex items-center gap-1 px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] hover:shadow-lg rounded-xl transition-all">
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>add</span>
+                            Thêm lịch thủ công
+                        </Link>
                         <button onClick={() => setShowAutoModal(true)}
                             className="inline-flex items-center gap-1 px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-violet-500 to-fuchsia-600 hover:shadow-lg rounded-xl transition-all">
                             <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>auto_awesome</span>
@@ -357,18 +369,26 @@ export default function StaffSchedulePage() {
 }
 
 function mapSchedule(s: any): StaffSchedule {
+    // BE staff-schedules/calendar trả: staff_schedules_id, user_id, working_date, full_name, room_name, shift_name, status: ACTIVE
+    const rawStatus = String(s.status ?? "").toUpperCase();
+    const isLeave = Boolean(s.is_leave);
+    const status: StaffSchedule["status"] = isLeave
+        ? "LEAVE"
+        : rawStatus === "ACTIVE" || rawStatus === ""
+            ? "SCHEDULED"
+            : (rawStatus as StaffSchedule["status"]);
     return {
-        id: String(s.schedule_id ?? s.id ?? ""),
-        staffId: String(s.staff_id ?? ""),
-        staffName: s.staff_name ?? s.full_name ?? "",
+        id: String(s.staff_schedules_id ?? s.schedule_id ?? s.id ?? ""),
+        staffId: String(s.user_id ?? s.staff_id ?? ""),
+        staffName: s.full_name ?? s.staff_name ?? "",
         shiftId: String(s.shift_id ?? ""),
         shiftName: s.shift_name ?? s.shift?.name ?? "",
-        workDate: (s.work_date ?? s.date ?? "").slice(0, 10),
-        startTime: s.start_time ?? "",
-        endTime: s.end_time ?? "",
-        departmentId: s.department_id ?? "",
-        status: (s.status ?? "SCHEDULED") as StaffSchedule["status"],
-        note: s.note ?? "",
+        workDate: (s.working_date ?? s.work_date ?? s.date ?? "").slice(0, 10),
+        startTime: (s.start_time ?? "").slice(0, 5),
+        endTime: (s.end_time ?? "").slice(0, 5),
+        departmentId: s.department_id ?? s.medical_room_id ?? "",
+        status,
+        note: s.note ?? s.leave_reason ?? "",
         createdAt: s.created_at ?? "",
     };
 }

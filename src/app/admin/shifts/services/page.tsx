@@ -28,12 +28,12 @@ interface FacilityLite { id: string; name: string; }
 
 function mapShiftService(r: any): ShiftService {
     return {
-        id: String(r.shift_service_id ?? r.id ?? ""),
-        shiftId: String(r.shift_id ?? ""),
-        facilityServiceId: String(r.facility_service_id ?? ""),
+        id: String(r.shift_services_id ?? r.shift_service_id ?? r.id ?? ""),
+        shiftId: String(r.shifts_id ?? r.shift_id ?? ""),
+        facilityServiceId: String(r.facility_services_id ?? r.facility_service_id ?? ""),
         shiftName: r.shift_name ?? "",
         serviceName: r.service_name ?? "",
-        isActive: Boolean(r.is_active ?? true),
+        isActive: r.is_active !== false,
         createdAt: r.created_at ?? "",
     };
 }
@@ -73,15 +73,17 @@ export default function ShiftServicesPage() {
             const sRaw: any[] = Array.isArray(sRes.data?.data) ? sRes.data.data : Array.isArray(sRes.data) ? sRes.data : [];
             const svRaw: any[] = Array.isArray(svRes.data?.data) ? svRes.data.data : Array.isArray(svRes.data) ? svRes.data : [];
             setShifts(sRaw.map((s: any) => ({
-                id: String(s.shift_id ?? s.id ?? ""),
+                id: String(s.shifts_id ?? s.shift_id ?? s.id ?? ""),
                 name: s.name ?? s.shift_name ?? "",
                 startTime: (s.start_time ?? "").slice(0, 5),
                 endTime: (s.end_time ?? "").slice(0, 5),
             })).filter((s) => s.id));
+            // BE /api/medical-services/facilities/:facilityId/active-services trả:
+            // { facility_services_id, service_name, service_code, base_price, is_active, ... }
             setServices(svRaw.map((s: any) => ({
-                id: String(s.facility_service_id ?? s.id ?? ""),
-                name: s.name ?? s.service_name ?? "",
-            })).filter((s) => s.id));
+                id: String(s.facility_services_id ?? s.facility_service_id ?? s.id ?? ""),
+                name: s.service_name ?? s.name ?? s.service_code ?? "",
+            })).filter((s) => s.id && s.id !== "undefined"));
         } catch {
             setShifts([]);
             setServices([]);
