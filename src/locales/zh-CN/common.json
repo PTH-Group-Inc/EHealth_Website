@@ -204,6 +204,12 @@
                 "telemedicine": "远程医疗",
                 "settings": "设置"
             },
+            "pharmacistGroup": {
+                "operations": "业务",
+                "warehouse": "仓库",
+                "data": "数据",
+                "account": "账户"
+            },
             "pharmacist": {
                 "dashboard": "首页",
                 "prescriptions": "处方",

@@ -204,6 +204,12 @@
                 "telemedicine": "Khám từ xa",
                 "settings": "Cài đặt"
             },
+            "pharmacistGroup": {
+                "operations": "Nghiệp vụ",
+                "warehouse": "Quản lý kho",
+                "data": "Dữ liệu",
+                "account": "Tài khoản"
+            },
             "pharmacist": {
                 "dashboard": "Trang chủ",
                 "prescriptions": "Đơn thuốc",

@@ -204,6 +204,12 @@
                 "telemedicine": "Telemedicine",
                 "settings": "Settings"
             },
+            "pharmacistGroup": {
+                "operations": "Operations",
+                "warehouse": "Warehouse",
+                "data": "Data",
+                "account": "Account"
+            },
             "pharmacist": {
                 "dashboard": "Home",
                 "prescriptions": "Prescriptions",
