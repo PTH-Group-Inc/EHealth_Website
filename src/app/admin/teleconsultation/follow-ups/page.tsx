@@ -28,7 +28,8 @@ const STATUS_META: Record<FollowUpPlan["status"], { label: string; color: string
 
 function normalizeStatus(raw: any): FollowUpPlan["status"] {
     const s = String(raw ?? "").toUpperCase();
-    if (s === "IN_PROGRESS" || s === "ONGOING") return "IN_PROGRESS";
+    // BE dùng ACTIVE thay vì IN_PROGRESS
+    if (s === "IN_PROGRESS" || s === "ONGOING" || s === "ACTIVE") return "IN_PROGRESS";
     if (s === "COMPLETED" || s === "DONE") return "COMPLETED";
     if (s === "CANCELLED" || s === "CANCELED") return "CANCELLED";
     return "PLANNED";
@@ -40,9 +41,10 @@ function mapPlan(r: any): FollowUpPlan {
         patientName: r.patient_name ?? "—",
         doctorName: r.doctor_name ?? "",
         planType: r.plan_type ?? "",
-        scheduledDate: r.scheduled_date ?? "",
+        // BE trả next_follow_up_date / start_date — ưu tiên ngày tái khám tiếp theo
+        scheduledDate: r.next_follow_up_date ?? r.scheduled_date ?? r.start_date ?? "",
         status: normalizeStatus(r.status),
-        needsAttention: Boolean(r.needs_attention ?? false),
+        needsAttention: Boolean(r.needs_attention ?? r.has_attention_update ?? false),
         updates: Number(r.update_count ?? r.updates ?? 0),
     };
 }

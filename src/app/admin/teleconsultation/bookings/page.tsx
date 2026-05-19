@@ -37,19 +37,24 @@ function normalizeStatus(raw: any): Status {
     if (s === "IN_PROGRESS" || s === "ONGOING") return "IN_PROGRESS";
     if (s === "COMPLETED" || s === "DONE") return "COMPLETED";
     if (s === "CANCELLED" || s === "CANCELED") return "CANCELLED";
+    // PENDING / PENDING_PAYMENT / DRAFT → coi như chờ xác nhận
     return "PENDING";
 }
 
 function mapBooking(r: any): TeleBooking {
+    // BE trả booking_date + booking_start_time tách rời → ghép lại ISO
+    const dateStr = r.booking_date ?? r.scheduled_date ?? "";
+    const timeStr = r.booking_start_time ?? r.start_time ?? "";
+    const scheduledAt = r.scheduled_at ?? (dateStr && timeStr ? `${dateStr}T${timeStr}` : dateStr || timeStr || "");
     return {
         id: String(r.consultation_id ?? r.session_id ?? r.id ?? ""),
         code: r.code ?? r.session_code ?? "",
         patientName: r.patient_name ?? "—",
         doctorName: r.doctor_name ?? "",
         typeName: r.type_name ?? "",
-        scheduledAt: r.scheduled_at ?? r.start_time ?? "",
+        scheduledAt,
         duration: Number(r.duration_minutes ?? r.duration ?? 0),
-        price: Number(r.price ?? r.amount ?? 0),
+        price: Number(r.price_amount ?? r.price ?? r.amount ?? 0),
         status: normalizeStatus(r.status),
         paymentStatus: r.payment_status ?? "",
     };

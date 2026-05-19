@@ -19,22 +19,24 @@ interface Prescription {
     sentAt?: string;
 }
 
-function normalizeStatus(raw: any): Prescription["status"] {
+function normalizeStatus(raw: any, sentToPatient?: boolean): Prescription["status"] {
     const s = String(raw ?? "").toUpperCase();
-    if (s === "PRESCRIBED" || s === "CONFIRMED") return "PRESCRIBED";
-    if (s === "SENT" || s === "SENT_TO_PATIENT") return "SENT";
     if (s === "DISPENSED" || s === "COMPLETED") return "DISPENSED";
+    if (s === "SENT" || s === "SENT_TO_PATIENT" || sentToPatient) return "SENT";
+    if (s === "PRESCRIBED" || s === "CONFIRMED") return "PRESCRIBED";
     return "DRAFT";
 }
 
 function mapRx(r: any): Prescription {
+    // BE trả prescription_status (từ prescriptions.status) + sent_to_patient (từ tele_prescriptions)
+    const sent = Boolean(r.sent_to_patient);
     return {
-        id: String(r.prescription_id ?? r.consultation_id ?? r.id ?? ""),
-        code: r.code ?? r.prescription_code ?? "",
+        id: String(r.tele_consultation_id ?? r.consultation_id ?? r.tele_prescription_id ?? r.prescription_id ?? r.id ?? ""),
+        code: r.prescription_code ?? r.code ?? "",
         patientName: r.patient_name ?? "—",
         doctorName: r.doctor_name ?? "",
-        itemCount: Number(r.item_count ?? 0),
-        status: normalizeStatus(r.status),
+        itemCount: Number(r.item_count ?? r.items_count ?? 0),
+        status: normalizeStatus(r.prescription_status ?? r.status, sent),
         createdAt: r.created_at ?? "",
         sentAt: r.sent_at ?? "",
     };
