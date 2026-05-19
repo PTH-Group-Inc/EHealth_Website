@@ -17,7 +17,7 @@ export default function DispensingPage() {
     const t = useTranslations("pages.portal.pharmacist.dispensing");
     const router = useRouter();
     const searchParams = useSearchParams();
-    const prescriptionId = searchParams.get("id");
+    const prescriptionId = searchParams.get("prescriptionId") ?? searchParams.get("id");
     usePageAIContext({ pageKey: 'dispensing' });
     const [checkedMeds, setCheckedMeds] = useState<Record<number, boolean>>({});
     const [patientConfirmed, setPatientConfirmed] = useState(false);
