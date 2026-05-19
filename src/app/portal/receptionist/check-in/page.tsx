@@ -24,7 +24,7 @@ export default function ReceptionistCheckInPage() {
             setResult(r);
             setCode("");
         } catch (e: any) {
-            setError(e?.response?.data?.message ?? e?.message ?? "Check-in thất bại. Mã không hợp lệ.");
+            setError(e?.response?.data?.message ?? e?.message ?? "Tiếp nhận thất bại. Mã không hợp lệ.");
         } finally { setBusy(false); }
     };
 
@@ -36,19 +36,19 @@ export default function ReceptionistCheckInPage() {
             setResult(r);
             setCode("");
         } catch (e: any) {
-            setError(e?.response?.data?.message ?? e?.message ?? "Check-in thất bại.");
+            setError(e?.response?.data?.message ?? e?.message ?? "Tiếp nhận thất bại.");
         } finally { setBusy(false); }
     };
 
     return (
         <div className="p-6 md:p-8 max-w-3xl mx-auto">
             <PageHeader
-                title="Check-in tại quầy"
-                subtitle="Quét mã QR hoặc nhập mã lịch để check-in nhanh."
+                title="Tiếp nhận tại quầy"
+                subtitle="Quét mã QR hoặc nhập mã lịch để tiếp nhận nhanh."
                 icon="qr_code_scanner"
                 breadcrumbs={[
-                    { label: "Portal", href: "/portal/receptionist" },
-                    { label: "Check-in" },
+                    { label: "Trang chủ", href: "/portal/receptionist" },
+                    { label: "Tiếp nhận" },
                 ]}
             />
 
@@ -58,7 +58,7 @@ export default function ReceptionistCheckInPage() {
                         <span className="material-symbols-outlined text-[40px]">qr_code_scanner</span>
                     </div>
                     <h2 className="text-xl font-bold">Nhập mã / quét QR</h2>
-                    <p className="text-sm text-[#687582]">Hỗ trợ check-in bằng QR (camera) hoặc nhập mã lịch thủ công.</p>
+                    <p className="text-sm text-[#687582]">Hỗ trợ tiếp nhận bằng QR (camera) hoặc nhập mã lịch thủ công.</p>
                 </div>
 
                 <div className="flex gap-2 mb-4">
@@ -73,10 +73,10 @@ export default function ReceptionistCheckInPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                     <button onClick={onCheckInQR} disabled={busy || !code.trim()} className="px-4 py-3 text-sm font-medium rounded-lg bg-[#3C81C6] text-white hover:bg-[#2a6da8] disabled:opacity-50">
-                        Check-in QR
+                        Tiếp nhận QR
                     </button>
                     <button onClick={onCheckInId} disabled={busy || !code.trim()} className="px-4 py-3 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50">
-                        Check-in theo mã
+                        Tiếp nhận theo mã
                     </button>
                 </div>
 
@@ -90,15 +90,15 @@ export default function ReceptionistCheckInPage() {
                     <div className="mt-4 p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700">
                         <p className="font-bold flex items-center gap-1">
                             <span className="material-symbols-outlined">check_circle</span>
-                            Check-in thành công
+                            Tiếp nhận thành công
                         </p>
                         <pre className="text-xs mt-2 overflow-x-auto">{JSON.stringify(result, null, 2)}</pre>
                         <div className="mt-3 flex gap-2">
                             <Link href="/portal/receptionist/queue" className="px-3 py-1.5 text-xs rounded bg-emerald-600 text-white">
-                                Xem queue
+                                Xem hàng đợi
                             </Link>
                             <button onClick={() => setResult(null)} className="px-3 py-1.5 text-xs rounded bg-white dark:bg-[#1e242b]">
-                                Check-in tiếp
+                                Tiếp nhận tiếp
                             </button>
                         </div>
                     </div>
@@ -106,7 +106,7 @@ export default function ReceptionistCheckInPage() {
             </div>
 
             <div className="text-center text-sm text-[#687582]">
-                <p>Hoặc check-in từ <Link href="/portal/receptionist/appointments" className="text-[#3C81C6] hover:underline">danh sách lịch khám</Link>.</p>
+                <p>Hoặc tiếp nhận từ <Link href="/portal/receptionist/appointments" className="text-[#3C81C6] hover:underline">danh sách lịch khám</Link>.</p>
             </div>
         </div>
     );

@@ -114,17 +114,17 @@ function SessionsTab() {
                 {items.length > 1 && <button onClick={onLogoutAll} className="px-3 py-1.5 text-xs rounded bg-rose-50 text-rose-700">Đăng xuất tất cả khác</button>}
             </div>
             {loading ? <p className="p-4 text-center text-xs text-[#687582]">Đang tải…</p>
-            : items.length === 0 ? <EmptyState icon="devices" title="Không có session" />
+            : items.length === 0 ? <EmptyState icon="devices" title="Không có phiên đăng nhập" />
             : (
                 <ul className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
-                    {items.map((s: any) => (
-                        <li key={s.id} className="p-4 flex items-center gap-3">
+                    {items.map((s: any, idx: number) => (
+                        <li key={s.user_sessions_id ?? s.id ?? idx} className="p-4 flex items-center gap-3">
                             <span className="material-symbols-outlined text-[24px] text-[#3C81C6]">devices</span>
                             <div className="flex-1">
-                                <p className="font-medium text-sm">{s.deviceName ?? s.device_name ?? s.userAgent?.slice(0, 50) ?? "Thiết bị"}{s.isCurrent && <span className="ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">Hiện tại</span>}</p>
-                                <p className="text-xs text-[#687582]">IP: {s.ip ?? "—"} · {fmtDateTime(s.loginAt ?? s.login_at)}</p>
+                                <p className="font-medium text-sm">{s.device_name ?? s.deviceName ?? s.userAgent?.slice(0, 50) ?? "Thiết bị"}{(s.is_current ?? s.isCurrent) && <span className="ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">Hiện tại</span>}</p>
+                                <p className="text-xs text-[#687582]">IP: {s.ip_address ?? s.ip ?? "Không xác định"} · {fmtDateTime(s.last_used_at ?? s.login_at ?? s.created_at)}</p>
                             </div>
-                            {!s.isCurrent && <button onClick={() => onLogout(s.id)} className="px-2 py-1 text-xs rounded text-rose-600 hover:bg-rose-50">Đăng xuất</button>}
+                            {!(s.is_current ?? s.isCurrent) && <button onClick={() => onLogout(s.user_sessions_id ?? s.id)} className="px-2 py-1 text-xs rounded text-rose-600 hover:bg-rose-50">Đăng xuất</button>}
                         </li>
                     ))}
                 </ul>
@@ -235,10 +235,10 @@ export default function ReceptionistSettingsPage() {
         <div className="p-6 md:p-8 max-w-7xl mx-auto">
             <PageHeader
                 title="Tài khoản của tôi"
-                subtitle="Hồ sơ, bảo mật, sessions, cài đặt và thông báo cá nhân."
+                subtitle="Hồ sơ, bảo mật, phiên đăng nhập, cài đặt và thông báo cá nhân."
                 icon="account_circle"
                 breadcrumbs={[
-                    { label: "Portal", href: "/portal/receptionist" },
+                    { label: "Trang chủ", href: "/portal/receptionist" },
                     { label: "Tài khoản của tôi" },
                 ]}
             />

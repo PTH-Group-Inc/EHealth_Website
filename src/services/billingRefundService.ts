@@ -89,6 +89,24 @@ export const billingRefundService = {
         return unwrap<RefundAdjustment>(res);
     },
 
+    /** Duyệt điều chỉnh */
+    approveAdjustment: async (id: string) => {
+        const res = await axiosClient.patch(BILLING_REFUND_ENDPOINTS.APPROVE_ADJUSTMENT(id), {});
+        return unwrap<RefundAdjustment>(res);
+    },
+
+    /** Áp dụng điều chỉnh */
+    applyAdjustment: async (id: string) => {
+        const res = await axiosClient.patch(BILLING_REFUND_ENDPOINTS.APPLY_ADJUSTMENT(id), {});
+        return unwrap<RefundAdjustment>(res);
+    },
+
+    /** Từ chối điều chỉnh */
+    rejectAdjustment: async (id: string, reason: string) => {
+        const res = await axiosClient.patch(BILLING_REFUND_ENDPOINTS.REJECT_ADJUSTMENT(id), { reject_reason: reason });
+        return unwrap<RefundAdjustment>(res);
+    },
+
     /** Timeline xử lý của 1 yêu cầu */
     getTimeline: async (id: string) => {
         const res = await axiosClient.get(BILLING_REFUND_ENDPOINTS.REQUEST_TIMELINE(id));

@@ -14,17 +14,9 @@ const nextConfig = {
 
     images: {
         remotePatterns: [
-            { protocol: "https", hostname: "lh3.googleusercontent.com" },
-            { protocol: "https", hostname: "i.pravatar.cc" },
-            // Avatar/file từ BE server (dev mode — prod đi qua rewrites)
-            { protocol: "http", hostname: "160.250.186.97" },
-            { protocol: "https", hostname: "dev.thanhhaishopwebsite.id.vn" },
-            // Cloudinary (avatar upload)
-            { protocol: "https", hostname: "res.cloudinary.com" },
-            // Avatar fallback (booking page)
-            { protocol: "https", hostname: "ui-avatars.com" },
-            // QR code service (booking confirmation)
-            { protocol: "https", hostname: "api.qrserver.com" },
+            // Cho phép TẤT CẢ các domain lấy ảnh (Fix triệt để lỗi unconfigured host)
+            { protocol: "https", hostname: "**" },
+            { protocol: "http", hostname: "**" },
         ],
     },
 

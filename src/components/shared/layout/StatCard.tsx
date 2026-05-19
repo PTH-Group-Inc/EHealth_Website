@@ -30,7 +30,7 @@ export interface StatCardProps {
 }
 
 export function StatCard({ label, value, icon, color = "blue", trend, footer, href, loading }: StatCardProps) {
-    const c = COLOR_STYLE[color];
+    const c = COLOR_STYLE[color] ?? COLOR_STYLE.blue;
 
     const inner = (
         <>

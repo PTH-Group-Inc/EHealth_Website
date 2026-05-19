@@ -56,10 +56,10 @@ export default function ChangeHistoryPage() {
         <div className="p-6 md:p-8 max-w-7xl mx-auto">
             <PageHeader
                 title="Lịch sử thay đổi lịch"
-                subtitle={appointmentId ? `Chi tiết thay đổi của appointment ${appointmentId.slice(0, 8)}` : "Tất cả thay đổi lịch gần đây"}
+                subtitle={appointmentId ? `Chi tiết thay đổi của lịch khám ${appointmentId.slice(0, 8)}` : "Tất cả thay đổi lịch gần đây"}
                 icon="history"
                 breadcrumbs={[
-                    { label: "Portal", href: "/portal/receptionist" },
+                    { label: "Trang chủ", href: "/portal/receptionist" },
                     { label: "Lịch sử thay đổi" },
                 ]}
             />
@@ -68,8 +68,8 @@ export default function ChangeHistoryPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <StatCard label="Hôm nay" value={stats?.today ?? 0} icon="today" color="blue" loading={loading} />
                     <StatCard label="Tuần này" value={stats?.this_week ?? 0} icon="date_range" color="violet" loading={loading} />
-                    <StatCard label="Reschedule" value={stats?.reschedule ?? 0} icon="schedule" color="amber" loading={loading} />
-                    <StatCard label="Cancel" value={stats?.cancel ?? 0} icon="cancel" color="red" loading={loading} />
+                    <StatCard label="Dời lịch" value={stats?.reschedule ?? 0} icon="schedule" color="amber" loading={loading} />
+                    <StatCard label="Huỷ" value={stats?.cancel ?? 0} icon="cancel" color="red" loading={loading} />
                 </div>
             )}
 

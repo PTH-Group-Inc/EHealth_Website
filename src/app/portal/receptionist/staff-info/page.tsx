@@ -5,8 +5,9 @@
  * Spec: dòng 12366-12459 (read-only: lịch nhân sự + nghỉ phép + đổi ca).
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { PageHeader, EmptyState, StatCard } from "@/components/shared/layout";
+import { ScheduleCalendar, ScheduleEvent } from "@/components/shared/calendar/ScheduleCalendar";
 import { staffScheduleService } from "@/services/staffScheduleService";
 import { leaveService } from "@/services/leaveService";
 import { shiftSwapService } from "@/services/shiftSwapService";
@@ -23,7 +24,7 @@ type TabKey = typeof TABS[number]["key"];
 
 export default function ReceptionistStaffInfoPage() {
     const [tab, setTab] = useState<TabKey>("schedules");
-    const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+    const [calMonth, setCalMonth] = useState(new Date());
     const [schedules, setSchedules] = useState<any[]>([]);
     const [leaves, setLeaves] = useState<any[]>([]);
     const [swaps, setSwaps] = useState<any[]>([]);
@@ -31,18 +32,44 @@ export default function ReceptionistStaffInfoPage() {
 
     const load = useCallback(async () => {
         setLoading(true);
+        const y = calMonth.getFullYear();
+        const m = String(calMonth.getMonth() + 1).padStart(2, "0");
+        const fromDate = `${y}-${m}-01`;
+        const toDate = new Date(y, calMonth.getMonth() + 1, 0).toISOString().slice(0, 10);
+
         const [s, l, sw] = await Promise.allSettled([
-            staffScheduleService.getList({ from: date, to: date }),
+            staffScheduleService.getList({ from: fromDate, to: toDate }),
             leaveService.getList(),
             shiftSwapService.getList(),
         ]);
-        if (s.status === "fulfilled") setSchedules(((s.value as any)?.data ?? []));
-        if (l.status === "fulfilled") setLeaves(((l.value as any)?.data ?? []));
-        if (sw.status === "fulfilled") setSwaps(((sw.value as any)?.data ?? []));
+        
+        if (s.status === "fulfilled") setSchedules(((s.value as any)?.data ?? s.value ?? []));
+        if (l.status === "fulfilled") setLeaves(((l.value as any)?.data ?? l.value ?? []));
+        if (sw.status === "fulfilled") setSwaps(((sw.value as any)?.data ?? sw.value ?? []));
         setLoading(false);
-    }, [date]);
+    }, [calMonth]);
 
     useEffect(() => { load(); }, [load]);
+
+    const scheduleEvents = useMemo<ScheduleEvent[]>(() => {
+        return (Array.isArray(schedules) ? schedules : []).map((s: any) => ({
+            id: s.id ?? s.staff_schedules_id,
+            date: s.workDate ?? s.work_date ?? s.working_date ?? s.schedule_date ?? "",
+            title: s.staffName ?? s.staff_name ?? s.full_name ?? "—",
+            subtitle: s.shiftName ?? s.shift_name ?? "",
+            shift: s.shiftCode ?? s.shift_code ?? s.shiftName ?? s.shift_name,
+            status: s.status,
+        }));
+    }, [schedules]);
+
+    // Lọc lịch trực của hôm nay để đếm (chỉ cho StatCard)
+    const todaySchedulesCount = useMemo(() => {
+        const todayIso = new Date().toISOString().slice(0, 10);
+        return (Array.isArray(schedules) ? schedules : []).filter((s: any) => {
+            const dateStr = s.workDate ?? s.work_date ?? s.working_date ?? s.schedule_date ?? "";
+            return dateStr.slice(0, 10) === todayIso;
+        }).length;
+    }, [schedules]);
 
     return (
         <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -51,13 +78,13 @@ export default function ReceptionistStaffInfoPage() {
                 subtitle="Tra cứu nhanh: ai trực hôm nay, ai nghỉ, ai đổi ca."
                 icon="badge"
                 breadcrumbs={[
-                    { label: "Portal", href: "/portal/receptionist" },
+                    { label: "Trang chủ", href: "/portal/receptionist" },
                     { label: "Vận hành nhân sự" },
                 ]}
             />
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                <StatCard label="Lịch trực hôm nay" value={schedules.length} icon="event_note" color="blue" loading={loading} />
+                <StatCard label="Lịch trực hôm nay" value={todaySchedulesCount} icon="event_note" color="blue" loading={loading} />
                 <StatCard label="Đang nghỉ phép" value={leaves.filter((l: any) => (l.status ?? "").toUpperCase() === "APPROVED").length} icon="event_busy" color="amber" loading={loading} />
                 <StatCard label="Yêu cầu đổi ca" value={swaps.filter((s: any) => (s.status ?? "").toUpperCase() === "PENDING").length} icon="swap_horiz" color="violet" loading={loading} />
             </div>
@@ -72,32 +99,16 @@ export default function ReceptionistStaffInfoPage() {
             </div>
 
             {tab === "schedules" && (
-                <>
-                    <div className="bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-3 mb-4">
-                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="px-3 py-2 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d353e] bg-white dark:bg-[#121417]" />
-                    </div>
-                    <div className="bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl overflow-hidden">
-                        {loading ? <p className="p-8 text-center text-sm text-[#687582]">Đang tải…</p>
-                        : schedules.length === 0 ? <EmptyState icon="event_busy" title="Không có lịch trực" />
-                        : (
-                            <table className="w-full text-sm">
-                                <thead className="bg-gray-50 dark:bg-gray-800/50 text-xs uppercase text-[#687582]">
-                                    <tr><th className="text-left px-4 py-3">Nhân viên</th><th className="text-left px-4 py-3">Ca</th><th className="text-left px-4 py-3">Giờ</th><th className="text-left px-4 py-3">Khoa / phòng</th></tr>
-                                </thead>
-                                <tbody className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
-                                    {schedules.map((s: any) => (
-                                        <tr key={s.id}>
-                                            <td className="px-4 py-3 font-medium">{s.staff_name ?? s.staffName ?? "—"}</td>
-                                            <td className="px-4 py-3">{s.shift_name ?? s.shiftName ?? "—"}</td>
-                                            <td className="px-4 py-3">{(s.start_time ?? "").slice(0, 5)}-{(s.end_time ?? "").slice(0, 5)}</td>
-                                            <td className="px-4 py-3 text-[#687582]">{s.department_name ?? "—"}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
-                </>
+                <div className="mb-4">
+                    <ScheduleCalendar
+                        month={calMonth}
+                        events={scheduleEvents}
+                        onPrevMonth={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1))}
+                        onNextMonth={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1))}
+                        onToday={() => setCalMonth(new Date())}
+                        loading={loading}
+                    />
+                </div>
             )}
 
             {tab === "leaves" && (

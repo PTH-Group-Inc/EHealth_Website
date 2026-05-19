@@ -501,7 +501,7 @@ export default function ReceptionistSupportDataPage() {
                 subtitle="Tra cứu nhanh thông tin phục vụ đặt lịch tại quầy."
                 icon="database"
                 breadcrumbs={[
-                    { label: "Portal", href: "/portal/receptionist" },
+                    { label: "Trang chủ", href: "/portal/receptionist" },
                     { label: "Dữ liệu" },
                 ]}
             />

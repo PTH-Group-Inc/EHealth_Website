@@ -18,6 +18,15 @@ import { useToast } from "@/contexts/ToastContext";
 
 type RoleLabel = "Bác sĩ" | "Dược sĩ" | "Lễ tân" | "Quản trị viên" | "Nhân viên";
 
+/** Convert ISO datetime or date string to yyyy-MM-dd for <input type="date"> */
+const toDateInput = (v?: string | null): string => {
+    if (!v) return "";
+    // Already yyyy-MM-dd
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+    // ISO datetime — take first 10 chars
+    try { return new Date(v).toISOString().slice(0, 10); } catch { return ""; }
+};
+
 const ROLE_META: Record<string, { label: RoleLabel; icon: string; desc: string }> = {
     ADMIN: { label: "Quản trị viên", icon: "shield_person", desc: "Toàn quyền hệ thống" },
     DOCTOR: { label: "Bác sĩ", icon: "stethoscope", desc: "Quản lý khám bệnh" },
@@ -228,7 +237,7 @@ export function ProfileCard({ currentRole, showWorkAssignment = true }: ProfileC
                                 <label className="block text-xs font-semibold text-[#687582] dark:text-gray-400 mb-1">Ngày sinh</label>
                                 <input
                                     type="date"
-                                    value={(form as any).date_of_birth ?? (form as any).dob ?? ""}
+                                    value={toDateInput((form as any).date_of_birth ?? (form as any).dob)}
                                     onChange={e => setForm({ ...form, date_of_birth: e.target.value } as any)}
                                     className="w-full px-3 py-2.5 text-sm rounded-xl border border-[#dde0e4] dark:border-[#2d353e] bg-white dark:bg-[#121417] focus:border-[#3C81C6] focus:ring-2 focus:ring-[#3C81C6]/20 outline-none transition-colors"
                                 />

@@ -24,11 +24,11 @@ type TabKey = "today" | "need_confirm" | "upcoming" | "done" | "cancelled" | "al
 const STATUS_META: Record<string, { label: string; cls: string }> = {
     PENDING: { label: "Chờ xác nhận", cls: "bg-amber-100 text-amber-700" },
     CONFIRMED: { label: "Đã xác nhận", cls: "bg-blue-100 text-blue-700" },
-    CHECKED_IN: { label: "Đã check-in", cls: "bg-indigo-100 text-indigo-700" },
+    CHECKED_IN: { label: "Đã tiếp nhận", cls: "bg-indigo-100 text-indigo-700" },
     IN_PROGRESS: { label: "Đang khám", cls: "bg-violet-100 text-violet-700" },
     COMPLETED: { label: "Hoàn tất", cls: "bg-emerald-100 text-emerald-700" },
     CANCELLED: { label: "Đã huỷ", cls: "bg-rose-100 text-rose-700" },
-    NO_SHOW: { label: "Không đến", cls: "bg-slate-200 text-slate-700" },
+    NO_SHOW: { label: "Vắng mặt", cls: "bg-slate-200 text-slate-700" },
 };
 
 const fmt = (v?: string) => { if (!v) return "—"; try { return new Date(v).toLocaleDateString("vi-VN"); } catch { return v; } };
@@ -312,9 +312,9 @@ export default function ReceptionistAppointmentsPage() {
         try { 
             const res = await appointmentConfirmationService.checkIn(id); 
             await load(); 
-            toast.success(`Check-in thành công. Số thứ tự: ${res?.queueNumber ?? res?.queue_number ?? "Đã cấp"}`); 
+            toast.success(`Tiếp nhận thành công. Số thứ tự: ${res?.queueNumber ?? res?.queue_number ?? "Đã cấp"}`); 
         }
-        catch (e: any) { toast.error(e?.message ?? "Check-in thất bại"); }
+        catch (e: any) { toast.error(e?.message ?? "Tiếp nhận thất bại"); }
     };
 
     const onResend = async (id: string) => {
@@ -340,11 +340,11 @@ export default function ReceptionistAppointmentsPage() {
     };
 
     const onNoShow = async (id: string) => {
-        if (!confirm("Xác nhận bệnh nhân không đến (No-Show)?")) return;
+        if (!confirm("Xác nhận bệnh nhân không đến (Vắng mặt)?")) return;
         try {
             await markNoShow(id);
             await load();
-            toast.success("Đã cập nhật trạng thái Không đến");
+            toast.success("Đã cập nhật trạng thái Vắng mặt");
         } catch (e: any) {
             toast.error(e?.message ?? "Cập nhật thất bại");
         }
@@ -373,7 +373,7 @@ export default function ReceptionistAppointmentsPage() {
                 subtitle="Quản lý toàn bộ lịch khám: xác nhận, dời, nhắc, huỷ."
                 icon="calendar_month"
                 breadcrumbs={[
-                    { label: "Portal", href: "/portal/receptionist" },
+                    { label: "Trang chủ", href: "/portal/receptionist" },
                     { label: "Lịch khám" },
                 ]}
                 actions={
@@ -485,9 +485,9 @@ export default function ReceptionistAppointmentsPage() {
                                                         onClick: () => { setSelected(r); setRescheduleDate(r.date?.slice(0, 10) ?? ""); setShowRescheduleForm(false); } 
                                                     },
                                                     ...(r.status === "PENDING" ? [{ label: "Xác nhận", icon: "check_circle", onClick: () => onConfirm(r.id) }] : []),
-                                                    ...(r.status === "CONFIRMED" ? [{ label: "Check-in", icon: "how_to_reg", onClick: () => onCheckIn(r.id) }] : []),
+                                                    ...(r.status === "CONFIRMED" ? [{ label: "Tiếp nhận", icon: "how_to_reg", onClick: () => onCheckIn(r.id) }] : []),
                                                     ...(["PENDING", "CONFIRMED", "CHECKED_IN"].includes(r.status) ? [{ label: "Gửi nhắc nhở", icon: "notifications", onClick: () => onResend(r.id) }] : []),
-                                                    ...(["CHECKED_IN"].includes(r.status) ? [{ label: "Không đến (No-Show)", icon: "event_busy", variant: "danger" as const, onClick: () => onNoShow(r.id) }] : []),
+                                                    ...(["CHECKED_IN"].includes(r.status) ? [{ label: "Vắng mặt", icon: "event_busy", variant: "danger" as const, onClick: () => onNoShow(r.id) }] : []),
                                                     ...(["PENDING", "CONFIRMED"].includes(r.status) ? [{ label: "Huỷ lịch", icon: "cancel", variant: "danger" as const, onClick: () => onCancelClick(r) }] : []),
                                                 ]}
                                             />
@@ -578,7 +578,7 @@ export default function ReceptionistAppointmentsPage() {
                             <div className="grid grid-cols-2 gap-3 text-xs">
                                 <div><span className="text-gray-500">Kênh đặt:</span> <span className="font-medium">{channelMap[selected.bookingChannel ?? ""] ?? selected.bookingChannel ?? "—"}</span></div>
                                 {selected.reason && <div className="col-span-2"><span className="text-gray-500">Lý do khám:</span> <span className="font-medium">{selected.reason}</span></div>}
-                                {selected.checkedInAt && <div><span className="text-gray-500">Check-in:</span> <span className="font-medium">{new Date(selected.checkedInAt).toLocaleTimeString("vi-VN", {hour:"2-digit",minute:"2-digit"})}</span></div>}
+                                {selected.checkedInAt && <div><span className="text-gray-500">Tiếp nhận lúc:</span> <span className="font-medium">{new Date(selected.checkedInAt).toLocaleTimeString("vi-VN", {hour:"2-digit",minute:"2-digit"})}</span></div>}
                                 {selected.confirmedAt && <div><span className="text-gray-500">Xác nhận lúc:</span> <span className="font-medium">{new Date(selected.confirmedAt).toLocaleTimeString("vi-VN", {hour:"2-digit",minute:"2-digit"})}</span></div>}
                                 {selected.status === "CANCELLED" && selected.cancellationReason && (
                                     <div className="col-span-2 bg-rose-50 dark:bg-rose-900/20 p-2 rounded-lg border border-rose-200 dark:border-rose-800">
@@ -636,7 +636,7 @@ export default function ReceptionistAppointmentsPage() {
                             )}
                             {selected.status === "CONFIRMED" && (
                                 <button onClick={() => { onCheckIn(selected.id); setSelected(null); }} className="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-1.5 shadow-sm">
-                                    <span className="material-symbols-outlined text-[16px]">how_to_reg</span> Check-in
+                                    <span className="material-symbols-outlined text-[16px]">how_to_reg</span> Tiếp nhận
                                 </button>
                             )}
                             {["PENDING","CONFIRMED","CHECKED_IN"].includes(selected.status) && (

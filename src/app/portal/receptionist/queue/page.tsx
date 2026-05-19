@@ -13,12 +13,13 @@ import { appointmentStatusService } from "@/services/appointmentStatusService";
 import { toast } from "react-hot-toast";
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
-    waiting: { label: "Đang chờ", cls: "bg-amber-100 text-amber-700 border border-amber-200" },
-    checked_in: { label: "Đã check-in", cls: "bg-blue-100 text-blue-700 border border-blue-200" },
+    waiting: { label: "Chờ xác nhận", cls: "bg-amber-100 text-amber-700 border border-amber-200" },
+    confirmed: { label: "Đã xác nhận", cls: "bg-sky-100 text-sky-700 border border-sky-200" },
+    checked_in: { label: "Đã tiếp nhận", cls: "bg-blue-100 text-blue-700 border border-blue-200" },
     in_progress: { label: "Đang khám", cls: "bg-violet-100 text-violet-700 border border-violet-200" },
     completed: { label: "Hoàn tất", cls: "bg-emerald-100 text-emerald-700 border border-emerald-200" },
     skipped: { label: "Bỏ qua", cls: "bg-slate-100 text-slate-700 border border-slate-200" },
-    no_show: { label: "Không đến", cls: "bg-rose-100 text-rose-700 border border-rose-200" },
+    no_show: { label: "Vắng mặt", cls: "bg-rose-100 text-rose-700 border border-rose-200" },
 };
 
 const normalizeStatus = (raw: any): string => {
@@ -185,7 +186,7 @@ export default function ReceptionistQueuePage() {
             }
             if (action === "check_in") {
                 await appointmentStatusService.checkIn(id);
-                toast.success("Đã check-in thành công");
+                toast.success("Đã tiếp nhận thành công");
             }
             if (action === "skip") {
                 await appointmentStatusService.skip(id);
@@ -214,7 +215,7 @@ export default function ReceptionistQueuePage() {
                 subtitle={`Cập nhật lúc ${lastUpdate.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`}
                 icon="groups"
                 breadcrumbs={[
-                    { label: "Portal", href: "/portal/receptionist" },
+                    { label: "Trang chủ", href: "/portal/receptionist" },
                     { label: "Hàng đợi" },
                 ]}
                 actions={
@@ -227,7 +228,7 @@ export default function ReceptionistQueuePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <StatCard label="Tổng" value={stats.total} icon="list_alt" color="blue" loading={loading} />
                 <StatCard label="Đang chờ" value={stats.waiting} icon="hourglass_empty" color="amber" loading={loading} />
-                <StatCard label="Đã check-in" value={stats.checkedIn} icon="how_to_reg" color="violet" loading={loading} />
+                <StatCard label="Đã tiếp nhận" value={stats.checkedIn} icon="how_to_reg" color="violet" loading={loading} />
                 <StatCard label="Đang khám" value={stats.inProgress} icon="stethoscope" color="emerald" loading={loading} />
             </div>
 
@@ -329,11 +330,18 @@ export default function ReceptionistQueuePage() {
                                                             style={{ top: menuPos.top, left: menuPos.left }}
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
-                                                            {q.status === "waiting" && (
+                                                            {["waiting", "confirmed"].includes(q.status) && (
                                                                 <>
-                                                                    <button onClick={() => doAction(q.id, "confirm")} disabled={disabled} className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 disabled:opacity-50 flex items-center gap-2 font-medium transition-colors">
-                                                                        <span className="material-symbols-outlined text-[18px]">check_circle</span> Xác nhận
-                                                                    </button>
+                                                                    {q.status === "waiting" && (
+                                                                        <button onClick={() => doAction(q.id, "confirm")} disabled={disabled} className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 disabled:opacity-50 flex items-center gap-2 font-medium transition-colors">
+                                                                            <span className="material-symbols-outlined text-[18px]">check_circle</span> Xác nhận
+                                                                        </button>
+                                                                    )}
+                                                                    {q.status === "confirmed" && (
+                                                                        <button onClick={() => doAction(q.id, "check_in")} disabled={disabled} className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-700 dark:text-blue-400 disabled:opacity-50 flex items-center gap-2 font-medium transition-colors">
+                                                                            <span className="material-symbols-outlined text-[18px]">how_to_reg</span> Tiếp nhận
+                                                                        </button>
+                                                                    )}
                                                                     <button onClick={() => { setOpenMenuId(null); setCancelTarget(q); setCancelReason(""); }} disabled={disabled} className="w-full text-left px-4 py-2.5 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20 text-rose-700 dark:text-rose-400 disabled:opacity-50 flex items-center gap-2 font-medium transition-colors">
                                                                         <span className="material-symbols-outlined text-[18px]">cancel</span> Hủy lịch
                                                                     </button>
@@ -408,7 +416,7 @@ export default function ReceptionistQueuePage() {
                                     <div className="font-semibold text-gray-900 dark:text-white">{selectedItem.appointmentDate} • {formatTime(selectedItem.appointmentTime)}</div>
                                 </div>
                                 <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">how_to_reg</span>Check-in lúc</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">how_to_reg</span>Tiếp nhận lúc</div>
                                     <div className="font-semibold text-gray-900 dark:text-white flex items-center gap-1 flex-wrap">
                                         {formatTime(selectedItem.checkedInAt)}
                                         {selectedItem.isLate && <span className="text-[10px] font-bold text-rose-600 bg-rose-100 dark:bg-rose-900/40 border border-rose-200 dark:border-rose-800 px-1.5 py-0.5 rounded ml-1">TRỄ {selectedItem.lateMinutes} PHÚT</span>}

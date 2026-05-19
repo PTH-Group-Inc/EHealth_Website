@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export type ShiftCode = "MORNING" | "AFTERNOON" | "NIGHT" | string;
 
@@ -34,29 +34,30 @@ const SHIFT_LABEL: Record<string, string> = {
 };
 
 const COLOR_MAP: Record<NonNullable<ScheduleEvent["color"]>, string> = {
-    blue: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800",
-    emerald: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800",
-    amber: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800",
-    red: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
-    violet: "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/30 dark:text-violet-300 dark:border-violet-800",
-    gray: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
+    blue: "bg-[#e8f0fe] text-[#1967d2] border-[#d2e3fc] dark:bg-[#1967d2]/20 dark:text-[#8ab4f8] dark:border-[#1967d2]/30",
+    violet: "bg-[#f3e8fd] text-[#681da8] border-[#e8d2fa] dark:bg-[#681da8]/20 dark:text-[#c58af9] dark:border-[#681da8]/30",
+    amber: "bg-[#fef7e0] text-[#b06000] border-[#fce8b2] dark:bg-[#b06000]/20 dark:text-[#fcd284] dark:border-[#b06000]/30",
+    emerald: "bg-[#e6f4ea] text-[#137333] border-[#ceead6] dark:bg-[#137333]/20 dark:text-[#81c995] dark:border-[#137333]/30",
+    red: "bg-[#fce8e6] text-[#c5221f] border-[#fad2cf] dark:bg-[#c5221f]/20 dark:text-[#f28b82] dark:border-[#c5221f]/30",
+    gray: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700",
 };
 
 function shiftToColor(shift?: ShiftCode): NonNullable<ScheduleEvent["color"]> {
-    switch (shift) {
-        case "MORNING": return "amber";
-        case "AFTERNOON": return "blue";
-        case "NIGHT": return "violet";
-        default: return "gray";
-    }
+    if (!shift) return "gray";
+    const s = shift.toUpperCase();
+    if (s.includes("SÁNG") || s.includes("MORNING") || s.includes("SHIFT_1") || s.includes("CA_1") || s.includes("CA1") || s.includes("CA 1") || s === "M" || s === "S") return "blue";
+    if (s.includes("CHIỀU") || s.includes("AFTERNOON") || s.includes("SHIFT_2") || s.includes("CA_2") || s.includes("CA2") || s.includes("CA 2") || s === "A" || s === "C") return "violet";
+    if (s.includes("TỐI") || s.includes("NIGHT") || s.includes("SHIFT_3") || s.includes("CA_3") || s.includes("CA3") || s.includes("CA 3") || s === "E" || s === "T") return "amber";
+    return "gray";
 }
 
 function statusToColor(status?: string): NonNullable<ScheduleEvent["color"]> | undefined {
-    switch (status) {
+    // Only apply status colors for exceptions. For normal schedules, we want to see the shift color.
+    switch (status?.toUpperCase()) {
         case "ABSENT": return "red";
         case "LEAVE": return "gray";
-        case "COMPLETED": return "emerald";
-        case "ON_DUTY": return "blue";
+        // case "COMPLETED": return "emerald"; // We still want to see the shift color even if completed
+        // case "ON_DUTY": return "blue";
         default: return undefined;
     }
 }
@@ -100,6 +101,7 @@ export function ScheduleCalendar({
     maxEventsPerDay = 3,
     weekStartsOn = 1,
 }: ScheduleCalendarProps) {
+    const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
     const grid = useMemo(() => buildGrid(month, weekStartsOn), [month, weekStartsOn]);
     const eventsByDate = useMemo(() => {
         const map = new Map<string, ScheduleEvent[]>();
@@ -116,35 +118,44 @@ export function ScheduleCalendar({
     const headerDow = weekStartsOn === 1 ? VN_DOW_MON_FIRST : VN_DOW_SUN_FIRST;
 
     return (
-        <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#dde0e4] dark:border-[#2d353e] bg-gradient-to-r from-[#3C81C6]/5 to-[#1d4ed8]/5">
-                <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#3C81C6]">calendar_month</span>
-                    <h3 className="text-base font-semibold text-[#121417] dark:text-white">
-                        {VN_MONTHS[month.getMonth()]} {month.getFullYear()}
-                    </h3>
+        <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1e242b] gap-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <span className="material-symbols-outlined">calendar_month</span>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white capitalize">
+                            {VN_MONTHS[month.getMonth()]} {month.getFullYear()}
+                        </h3>
+                        <div className="flex items-center gap-3 mt-1 text-[11px] font-medium text-gray-500 dark:text-gray-400">
+                            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></span>Sáng</span>
+                            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-violet-500 shadow-sm"></span>Chiều</span>
+                            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500 shadow-sm"></span>Tối</span>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#13191f] p-1 rounded-xl border border-gray-100 dark:border-gray-800">
                     <button type="button" onClick={onPrevMonth}
-                        className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-[#13191f] flex items-center justify-center text-[#687582] dark:text-gray-400 transition-colors"
+                        className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-all shadow-sm hover:shadow"
                         aria-label="Tháng trước">
-                        <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>chevron_left</span>
+                        <span className="material-symbols-outlined text-[20px]">chevron_left</span>
                     </button>
                     <button type="button" onClick={onToday}
-                        className="px-3 h-8 rounded-lg text-xs font-medium text-[#3C81C6] hover:bg-white dark:hover:bg-[#13191f] transition-colors">
+                        className="px-4 h-8 rounded-lg text-sm font-semibold text-blue-600 hover:bg-white dark:hover:bg-gray-800 transition-all shadow-sm hover:shadow">
                         Hôm nay
                     </button>
                     <button type="button" onClick={onNextMonth}
-                        className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-[#13191f] flex items-center justify-center text-[#687582] dark:text-gray-400 transition-colors"
+                        className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-all shadow-sm hover:shadow"
                         aria-label="Tháng sau">
-                        <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>chevron_right</span>
+                        <span className="material-symbols-outlined text-[20px]">chevron_right</span>
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-7 bg-[#f8f9fa] dark:bg-[#13191f] border-b border-[#dde0e4] dark:border-[#2d353e]">
+            <div className="grid grid-cols-7 bg-gray-50/50 dark:bg-[#161c22]/50 border-b border-gray-100 dark:border-gray-800">
                 {headerDow.map((dow) => (
-                    <div key={dow} className="px-2 py-2 text-center text-xs font-semibold text-[#687582] dark:text-gray-400 uppercase tracking-wider">
+                    <div key={dow} className="px-3 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         {dow}
                     </div>
                 ))}
@@ -156,62 +167,83 @@ export function ScheduleCalendar({
                     const inMonth = d.getMonth() === month.getMonth();
                     const isToday = iso === todayIso;
                     const dayEvents = eventsByDate.get(iso) ?? [];
-                    const visible = dayEvents.slice(0, maxEventsPerDay);
-                    const overflow = dayEvents.length - visible.length;
+                    const isExpanded = expandedDates[iso];
+                    const visible = isExpanded ? dayEvents : dayEvents.slice(0, maxEventsPerDay);
+                    const overflow = dayEvents.length - maxEventsPerDay;
 
                     return (
-                        <button
+                        <div
                             key={`${iso}-${idx}`}
-                            type="button"
                             onClick={() => onDayClick?.(iso)}
-                            className={`min-h-[96px] text-left px-1.5 py-1.5 border-b border-r border-[#dde0e4] dark:border-[#2d353e] transition-colors relative ${
-                                inMonth ? "bg-white dark:bg-[#1e242b]" : "bg-[#f8f9fa] dark:bg-[#161c22]"
-                            } ${onDayClick ? "hover:bg-[#3C81C6]/5 dark:hover:bg-[#3C81C6]/10 cursor-pointer" : "cursor-default"}`}
+                            role={onDayClick ? "button" : undefined}
+                            tabIndex={onDayClick ? 0 : undefined}
+                            onKeyDown={(e) => { if (e.key === "Enter" && onDayClick) onDayClick(iso); }}
+                            className={`min-h-[120px] text-left p-2 border-b border-r border-gray-100 dark:border-gray-800/60 transition-all relative flex flex-col gap-1 ${
+                                inMonth ? "bg-white dark:bg-[#1e242b]" : "bg-gray-50/50 dark:bg-[#161c22]"
+                            } ${onDayClick ? "hover:bg-blue-50/30 dark:hover:bg-blue-900/10 cursor-pointer" : "cursor-default"}
+                            ${idx % 7 === 6 ? "border-r-0" : ""}
+                            `}
                         >
-                            <div className={`text-[11px] font-semibold mb-1 inline-flex items-center justify-center ${
+                            <div className={`text-xs font-bold mb-1 w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
                                 isToday
-                                    ? "w-6 h-6 rounded-full bg-gradient-to-r from-[#3C81C6] to-[#1d4ed8] text-white shadow-sm"
-                                    : inMonth ? "text-[#121417] dark:text-white" : "text-gray-400 dark:text-gray-600"
+                                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/30"
+                                    : inMonth ? "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800" : "text-gray-400 dark:text-gray-600"
                             }`}>
                                 {d.getDate()}
                             </div>
 
                             {loading && inMonth && (
-                                <div className="space-y-1">
-                                    <div className="h-3 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
-                                    <div className="h-3 rounded bg-gray-200 dark:bg-gray-700 animate-pulse w-2/3" />
+                                <div className="space-y-1.5 flex-1">
+                                    <div className="h-6 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                                    <div className="h-6 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse w-2/3" />
                                 </div>
                             )}
 
                             {!loading && (
-                                <div className="space-y-1">
+                                <div className="space-y-1.5 flex-1">
                                     {visible.map((ev) => {
                                         const colorKey = ev.color ?? statusToColor(ev.status) ?? shiftToColor(ev.shift);
                                         const cls = COLOR_MAP[colorKey];
-                                        const shiftLabel = ev.shift ? SHIFT_LABEL[ev.shift] ?? ev.shift : null;
                                         return (
-                                            <span
+                                            <div
                                                 key={ev.id}
                                                 role="button"
                                                 tabIndex={0}
                                                 onClick={(e) => { e.stopPropagation(); onEventClick?.(ev); }}
                                                 onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onEventClick?.(ev); } }}
-                                                className={`block w-full text-[10px] leading-tight px-1.5 py-1 rounded border truncate ${cls} ${onEventClick ? "cursor-pointer hover:opacity-80" : ""}`}
-                                                title={`${shiftLabel ? shiftLabel + " — " : ""}${ev.title}${ev.subtitle ? " · " + ev.subtitle : ""}`}
+                                                className={`group flex flex-col w-full px-2 py-1.5 rounded-lg border transition-all ${cls} ${onEventClick ? "cursor-pointer hover:scale-[1.02] hover:shadow-sm" : ""}`}
+                                                title={`${ev.title}${ev.subtitle ? " · " + ev.subtitle : ""}`}
                                             >
-                                                {shiftLabel && <span className="font-bold mr-1">{shiftLabel}</span>}
-                                                {ev.title}
-                                            </span>
+                                                <div className="flex items-center gap-1.5 overflow-hidden">
+                                                    <span className="text-[11px] font-medium leading-tight truncate">
+                                                        {ev.title}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         );
                                     })}
-                                    {overflow > 0 && (
-                                        <span className="block text-[10px] text-[#687582] dark:text-gray-500 px-1">
-                                            +{overflow} khác
-                                        </span>
+                                    {!isExpanded && overflow > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); setExpandedDates(prev => ({ ...prev, [iso]: true })); }}
+                                            className="w-full mt-1 text-center text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border border-transparent hover:border-blue-100 dark:hover:border-blue-800"
+                                        >
+                                            + {overflow} lịch khác
+                                        </button>
+                                    )}
+                                    {isExpanded && overflow > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); setExpandedDates(prev => ({ ...prev, [iso]: false })); }}
+                                            className="w-full mt-1 text-center text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center gap-1 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                                        >
+                                            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>expand_less</span>
+                                            Thu gọn
+                                        </button>
                                     )}
                                 </div>
                             )}
-                        </button>
+                        </div>
                     );
                 })}
             </div>

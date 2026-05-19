@@ -21,7 +21,7 @@ export const billingService = {
 
     /** Cancel an invoice */
     cancelInvoice: (id: string, reason?: string) =>
-        axiosClient.post(BILLING_ENDPOINTS.CANCEL(id), { reason }),
+        axiosClient.patch(BILLING_ENDPOINTS.CANCEL(id), { reason }),
 
     /** Auto-generate invoice from encounter */
     generateInvoice: (encounterId: string) =>
@@ -53,8 +53,12 @@ export const billingService = {
 
     // ─── Payments ───────────────────────────────────────────────────────────
     /** Pay offline (cash / bank transfer) */
-    pay: (id: string, data: Record<string, any>) =>
-        axiosClient.post(BILLING_ENDPOINTS.PAY, { invoiceId: id, ...data }),
+    pay: (invoiceId: string, data: { payment_method: string; amount: number; notes?: string }) =>
+        axiosClient.post(BILLING_ENDPOINTS.PAY, { invoice_id: invoiceId, ...data }),
+
+    /** Get payments by invoice */
+    getPaymentsByInvoice: (invoiceId: string) =>
+        axiosClient.get(`/api/billing/payments/by-invoice/${invoiceId}`),
 
     /** Pay online via payment gateway */
     payOnline: (data: Record<string, any>) =>
