@@ -2,7 +2,7 @@
 
 /**
  * DoctorCard — card bác sĩ cho admin doctors list + public doctor listing.
- * Hiển thị avatar, tên, chuyên khoa, rating, status.
+ * Hiển thị avatar, tên, chuyên khoa, contact, status.
  */
 
 import Image from "next/image";
@@ -18,8 +18,8 @@ export interface DoctorCardProps {
     departmentName?: string;
     phone?: string;
     email?: string;
-    rating?: number;
-    reviewCount?: number;
+    rating?: number;            // giữ prop để tương thích nhưng KHÔNG render
+    reviewCount?: number;       // giữ prop để tương thích nhưng KHÔNG render
     experience?: number;
     status?: "ACTIVE" | "OFFLINE" | "BUSY" | "ON_LEAVE" | "INACTIVE" | string;
     onView?: () => void;
@@ -35,24 +35,6 @@ const STATUS_STYLE: Record<string, { dot: string; label: string; badge: string }
     INACTIVE: { dot: "bg-gray-400", label: "Ngừng", badge: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" },
 };
 
-function RatingStars({ rating = 0 }: { rating?: number }) {
-    const full = Math.floor(rating);
-    const half = rating - full >= 0.5;
-    return (
-        <div className="inline-flex items-center gap-0.5">
-            {[0, 1, 2, 3, 4].map((i) => {
-                const isFull = i < full;
-                const isHalf = !isFull && i === full && half;
-                return (
-                    <span key={i} className="material-symbols-outlined" style={{ fontSize: "14px", color: isFull || isHalf ? "#f59e0b" : "#d1d5db" }}>
-                        {isFull ? "star" : isHalf ? "star_half" : "star"}
-                    </span>
-                );
-            })}
-        </div>
-    );
-}
-
 export function DoctorCard({
     fullName,
     avatarUrl,
@@ -62,8 +44,6 @@ export function DoctorCard({
     departmentName,
     phone,
     email,
-    rating = 0,
-    reviewCount,
     experience,
     status = "ACTIVE",
     onView,
@@ -76,61 +56,65 @@ export function DoctorCard({
     return (
         <div className="bg-white dark:bg-[#1e242b] rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm hover:shadow-md hover:border-[#3C81C6]/40 transition-all group overflow-hidden">
             <div className="p-4">
+                {/* Header: avatar + name + status */}
                 <div className="flex items-start gap-3">
                     <div className="relative flex-shrink-0">
                         {avatarUrl ? (
                             <Image src={getImageUrl(avatarUrl)} alt={fullName}
-                                width={64} height={64}
-                                className="w-16 h-16 rounded-2xl object-cover border border-gray-100 dark:border-gray-800" />
+                                width={56} height={56}
+                                className="w-14 h-14 rounded-2xl object-cover border border-gray-100 dark:border-gray-800" />
                         ) : (
-                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3C81C6] to-[#1d4ed8] flex items-center justify-center text-white font-bold text-lg">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#3C81C6] to-[#1d4ed8] flex items-center justify-center text-white font-bold text-base">
                                 {getInitials(fullName)}
                             </div>
                         )}
-                        <span className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ${s.dot} border-2 border-white dark:border-[#1e242b]`} />
+                        <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${s.dot} border-2 border-white dark:border-[#1e242b]`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                        {code && <p className="text-[10px] font-mono text-[#687582] dark:text-gray-500 uppercase">#{code}</p>}
-                        <h3 className="font-bold text-sm text-[#121417] dark:text-white truncate">{displayName}</h3>
+                        <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-bold text-base text-[#121417] dark:text-white leading-tight" title={displayName}>
+                                {displayName}
+                            </h3>
+                            <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${s.badge}`}>{s.label}</span>
+                        </div>
                         {(specialization || departmentName) && (
-                            <p className="text-xs text-[#3C81C6] font-medium truncate">
+                            <p className="text-xs text-[#3C81C6] font-medium mt-0.5" title={specialization || departmentName}>
                                 {specialization || departmentName}
                             </p>
                         )}
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            <RatingStars rating={rating} />
-                            <span className="text-[10px] text-[#687582] dark:text-gray-500">
-                                {rating.toFixed(1)}
-                                {reviewCount !== undefined && ` (${reviewCount})`}
-                            </span>
-                        </div>
+                        {code && (
+                            <p className="text-[10px] font-mono text-[#687582] dark:text-gray-500 mt-0.5 truncate">
+                                {code}
+                            </p>
+                        )}
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${s.badge} flex-shrink-0`}>{s.label}</span>
                 </div>
 
-                {(experience !== undefined || phone || email) && (
-                    <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-800 space-y-1">
+                {/* Contact info */}
+                {(experience !== undefined && experience > 0) || phone || email ? (
+                    <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-800 space-y-1.5">
                         {experience !== undefined && experience > 0 && (
                             <div className="flex items-center gap-2 text-xs text-[#687582] dark:text-gray-400">
-                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>work_history</span>
+                                <span className="material-symbols-outlined text-[#3C81C6]/70" style={{ fontSize: "16px" }}>work_history</span>
                                 <span>{experience} năm kinh nghiệm</span>
                             </div>
                         )}
                         {phone && (
                             <div className="flex items-center gap-2 text-xs text-[#687582] dark:text-gray-400">
-                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>phone</span>
-                                <span className="truncate">{phone}</span>
+                                <span className="material-symbols-outlined text-[#3C81C6]/70" style={{ fontSize: "16px" }}>phone</span>
+                                <span className="truncate" title={phone}>{phone}</span>
                             </div>
                         )}
                         {email && (
                             <div className="flex items-center gap-2 text-xs text-[#687582] dark:text-gray-400">
-                                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>mail</span>
-                                <span className="truncate">{email}</span>
+                                <span className="material-symbols-outlined text-[#3C81C6]/70" style={{ fontSize: "16px" }}>mail</span>
+                                <span className="truncate" title={email}>{email}</span>
                             </div>
                         )}
                     </div>
-                )}
+                ) : null}
 
+                {/* Actions */}
                 {(onView || onEdit || onSchedule) && (
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50 dark:border-gray-800">
                         {onView && (
