@@ -188,6 +188,7 @@
                 "alerts": "Alerts",
                 "appointments": "Appointments",
                 "queue": "Queue",
+                "encounters": "Encounters",
                 "schedule": "Work schedule",
                 "leaves": "Leaves",
                 "shiftSwaps": "Shift swaps",

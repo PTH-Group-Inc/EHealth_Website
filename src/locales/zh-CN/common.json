@@ -188,6 +188,7 @@
                 "alerts": "警报",
                 "appointments": "预约",
                 "queue": "队列",
+                "encounters": "就诊",
                 "schedule": "工作排班",
                 "leaves": "请假",
                 "shiftSwaps": "换班",
