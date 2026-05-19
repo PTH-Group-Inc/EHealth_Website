@@ -51,13 +51,13 @@ function mapDiscount(r: any): Discount {
     return {
         id: String(r.discount_id ?? r.id ?? ""),
         name: r.name ?? "",
-        code: r.code ?? "",
+        code: r.discount_code ?? r.code ?? "",
         discountType: (r.discount_type ?? "PERCENT") === "AMOUNT" ? "AMOUNT" : "PERCENT",
         discountValue: dv,
-        validFrom: r.valid_from ?? "",
-        validTo: r.valid_to ?? "",
+        validFrom: r.effective_from ?? r.valid_from ?? "",
+        validTo: r.effective_to ?? r.valid_to ?? "",
         isActive: Boolean(r.is_active ?? true),
-        usedCount: Number(r.used_count ?? 0),
+        usedCount: Number(r.used_count ?? r.usage_count ?? 0),
     };
 }
 
@@ -65,28 +65,29 @@ function mapVoucher(r: any): Voucher {
     return {
         id: String(r.voucher_id ?? r.id ?? ""),
         name: r.name ?? "",
-        code: r.code ?? "",
+        code: r.voucher_code ?? r.code ?? "",
         discountType: (r.discount_type ?? "PERCENT") === "AMOUNT" ? "AMOUNT" : "PERCENT",
         discountValue: Number(r.discount_value ?? 0),
         validFrom: r.valid_from ?? "",
         validTo: r.valid_to ?? "",
-        maxUse: Number(r.max_use ?? 0),
-        usedCount: Number(r.used_count ?? 0),
+        maxUse: Number(r.max_usage ?? r.max_use ?? 0),
+        usedCount: Number(r.current_usage ?? r.used_count ?? 0),
         isActive: Boolean(r.is_active ?? true),
     };
 }
 
 function mapBundle(r: any): Bundle {
-    const total = Number(r.total_price ?? 0);
+    const total = Number(r.original_total_price ?? r.total_price ?? 0);
     const bp = Number(r.bundle_price ?? 0);
+    const itemsArr = Array.isArray(r.items) ? r.items : Array.isArray(r.bundle_items) ? r.bundle_items : [];
     return {
         id: String(r.bundle_id ?? r.id ?? ""),
         name: r.name ?? "",
-        code: r.code ?? "",
-        serviceCount: Number(r.service_count ?? 0),
+        code: r.bundle_code ?? r.code ?? "",
+        serviceCount: Number(r.service_count ?? itemsArr.length ?? 0),
         totalPrice: total,
         bundlePrice: bp,
-        savings: total - bp,
+        savings: Math.max(0, total - bp),
         isActive: Boolean(r.is_active ?? true),
     };
 }
@@ -177,11 +178,11 @@ function DiscountsTab() {
         try {
             await axiosClient.post(BILLING_PRICING_POLICY_ENDPOINTS.CREATE_DISCOUNT, {
                 name: form.name.trim(),
-                code: form.code.trim() || undefined,
+                discount_code: form.code.trim() || `DSC_${Date.now()}`,
                 discount_type: form.discountType,
                 discount_value: value,
-                valid_from: form.validFrom || undefined,
-                valid_to: form.validTo || undefined,
+                effective_from: form.validFrom || new Date().toISOString().slice(0, 10),
+                effective_to: form.validTo || undefined,
                 is_active: true,
             });
             toast.success(t("toast.created"));
