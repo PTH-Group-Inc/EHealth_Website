@@ -64,10 +64,12 @@ const STATUS_META: Record<string, { label: string; gradient: string; text: strin
 };
 
 const NAV_TILES = [
-    { key: "exam", icon: "monitor_heart", label: "Khám lâm sàng", desc: "Vitals + ghi nhận lâm sàng + finalize", color: "from-pink-500 to-rose-500", path: (id: string) => `/portal/doctor/clinical-exam/${id}` },
+    { key: "exam", icon: "stethoscope", label: "Mở phiên khám", desc: "Wizard 6 bước: vitals → triệu chứng → lab → chẩn đoán → đơn → ký", color: "from-pink-500 to-rose-500", path: (id: string) => `/portal/doctor/examination?encounter=${id}` },
+    { key: "orders", icon: "experiment", label: "Chỉ định", desc: "Lab order + cận lâm sàng + chờ kết quả", color: "from-amber-500 to-orange-500", path: (id: string) => `/portal/doctor/medical-orders?encounter=${id}` },
     { key: "dx", icon: "diagnosis", label: "Chẩn đoán", desc: "Tra cứu ICD + danh sách diagnosis + kết luận", color: "from-violet-500 to-purple-600", path: (id: string) => `/portal/doctor/diagnosis/${id}` },
     { key: "rx", icon: "pill", label: "Đơn thuốc", desc: "Kê toa + cấp phát + lịch sử kê", color: "from-emerald-500 to-teal-600", path: (id: string) => `/portal/doctor/prescriptions?encounterId=${id}` },
-    { key: "mr", icon: "medical_information", label: "Hồ sơ bệnh án", desc: "Tổng hợp + ký + xuất bản", color: "from-blue-500 to-indigo-600", path: (id: string) => `/portal/doctor/medical-records/${id}` },
+    { key: "mr", icon: "folder_shared", label: "Hồ sơ bệnh án", desc: "Tổng hợp + xuất bản", color: "from-blue-500 to-indigo-600", path: (id: string) => `/portal/doctor/medical-records/${id}` },
+    { key: "sign", icon: "draw", label: "Ký hồ sơ", desc: "Xác thực + chữ ký số + chốt hồ sơ", color: "from-red-500 to-rose-600", path: (id: string) => `/portal/doctor/sign-off?encounterId=${id}` },
 ];
 
 export default function EncounterDetailPage() {
@@ -289,7 +291,7 @@ export default function EncounterDetailPage() {
                     <span className="material-symbols-outlined text-[#3C81C6]" style={{ fontSize: "18px" }}>hub</span>
                     Hub điều hướng EMR
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {NAV_TILES.map((tile) => (
                         <button
                             key={tile.key}
