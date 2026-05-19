@@ -7,6 +7,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageHeader, EmptyState, StatCard } from "@/components/shared/layout";
 import { appointmentStatusService } from "@/services/appointmentStatusService";
@@ -60,6 +61,7 @@ function normalizeItem(a: any): QueueItem {
 
 export default function DoctorQueuePage() {
     const { user } = useAuth();
+    const router = useRouter();
     const [queue, setQueue] = useState<QueueItem[]>([]);
     const [rooms, setRooms] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -117,11 +119,20 @@ export default function DoctorQueuePage() {
         completed: queue.filter(q => q.status === "completed").length,
     }), [queue]);
 
-    const doAction = async (id: string, action: "start" | "complete" | "skip" | "recall") => {
+    const doAction = async (id: string, action: "enter" | "continue" | "skip" | "recall") => {
         setBusyId(id);
         try {
-            if (action === "start") await appointmentStatusService.startExam(id);
-            if (action === "complete") await appointmentStatusService.completeExam(id);
+            if (action === "enter") {
+                // Gộp 2 thao tác: chuyển status WAITING→IN_PROGRESS + navigate vào wizard
+                await appointmentStatusService.startExam(id);
+                router.push(`/portal/doctor/examination?appointment=${id}`);
+                return; // không cần reload queue — sẽ thấy khi quay về
+            }
+            if (action === "continue") {
+                // BN đã IN_PROGRESS → chỉ navigate, không gọi startExam lần 2
+                router.push(`/portal/doctor/examination?appointment=${id}`);
+                return;
+            }
             if (action === "skip") await appointmentStatusService.skip(id);
             if (action === "recall") await appointmentStatusService.recall(id);
             await load();
@@ -227,47 +238,51 @@ export default function DoctorQueuePage() {
                                         <td className="px-4 py-3 text-right">
                                             <div className="inline-flex items-center gap-1">
                                                 {q.status === "waiting" && (
-                                                    <button
-                                                        onClick={() => doAction(q.id, "start")}
-                                                        disabled={disabled}
-                                                        className="px-2 py-1 text-xs rounded-md bg-[#3C81C6] text-white hover:bg-[#2a6da8] disabled:opacity-50"
-                                                    >
-                                                        Bắt đầu
-                                                    </button>
+                                                    <>
+                                                        <button
+                                                            onClick={() => doAction(q.id, "enter")}
+                                                            disabled={disabled}
+                                                            className="px-3 py-1.5 text-xs font-semibold rounded-md bg-[#3C81C6] text-white hover:bg-[#2a6da8] disabled:opacity-50"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[14px] align-middle mr-1">stethoscope</span>
+                                                            Vào khám
+                                                        </button>
+                                                        <button
+                                                            onClick={() => doAction(q.id, "skip")}
+                                                            disabled={disabled}
+                                                            className="px-2 py-1.5 text-xs rounded-md bg-gray-100 dark:bg-gray-800 text-[#121417] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
+                                                        >
+                                                            Bỏ qua
+                                                        </button>
+                                                    </>
                                                 )}
                                                 {q.status === "in_progress" && (
                                                     <button
-                                                        onClick={() => doAction(q.id, "complete")}
+                                                        onClick={() => doAction(q.id, "continue")}
                                                         disabled={disabled}
-                                                        className="px-2 py-1 text-xs rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                                                        className="px-3 py-1.5 text-xs font-semibold rounded-md bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50"
                                                     >
-                                                        Hoàn tất
-                                                    </button>
-                                                )}
-                                                {q.status === "waiting" && (
-                                                    <button
-                                                        onClick={() => doAction(q.id, "skip")}
-                                                        disabled={disabled}
-                                                        className="px-2 py-1 text-xs rounded-md bg-gray-100 dark:bg-gray-800 text-[#121417] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50"
-                                                    >
-                                                        Bỏ qua
+                                                        <span className="material-symbols-outlined text-[14px] align-middle mr-1">play_arrow</span>
+                                                        Tiếp tục khám
                                                     </button>
                                                 )}
                                                 {q.status === "skipped" && (
                                                     <button
                                                         onClick={() => doAction(q.id, "recall")}
                                                         disabled={disabled}
-                                                        className="px-2 py-1 text-xs rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                                                        className="px-2 py-1.5 text-xs rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50"
                                                     >
                                                         Gọi lại
                                                     </button>
                                                 )}
-                                                <Link
-                                                    href={`/portal/doctor/examination?appointmentId=${q.id}`}
-                                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-                                                >
-                                                    Chi tiết
-                                                </Link>
+                                                {q.status === "completed" && (
+                                                    <Link
+                                                        href={`/portal/doctor/encounters?appointmentId=${q.id}`}
+                                                        className="px-2 py-1.5 text-xs rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                                    >
+                                                        Xem hồ sơ
+                                                    </Link>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
