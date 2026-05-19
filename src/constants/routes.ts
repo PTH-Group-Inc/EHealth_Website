@@ -168,7 +168,6 @@ export const ROUTES = {
     },
     STAFF: {
       DASHBOARD: "/portal/receptionist",
-      RECEPTION: "/portal/receptionist/reception",
       APPOINTMENTS: "/portal/receptionist/appointments",
       QUEUE: "/portal/receptionist/queue",
       ROOM_STATUS: "/portal/receptionist/room-status",
