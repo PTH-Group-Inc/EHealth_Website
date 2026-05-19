@@ -65,7 +65,7 @@ export default function RolesPage() {
             if (rolesRaw.status === "fulfilled" && Array.isArray(rolesRaw.value)) {
                 setRoles(
                     rolesRaw.value.map((r: any) => ({
-                        id: String(r.id ?? r.name ?? ""),
+                        id: String(r.roles_id ?? r.role_id ?? r.id ?? ""),
                         name: r.displayName ?? r.name ?? "",
                         code: r.code ?? r.name ?? "",
                         description: r.description ?? "",
