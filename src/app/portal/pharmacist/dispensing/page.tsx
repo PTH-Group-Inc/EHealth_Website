@@ -40,6 +40,14 @@ export default function DispensingPage() {
             .finally(() => setLoading(false));
     }, [prescriptionId]);
 
+    useEffect(() => {
+        if (!prescriptionId) {
+            router.replace("/portal/pharmacist/prescriptions?status=PENDING");
+        }
+    }, [prescriptionId, router]);
+
+    if (!prescriptionId) return null;
+
     const allChecked = (rx?.medicines ?? []).every((_, i) => checkedMeds[i]);
 
     const toggleMed = (idx: number) => {
