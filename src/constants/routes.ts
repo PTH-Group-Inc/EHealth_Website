@@ -267,6 +267,61 @@ export function getDoctorMenuItemByHref(href: string): { key: string; href: stri
   return undefined;
 }
 
+// Pharmacist sidebar menu — nhóm theo luồng nghiệp vụ PMIS (4 nhóm / 6 mục)
+export interface PharmacistMenuGroup {
+  key: string;
+  href?: string;
+  icon: string;
+  label: string;
+  children?: { key: string; href: string; icon?: string; label: string }[];
+}
+
+export const PHARMACIST_MENU_GROUPS: PharmacistMenuGroup[] = [
+  {
+    key: "operations",
+    icon: "medication",
+    label: "Nghiệp vụ",
+    children: [
+      { key: "prescriptions", href: ROUTES.PORTAL.PHARMACIST.PRESCRIPTIONS, icon: "list_alt", label: "Hàng đợi đơn" },
+      { key: "my-history", href: ROUTES.PORTAL.PHARMACIST.MY_HISTORY, icon: "history", label: "Lịch sử của tôi" },
+    ],
+  },
+  {
+    key: "warehouse",
+    icon: "inventory_2",
+    label: "Quản lý kho",
+    children: [
+      { key: "inventory", href: ROUTES.PORTAL.PHARMACIST.INVENTORY, icon: "warehouse", label: "Tồn kho & Nhập/Xuất" },
+    ],
+  },
+  {
+    key: "data",
+    icon: "folder_shared",
+    label: "Dữ liệu",
+    children: [
+      { key: "patients", href: ROUTES.PORTAL.PHARMACIST.PATIENTS, icon: "people", label: "Bệnh nhân" },
+      { key: "master-data", href: ROUTES.PORTAL.PHARMACIST.MASTER_DATA, icon: "category", label: "Danh mục thuốc" },
+    ],
+  },
+  {
+    key: "account",
+    icon: "settings",
+    label: "Tài khoản",
+    children: [
+      { key: "settings", href: ROUTES.PORTAL.PHARMACIST.SETTINGS, icon: "settings", label: "Cài đặt" },
+    ],
+  },
+];
+
+export function getPharmacistMenuItemByHref(href: string): { key: string; href: string; label: string } | undefined {
+  for (const g of PHARMACIST_MENU_GROUPS) {
+    if (g.href === href) return { key: g.key, href: g.href, label: g.label };
+    const c = g.children?.find((c) => c.href === href);
+    if (c) return { key: c.key, href: c.href, label: c.label };
+  }
+  return undefined;
+}
+
 // Admin sidebar menu items — hỗ trợ nhóm + submenu
 export interface AdminMenuItem {
   key: string;
