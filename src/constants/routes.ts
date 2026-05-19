@@ -445,9 +445,7 @@ export const ADMIN_MENU_ITEMS: AdminMenuItem[] = [
     children: [
       { key: "slots-config", href: ROUTES.ADMIN.SLOTS_CONFIG, label: "Khung giờ khám" },
       { key: "slots-locked", href: ROUTES.ADMIN.SLOTS_LOCKED, label: "Slot bị khoá" },
-      { key: "shift-services", href: ROUTES.ADMIN.SHIFT_SERVICES, label: "Gán dịch vụ vào ca" },
       { key: "service-durations", href: ROUTES.ADMIN.SERVICE_DURATIONS, label: "Thời lượng dịch vụ" },
-      { key: "booking-configs", href: ROUTES.ADMIN.BOOKING_CONFIGS, label: "Cấu hình booking" },
       { key: "operating-hours", href: ROUTES.ADMIN.OPERATING_HOURS, label: "Giờ hoạt động" },
       { key: "facility-status", href: ROUTES.ADMIN.FACILITY_STATUS, label: "Trạng thái cơ sở" },
     ],
