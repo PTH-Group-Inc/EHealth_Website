@@ -210,6 +210,13 @@
                 "data": "Data",
                 "account": "Account"
             },
+            "receptionistGroup": {
+                "operations": "Coordination",
+                "patient-flow": "Patients & Appointments",
+                "finance": "Finance",
+                "data": "Data",
+                "account": "Account"
+            },
             "pharmacist": {
                 "dashboard": "Home",
                 "prescriptions": "Prescriptions",

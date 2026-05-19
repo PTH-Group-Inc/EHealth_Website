@@ -321,6 +321,73 @@ export function getPharmacistMenuItemByHref(href: string): { key: string; href: 
   return undefined;
 }
 
+// Receptionist sidebar menu — gom 13 mục phẳng thành 5 nhóm theo nghiệp vụ
+export interface ReceptionistMenuGroup {
+  key: string;
+  href?: string;
+  icon: string;
+  label: string;
+  children?: { key: string; href: string; icon?: string; label: string }[];
+}
+
+export const RECEPTIONIST_MENU_GROUPS: ReceptionistMenuGroup[] = [
+  {
+    key: "operations",
+    icon: "support_agent",
+    label: "Điều phối",
+    children: [
+      { key: "queue", href: ROUTES.PORTAL.STAFF.QUEUE, icon: "groups", label: "Hàng đợi" },
+      { key: "room-status", href: ROUTES.PORTAL.STAFF.ROOM_STATUS, icon: "meeting_room", label: "Tình trạng phòng" },
+    ],
+  },
+  {
+    key: "patient-flow",
+    icon: "person_add",
+    label: "Bệnh nhân & Lịch hẹn",
+    children: [
+      { key: "patients", href: ROUTES.PORTAL.STAFF.PATIENTS, icon: "people", label: "Bệnh nhân" },
+      { key: "appointments", href: ROUTES.PORTAL.STAFF.APPOINTMENTS, icon: "calendar_month", label: "Lịch khám" },
+      { key: "check-in", href: ROUTES.PORTAL.STAFF.CHECK_IN, icon: "qr_code_scanner", label: "Tiếp đón QR" },
+    ],
+  },
+  {
+    key: "finance",
+    icon: "payments",
+    label: "Tài chính",
+    children: [
+      { key: "billing", href: ROUTES.PORTAL.STAFF.BILLING, icon: "receipt", label: "Hoá đơn" },
+      { key: "payments", href: ROUTES.PORTAL.STAFF.PAYMENTS, icon: "qr_code", label: "Thanh toán QR" },
+      { key: "refunds", href: ROUTES.PORTAL.STAFF.REFUNDS, icon: "currency_exchange", label: "Hoàn tiền" },
+    ],
+  },
+  {
+    key: "data",
+    icon: "folder_special",
+    label: "Dữ liệu",
+    children: [
+      { key: "support-data", href: ROUTES.PORTAL.STAFF.SUPPORT_DATA, icon: "menu_book", label: "Danh mục tra cứu" },
+      { key: "change-history", href: ROUTES.PORTAL.STAFF.CHANGE_HISTORY, icon: "history", label: "Lịch sử thay đổi" },
+      { key: "staff-info", href: ROUTES.PORTAL.STAFF.STAFF_INFO, icon: "badge", label: "Vận hành nhân sự" },
+    ],
+  },
+  {
+    key: "account",
+    icon: "settings",
+    label: "Tài khoản",
+    children: [
+      { key: "settings", href: ROUTES.PORTAL.STAFF.SETTINGS, icon: "settings", label: "Cài đặt" },
+    ],
+  },
+];
+
+export function getReceptionistMenuItemByHref(href: string): { key: string; href: string; label: string } | undefined {
+  for (const g of RECEPTIONIST_MENU_GROUPS) {
+    const c = g.children?.find((c) => c.href === href);
+    if (c) return { key: c.key, href: c.href, label: c.label };
+  }
+  return undefined;
+}
+
 // Admin sidebar menu items — hỗ trợ nhóm + submenu
 export interface AdminMenuItem {
   key: string;

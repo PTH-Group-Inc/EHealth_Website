@@ -210,6 +210,13 @@
                 "data": "数据",
                 "account": "账户"
             },
+            "receptionistGroup": {
+                "operations": "调度",
+                "patient-flow": "患者与预约",
+                "finance": "财务",
+                "data": "数据",
+                "account": "账户"
+            },
             "pharmacist": {
                 "dashboard": "首页",
                 "prescriptions": "处方",

@@ -210,6 +210,13 @@
                 "data": "Dữ liệu",
                 "account": "Tài khoản"
             },
+            "receptionistGroup": {
+                "operations": "Điều phối",
+                "patient-flow": "Bệnh nhân & Lịch hẹn",
+                "finance": "Tài chính",
+                "data": "Dữ liệu",
+                "account": "Tài khoản"
+            },
             "pharmacist": {
                 "dashboard": "Trang chủ",
                 "prescriptions": "Đơn thuốc",
