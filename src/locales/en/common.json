@@ -211,6 +211,7 @@
                 "account": "Account"
             },
             "receptionistGroup": {
+                "dashboard": "Dashboard",
                 "operations": "Coordination",
                 "patient-flow": "Patients & Appointments",
                 "finance": "Finance",

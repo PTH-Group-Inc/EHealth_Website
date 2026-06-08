@@ -211,6 +211,7 @@
                 "account": "Tài khoản"
             },
             "receptionistGroup": {
+                "dashboard": "Trang chủ",
                 "operations": "Điều phối",
                 "patient-flow": "Bệnh nhân & Lịch hẹn",
                 "finance": "Tài chính",

@@ -211,6 +211,7 @@
                 "account": "账户"
             },
             "receptionistGroup": {
+                "dashboard": "首页",
                 "operations": "调度",
                 "patient-flow": "患者与预约",
                 "finance": "财务",
