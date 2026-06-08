@@ -55,22 +55,23 @@ const PAIN_LOCATIONS = ["Đầu", "Ngực", "Bụng", "Lưng", "Tay", "Chân", "
 type PatientInfo = {
     id: string; fullName: string; phone: string; gender: string;
     dob: string; age: number; reason: string; priority: string;
-    queueNumber: number; checkInTime: string; allergies?: string[]; avatar?: string;
-    birthDate?: string;
-    medicalHistory?: string[];
+    queueNumber: number; checkInTime: string; allergies?: string[];
+    avatar?: string; birthDate?: string; medicalHistory?: string[];
+    patientCode?: string;
 };
 
 /* ──────── Component ──────── */
 export default function ExaminationPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const patientId = searchParams.get("patient");
+    const patientIdParam = searchParams.get("patient");
     const appointmentId = searchParams.get("appointment");
     const encounterId = searchParams.get("encounter");
     const { user } = useAuth();
     const toast = useToast();
 
     // Patient state — load từ API
+    const [patientId, setPatientId] = useState<string | null>(patientIdParam);
     const [patient, setPatient] = useState<PatientInfo | null>(null);
     const [patientLoading, setPatientLoading] = useState(false);
     const [emrId, setEmrId] = useState<string | null>(null);
@@ -102,11 +103,14 @@ export default function ExaminationPage() {
     const [diagnosis, setDiagnosis] = useState("");
     const [icdCode, setIcdCode] = useState("");
     const [icdQuery, setIcdQuery] = useState("");
-    const [icdResults, setIcdResults] = useState<{ code: string; description: string }[]>([]);
+    const [icdResults, setIcdResults] = useState<any[]>([]);
     const [icdSearching, setIcdSearching] = useState(false);
     const [treatment, setTreatment] = useState("");
-    const [meds, setMeds] = useState<{ name: string; dosage: string; frequency: string; duration: string; note: string }[]>([]);
-    const [newMed, setNewMed] = useState({ name: "", dosage: "", frequency: "", duration: "", note: "" });
+    const [meds, setMeds] = useState<{ name: string; dosage: string; frequency: string; duration: string; note: string; drugId: string }[]>([]);
+    const [newMed, setNewMed] = useState({ name: "", dosage: "", frequency: "", duration: "", note: "", drugId: "" });
+    const [drugQuery, setDrugQuery] = useState("");
+    const [drugResults, setDrugResults] = useState<any[]>([]);
+    const [drugSearching, setDrugSearching] = useState(false);
     const [followUp, setFollowUp] = useState("");
     const [doctorNote, setDoctorNote] = useState("");
     const [sendToPharmacy, setSendToPharmacy] = useState(false);
@@ -139,26 +143,38 @@ export default function ExaminationPage() {
         addAuditEntry("Kết luận", "AI tạo tóm tắt SOAP", "accepted");
     };
 
-    // Load patient info từ API (fallback về mock nếu thất bại)
+    // Load patient info từ API
     useEffect(() => {
         if (!patientId) return;
         setPatientLoading(true);
         encounterService.getPatient(patientId)
             .then(data => {
                 if (data) {
+                    // Calculate age from date_of_birth
+                    const dob = data.date_of_birth ?? data.dateOfBirth ?? data.dob ?? '';
+                    let age = data.age ?? 0;
+                    if (dob && !age) {
+                        const birthDate = new Date(dob);
+                        const today = new Date();
+                        age = today.getFullYear() - birthDate.getFullYear();
+                        const m = today.getMonth() - birthDate.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                    }
                     setPatient(prev => ({
                         ...(prev ?? {}),
                         id: data.id ?? patientId,
-                        fullName: data.fullName ?? data.name ?? prev?.fullName ?? '',
+                        fullName: data.full_name ?? data.fullName ?? data.name ?? prev?.fullName ?? '',
                         gender: data.gender ?? prev?.gender ?? '',
-                        age: data.age ?? prev?.age ?? 0,
-                        birthDate: data.birthDate ?? data.dateOfBirth ?? prev?.birthDate ?? '',
-                        phone: data.phone ?? data.phoneNumber ?? prev?.phone ?? '',
+                        age,
+                        birthDate: dob,
+                        dob: dob,
+                        phone: data.phone_number ?? data.phone ?? prev?.phone ?? '',
                         allergies: data.allergies ?? prev?.allergies ?? [],
                         medicalHistory: data.medicalHistory ?? prev?.medicalHistory ?? [],
                         reason: data.chiefComplaint ?? prev?.reason ?? '',
-                        queueNumber: data.queueNumber ?? prev?.queueNumber ?? '',
-                        avatar: data.avatar ?? prev?.avatar ?? null,
+                        queueNumber: data.queueNumber ?? data.queue_number ?? prev?.queueNumber ?? '',
+                        avatar: data.avatar_url ?? data.avatar ?? prev?.avatar ?? null,
+                        patientCode: data.patient_code ?? data.patientCode ?? '',
                     } as any));
                 }
             })
@@ -178,11 +194,32 @@ export default function ExaminationPage() {
             return;
         }
 
-        // Nếu có appointmentId → tạo encounter từ appointment
+        // Nếu có appointmentId → lấy encounter đã có, nếu chưa có thì tạo mới
         if (appointmentId) {
-            encounterService.createFromAppointment(appointmentId)
-                .then(data => { if (data?.id) setCurrentEncounterId(data.id); })
-                .catch(() => {/* không block UI */});
+            encounterService.getByAppointment(appointmentId)
+                .then(data => {
+                    if (data?.patient_id) setPatientId(data.patient_id);
+                    
+                    if (data?.id || data?.encounters_id) {
+                        setCurrentEncounterId(data.id || data.encounters_id);
+                    } else {
+                        encounterService.createFromAppointment(appointmentId)
+                            .then(newData => { 
+                                if (newData?.patient_id) setPatientId(newData.patient_id);
+                                if (newData?.id) setCurrentEncounterId(newData.id); 
+                            })
+                            .catch(() => {});
+                    }
+                })
+                .catch(() => {
+                    // Fallback tạo mới nếu API getByAppointment trả về lỗi (vd 404)
+                    encounterService.createFromAppointment(appointmentId)
+                        .then(newData => { 
+                            if (newData?.patient_id) setPatientId(newData.patient_id);
+                            if (newData?.id) setCurrentEncounterId(newData.id); 
+                        })
+                        .catch(() => {});
+                });
             return;
         }
 
@@ -201,7 +238,7 @@ export default function ExaminationPage() {
 
     // ICD-10 search với debounce
     useEffect(() => {
-        if (!icdQuery || icdQuery.length < 2) { setIcdResults([]); return; }
+        if (!icdQuery || icdQuery.length < 1) { setIcdResults([]); return; }
         const timer = setTimeout(() => {
             setIcdSearching(true);
             encounterService.searchICD(icdQuery)
@@ -211,6 +248,19 @@ export default function ExaminationPage() {
         }, 400);
         return () => clearTimeout(timer);
     }, [icdQuery]);
+
+    // Drug search với debounce
+    useEffect(() => {
+        if (!drugQuery || drugQuery.length < 1 || drugQuery === newMed.name) { setDrugResults([]); return; }
+        const timer = setTimeout(() => {
+            setDrugSearching(true);
+            prescriptionService.searchDrugsActive(drugQuery)
+                .then(data => setDrugResults(data))
+                .catch(() => setDrugResults([]))
+                .finally(() => setDrugSearching(false));
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [drugQuery]);
 
     // AI Copilot context — push state to copilot sidebar
     const { updateContext, registerAutoFill: regAutoFill } = usePageAIContext({
@@ -282,9 +332,13 @@ export default function ExaminationPage() {
 
     // Handlers
     const addMed = () => {
-        if (!newMed.name.trim()) return;
+        if (!newMed.name.trim() || !newMed.drugId) {
+            toast.error("Vui lòng chọn một loại thuốc từ danh sách!");
+            return;
+        }
         setMeds(prev => [...prev, { ...newMed }]);
-        setNewMed({ name: "", dosage: "", frequency: "", duration: "", note: "" });
+        setNewMed({ name: "", dosage: "", frequency: "", duration: "", note: "", drugId: "" });
+        setDrugQuery("");
     };
     const removeMed = (idx: number) => setMeds(prev => prev.filter((_, i) => i !== idx));
     const goBack = () => { if (activeStep > 0) setActiveStep(prev => prev - 1); };
@@ -318,15 +372,16 @@ export default function ExaminationPage() {
         sendToPharmacy,
     });
 
-    // Lưu vitals step 0 lên API
     const handleSaveVitals = async (eid: string) => {
+        const bp = vitals.bloodPressure?.split('/');
         try {
             await encounterService.saveVitals(eid, {
-                bloodPressure: vitals.bloodPressure,
-                heartRate: vitals.heartRate ? parseFloat(vitals.heartRate) : undefined,
+                blood_pressure_systolic: bp?.[0] ? parseInt(bp[0]) : undefined,
+                blood_pressure_diastolic: bp?.[1] ? parseInt(bp[1]) : undefined,
+                pulse: vitals.heartRate ? parseFloat(vitals.heartRate) : undefined,
                 temperature: vitals.temperature ? parseFloat(vitals.temperature) : undefined,
-                spO2: vitals.spO2 ? parseFloat(vitals.spO2) : undefined,
-                respiratoryRate: vitals.respiratoryRate ? parseFloat(vitals.respiratoryRate) : undefined,
+                spo2: vitals.spO2 ? parseFloat(vitals.spO2) : undefined,
+                respiratory_rate: vitals.respiratoryRate ? parseFloat(vitals.respiratoryRate) : undefined,
                 weight: vitals.weight ? parseFloat(vitals.weight) : undefined,
                 height: vitals.height ? parseFloat(vitals.height) : undefined,
             });
@@ -353,8 +408,7 @@ export default function ExaminationPage() {
         if (!diagnosis.trim()) return;
         try {
             await encounterService.addDiagnosis(eid, {
-                encounterId: eid,
-                icdCode: icdCode || undefined,
+                icd10_code: icdCode || undefined,
                 description: diagnosis,
                 type: 'PRIMARY',
                 treatment: treatment || undefined,
@@ -414,23 +468,39 @@ export default function ExaminationPage() {
             const eid = currentEncounterId;
 
             // 1. Kê đơn thuốc nếu có
-            if (meds.length > 0) {
-                await prescriptionService.create({
-                    encounterId: eid ?? undefined,
-                    patientId,
-                    doctorId: user?.id,
-                    diagnosis,
-                    icdCode: icdCode || undefined,
-                    notes: doctorNote || undefined,
-                    medications: meds.map(m => ({
-                        name: m.name,
-                        dosage: m.dosage,
-                        frequency: m.frequency,
-                        duration: m.duration,
-                        note: m.note || undefined,
-                    })),
-                    sendToPharmacy,
-                });
+            if (meds.length > 0 && eid) {
+                try {
+                    // 1.1 Tạo đơn thuốc
+                    const rxRes = await prescriptionService.create({
+                        encounterId: eid,
+                        clinical_diagnosis: diagnosis,
+                        doctor_notes: doctorNote || undefined,
+                    });
+                    const rxId = rxRes?.id || rxRes?.prescription_id;
+                    if (rxId) {
+                        // 1.2 Thêm từng thuốc vào đơn
+                        for (const m of meds) {
+                            if (!m.drugId) continue;
+                            await prescriptionService.addDetail(rxId, {
+                                drug_id: m.drugId,
+                                quantity: parseInt(m.duration) || 1, // temporary logic
+                                dosage: m.dosage,
+                                frequency: m.frequency,
+                                duration_days: parseInt(m.duration) || undefined,
+                                usage_instruction: m.note || undefined,
+                                route_of_administration: 'ORAL', // default fallback
+                                notes: m.note || undefined
+                            });
+                        }
+                        // 1.3 Nếu đã xác nhận gửi thì CONFIRM đơn thuốc
+                        if (sendToPharmacy) {
+                            await prescriptionService.confirm(rxId);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Prescription save failed:", err);
+                    toast.error("Không thể lưu đơn thuốc, có thể do thuốc không hợp lệ.");
+                }
             }
 
             // 2. Sign-off nếu có encounter
@@ -856,10 +926,10 @@ export default function ExaminationPage() {
                                             <div className="absolute z-20 mt-1 w-full bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-lg max-h-48 overflow-y-auto">
                                                 {icdResults.map((r) => (
                                                     <button key={r.code} type="button"
-                                                        onClick={() => { setIcdCode(r.code); setDiagnosis(r.description); setIcdQuery(""); setIcdResults([]); }}
+                                                        onClick={() => { setIcdCode(r.code); setDiagnosis(r.description || r.name || ""); setIcdQuery(""); setIcdResults([]); }}
                                                         className="w-full text-left px-4 py-2.5 hover:bg-[#f8f9fa] dark:hover:bg-[#13191f] text-sm border-b border-[#f0f0f0] dark:border-[#2d353e] last:border-0">
                                                         <span className="font-mono text-[#3C81C6] text-xs mr-2">{r.code}</span>
-                                                        <span className="text-[#121417] dark:text-white">{r.description}</span>
+                                                        <span className="text-[#121417] dark:text-white">{r.description || r.name}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -959,16 +1029,40 @@ export default function ExaminationPage() {
                                 )}
                                 <div className="p-4 border-2 border-dashed border-[#dde0e4] dark:border-[#2d353e] rounded-xl space-y-3">
                                     <p className="text-xs font-bold text-[#687582] uppercase tracking-wide">Thêm thuốc mới</p>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                        <input type="text" value={newMed.name} onChange={(e) => setNewMed(p => ({ ...p, name: e.target.value }))} aria-label="Tên thuốc" placeholder="Tên thuốc *"
-                                            className="px-3 py-2 bg-white dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-lg text-sm outline-none focus:border-[#3C81C6] dark:text-white" />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 relative">
+                                        <div className="relative">
+                                            <input type="text" value={drugQuery}
+                                                onChange={(e) => setDrugQuery(e.target.value)}
+                                                onFocus={() => { if (!drugQuery) setDrugQuery(newMed.name) }}
+                                                aria-label="Tên thuốc" placeholder="Gõ tên thuốc để tìm..."
+                                                className="w-full px-3 py-2 bg-white dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-lg text-sm outline-none focus:border-[#3C81C6] dark:text-white" />
+                                            {drugSearching && <div className="absolute right-3 top-2.5 w-4 h-4 border-2 border-[#3C81C6] border-t-transparent rounded-full animate-spin" />}
+                                            {newMed.name && <p className="text-[10px] text-[#3C81C6] font-medium mt-1 truncate">Đã chọn: {newMed.name}</p>}
+                                            {drugResults.length > 0 && (
+                                                <div className="absolute z-20 mb-1 bottom-full left-0 w-full bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                                    {drugResults.map((dr) => (
+                                                        <button key={dr.drugs_id || dr.id} type="button"
+                                                            onClick={() => { 
+                                                                const selectedName = dr.brand_name || dr.drug_name || dr.name;
+                                                                setNewMed(p => ({ ...p, name: selectedName, drugId: dr.drugs_id || dr.id })); 
+                                                                setDrugQuery(selectedName); 
+                                                                setDrugResults([]); 
+                                                            }}
+                                                            className="w-full text-left px-4 py-2 hover:bg-[#f8f9fa] dark:hover:bg-[#13191f] text-sm border-b border-[#f0f0f0] dark:border-[#2d353e] last:border-0">
+                                                            <div className="text-[#121417] dark:text-white font-medium truncate">{dr.brand_name || dr.drug_name || dr.name}</div>
+                                                            <div className="text-xs text-[#687582] truncate">{dr.active_ingredients || dr.active_ingredient} • {dr.dispensing_unit || dr.unit}</div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                         <input type="text" value={newMed.dosage} onChange={(e) => setNewMed(p => ({ ...p, dosage: e.target.value }))} aria-label="Liều lượng" placeholder="Liều lượng"
                                             className="px-3 py-2 bg-white dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-lg text-sm outline-none focus:border-[#3C81C6] dark:text-white" />
                                         <input type="text" value={newMed.frequency} onChange={(e) => setNewMed(p => ({ ...p, frequency: e.target.value }))} aria-label="Tần suất dùng thuốc" placeholder="Tần suất"
                                             className="px-3 py-2 bg-white dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-lg text-sm outline-none focus:border-[#3C81C6] dark:text-white" />
-                                        <input type="text" value={newMed.duration} onChange={(e) => setNewMed(p => ({ ...p, duration: e.target.value }))} aria-label="Số ngày dùng thuốc" placeholder="Số ngày"
+                                        <input type="text" value={newMed.duration} onChange={(e) => setNewMed(p => ({ ...p, duration: e.target.value }))} aria-label="Số ngày dùng thuốc" placeholder="Số lượng (viên/vỉ...)"
                                             className="px-3 py-2 bg-white dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-lg text-sm outline-none focus:border-[#3C81C6] dark:text-white" />
-                                        <input type="text" value={newMed.note} onChange={(e) => setNewMed(p => ({ ...p, note: e.target.value }))} aria-label="Ghi chú thuốc" placeholder="Ghi chú"
+                                        <input type="text" value={newMed.note} onChange={(e) => setNewMed(p => ({ ...p, note: e.target.value }))} aria-label="Ghi chú thuốc" placeholder="Cách dùng"
                                             className="px-3 py-2 bg-white dark:bg-[#13191f] border border-[#dde0e4] dark:border-[#2d353e] rounded-lg text-sm outline-none focus:border-[#3C81C6] dark:text-white" />
                                         <button onClick={addMed} className="px-4 py-2 bg-[#3C81C6] text-white rounded-lg text-sm font-medium hover:bg-[#2a6da8] flex items-center justify-center gap-1.5 transition-colors">
                                             <span className="material-symbols-outlined text-[16px]">add</span>Thêm thuốc

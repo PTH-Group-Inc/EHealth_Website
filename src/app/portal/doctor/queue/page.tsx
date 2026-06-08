@@ -43,6 +43,7 @@ interface QueueItem {
     appointmentTime?: string;
     checkInTime?: string;
     waitTime?: string;
+    patientId?: string;
 }
 
 function normalizeItem(a: any): QueueItem {
@@ -56,6 +57,7 @@ function normalizeItem(a: any): QueueItem {
         appointmentTime: a.appointment_time ?? a.appointmentTime ?? a.slot_start_time ?? a.time,
         checkInTime: a.check_in_time ?? a.checkInTime,
         waitTime: a.wait_time ?? a.waitTime,
+        patientId: a.patient_id ?? a.patientId ?? a.patient?.id,
     };
 }
 
@@ -122,15 +124,18 @@ export default function DoctorQueuePage() {
     const doAction = async (id: string, action: "enter" | "continue" | "skip" | "recall") => {
         setBusyId(id);
         try {
+            const item = queue.find(q => q.id === id);
+            const patientParam = item?.patientId ? `&patient=${item.patientId}` : "";
+            
             if (action === "enter") {
                 // Gộp 2 thao tác: chuyển status WAITING→IN_PROGRESS + navigate vào wizard
                 await appointmentStatusService.startExam(id);
-                router.push(`/portal/doctor/examination?appointment=${id}`);
+                router.push(`/portal/doctor/examination?appointment=${id}${patientParam}`);
                 return; // không cần reload queue — sẽ thấy khi quay về
             }
             if (action === "continue") {
                 // BN đã IN_PROGRESS → chỉ navigate, không gọi startExam lần 2
-                router.push(`/portal/doctor/examination?appointment=${id}`);
+                router.push(`/portal/doctor/examination?appointment=${id}${patientParam}`);
                 return;
             }
             if (action === "skip") await appointmentStatusService.skip(id);

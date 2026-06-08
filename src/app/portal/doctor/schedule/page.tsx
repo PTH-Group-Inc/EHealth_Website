@@ -66,18 +66,54 @@ export default function DoctorSchedulePage() {
             .catch(err => { console.error("Load schedules failed:", err); return null; });
         const arr = (s as any)?.data ?? [];
         const rows = (arr as any[]).map((r: any, idx: number) => ({
-            id: String(r.id ?? r.staff_schedule_id ?? `row-${idx}`),
-            workDate: r.work_date ?? r.workDate ?? r.date,
+            id: String(r.id ?? r.staff_schedules_id ?? r.staff_schedule_id ?? `row-${idx}`),
+            workDate: r.working_date ?? r.work_date ?? r.workDate ?? r.date,
             shiftName: r.shift_name ?? r.shiftName ?? r.shift?.name,
             startTime: r.start_time ?? r.startTime,
             endTime: r.end_time ?? r.endTime,
-            facility: r.facility_name ?? r.facility?.name ?? r.branch_name ?? r.department_name,
+            facility: r.room_name ?? r.facility_name ?? r.facility?.name ?? r.branch_name ?? r.department_name,
             status: (r.status ?? "SCHEDULED").toString().toUpperCase(),
-            note: r.note,
+            note: r.note ?? r.leave_reason,
         } as ScheduleRow));
+        
         setSchedules(rows);
-        setConflicts([]);
-        setFacilities([]);
+        
+        // Compute conflicts: multiple shifts on the same day with overlapping times (simplified: just same day > 1 shift is a potential conflict if times overlap)
+        const dateMap = new Map<string, ScheduleRow[]>();
+        rows.forEach(r => {
+            const k = r.workDate || "";
+            if (!dateMap.has(k)) dateMap.set(k, []);
+            dateMap.get(k)!.push(r);
+        });
+        const cfl: any[] = [];
+        dateMap.forEach((dailyRows, date) => {
+            if (dailyRows.length > 1) {
+                // Check overlaps
+                for (let i = 0; i < dailyRows.length; i++) {
+                    for (let j = i + 1; j < dailyRows.length; j++) {
+                        const r1 = dailyRows[i];
+                        const r2 = dailyRows[j];
+                        if (r1.startTime && r2.startTime && r1.endTime && r2.endTime) {
+                            if ((r1.startTime < r2.endTime) && (r1.endTime > r2.startTime)) {
+                                cfl.push({
+                                    id: `${r1.id}-${r2.id}`,
+                                    title: `Trùng lặp: ${r1.shiftName} và ${r2.shiftName}`,
+                                    date: date,
+                                    start_time: `${r1.startTime} - ${r2.endTime}`
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        setConflicts(cfl);
+        
+        // Compute facilities
+        const facSet = new Set<string>();
+        rows.forEach(r => { if (r.facility) facSet.add(r.facility); });
+        setFacilities(Array.from(facSet).map(f => ({ name: f })));
+        
         setLoading(false);
     }, [user?.id, from, to]);
 

@@ -23,14 +23,33 @@ export const prescriptionService = {
     getDetails: (id: string) =>
         axiosClient.get(PRESCRIPTION_ENDPOINTS.DETAILS(id)).then(r => r.data?.data ?? r.data),
 
-    create: (data: Record<string, any>) =>
-        axiosClient.post(PRESCRIPTION_ENDPOINTS.CREATE, data).then(r => r.data?.data ?? r.data),
+    // POST /api/prescriptions/{encounterId} — tạo đơn thuốc cho encounter
+    create: (data: Record<string, any>) => {
+        const encounterId = data.encounterId;
+        if (encounterId) {
+            return axiosClient.post(PRESCRIPTION_ENDPOINTS.BY_ENCOUNTER(encounterId), data).then(r => r.data?.data ?? r.data);
+        }
+        // Fallback
+        return axiosClient.post(PRESCRIPTION_ENDPOINTS.CREATE, data).then(r => r.data?.data ?? r.data);
+    },
+
+    // POST /api/prescriptions/{prescriptionId}/details — thêm dòng thuốc
+    addDetail: (prescriptionId: string, data: Record<string, any>) =>
+        axiosClient.post(PRESCRIPTION_ENDPOINTS.DETAILS(prescriptionId), data).then(r => r.data?.data ?? r.data),
 
     update: (id: string, data: Record<string, any>) =>
-        axiosClient.put(PRESCRIPTION_ENDPOINTS.UPDATE(id), data).then(r => r.data),
+        axiosClient.patch(PRESCRIPTION_ENDPOINTS.UPDATE(id), data).then(r => r.data),
 
     dispense: (id: string, data: Record<string, any>) =>
         axiosClient.post(PRESCRIPTION_ENDPOINTS.DISPENSE(id), data).then(r => r.data),
+
+    // GET /api/pharmacy/drugs/active — tìm thuốc active (cho dropdown)
+    searchDrugsActive: (q: string) =>
+        axiosClient.get(PHARMACY_ENDPOINTS.DRUGS_ACTIVE, { params: { search: q, limit: 20 } })
+            .then(r => {
+                const items = r.data?.data?.items ?? r.data?.data ?? r.data ?? [];
+                return Array.isArray(items) ? items : [];
+            }),
 
     // Backward-compat alias
     getList: (params?: Record<string, any>) =>

@@ -39,7 +39,7 @@ export const encounterService = {
         axiosClient.get(ENCOUNTER_ENDPOINTS.BY_PATIENT(patientId)).then(r => r.data),
 
     updateStatus: (id: string, status: string, data?: Record<string, any>) =>
-        axiosClient.patch(ENCOUNTER_ENDPOINTS.STATUS(id), { status, ...data }).then(r => r.data),
+        axiosClient.patch(ENCOUNTER_ENDPOINTS.STATUS(id), { new_status: status, ...data }).then(r => r.data),
 
     assignDoctor: (id: string, doctorId: string) =>
         axiosClient.put(ENCOUNTER_ENDPOINTS.ASSIGN_DOCTOR(id), { doctorId }).then(r => r.data),
@@ -52,7 +52,7 @@ export const encounterService = {
         axiosClient.get(CLINICAL_EXAM_ENDPOINTS.VITALS(encounterId)).then(r => r.data?.data ?? r.data),
 
     saveVitals: (encounterId: string, data: Record<string, any>) =>
-        axiosClient.put(CLINICAL_EXAM_ENDPOINTS.VITALS(encounterId), data).then(r => r.data?.data ?? r.data),
+        axiosClient.patch(CLINICAL_EXAM_ENDPOINTS.VITALS(encounterId), data).then(r => r.data?.data ?? r.data),
 
     finalizeExam: (encounterId: string) =>
         axiosClient.post(CLINICAL_EXAM_ENDPOINTS.FINALIZE(encounterId), {}).then(r => r.data),
