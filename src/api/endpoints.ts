@@ -2009,6 +2009,7 @@ export const AI_RAG_ENDPOINTS = {
 export const STAFF_SCHEDULE_ENDPOINTS = {
     LIST: '/api/staff-schedules',                                                             // GET
     CREATE: '/api/staff-schedules',                                                           // POST
+    BATCH: '/api/staff-schedules/batch',                                                      // POST
     CALENDAR: '/api/staff-schedules/calendar',                                                // GET
     BY_STAFF: (staffId: string) => `/api/staff-schedules/staff/${staffId}`,                   // GET
     BY_DATE: (date: string) => `/api/staff-schedules/date/${date}`,                           // GET

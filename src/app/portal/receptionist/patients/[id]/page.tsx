@@ -77,7 +77,7 @@ function fmtFileSize(bytes?: number): string {
 }
 
 function getPrimaryAvatarUrl(patient?: Patient | null): string {
-    return Array.isArray(patient?.avatar_url) ? patient.avatar_url[0]?.url || "" : "";
+    return (Array.isArray(patient?.avatar_url) && patient.avatar_url.length > 0) ? patient.avatar_url[patient.avatar_url.length - 1]?.url || "" : "";
 }
 
 // ==================== COMPONENTS ====================

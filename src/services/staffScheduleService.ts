@@ -79,7 +79,14 @@ export const staffScheduleService = {
             .get(STAFF_SCHEDULE_ENDPOINTS.CALENDAR, {
                 params: { month, year, ...params },
             })
-            .then((r) => unwrapList<StaffSchedule>(r.data)),
+            .then((r) => {
+                const data = unwrap<any>(r.data);
+                // If backend returns Record<string, array[]>, flatten it into a single array
+                if (data && !Array.isArray(data) && typeof data === 'object') {
+                    return Object.values(data).flat() as StaffSchedule[];
+                }
+                return data as StaffSchedule[];
+            }),
 
     bulkAssign: (data: {
         staffIds: string[];

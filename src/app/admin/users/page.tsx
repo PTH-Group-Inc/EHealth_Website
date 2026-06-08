@@ -84,7 +84,8 @@ function mapApiUserToAdminUser(u: any): AdminUser {
     if (typeof uAvatar === "string") {
         avatarStr = uAvatar;
     } else if (Array.isArray(uAvatar) && uAvatar.length > 0) {
-        avatarStr = typeof uAvatar[0] === "string" ? uAvatar[0] : (uAvatar[0]?.url || uAvatar[0]?.path || "");
+        const lastAvatar = uAvatar[uAvatar.length - 1];
+        avatarStr = typeof lastAvatar === "string" ? lastAvatar : (lastAvatar?.url || lastAvatar?.path || "");
     } else if (uAvatar && typeof uAvatar === "object") {
         avatarStr = uAvatar.url || uAvatar.path || "";
     }

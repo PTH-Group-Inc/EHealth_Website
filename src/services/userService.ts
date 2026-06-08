@@ -203,7 +203,7 @@ export const bulkDeleteUsers = async (userIds: string[]): Promise<any> => {
 export const uploadUserAvatar = async (id: string, file: File): Promise<{ success: boolean; data: { url: string; public_id: string } }> => {
     try {
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('avatar', file);
         const response = await axiosClient.post(USER_ENDPOINTS.AVATAR(id), formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',

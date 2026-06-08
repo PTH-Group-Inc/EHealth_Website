@@ -1175,7 +1175,7 @@ function ScheduleTab({ userId }: { userId: string }) {
 
             const shiftPromise = workShiftService.getList({ limit: 200, isActive: true } as any);
             const scheduleList = await scheduleReq;
-            let scheduleData = scheduleList.data || [];
+            let scheduleData = (scheduleList as any).data || (Array.isArray(scheduleList) ? scheduleList : []);
 
             // Fallback: một số môi trường BE không hỗ trợ filter params / calendar theo staff
             if (scheduleData.length === 0) {

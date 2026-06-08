@@ -10,11 +10,13 @@ import {
     assignPermissions,
     addRoleApiPermission,
     removeRoleApiPermission,
+    replaceRoleApiPermissions,
     createRole,
     type PermissionGroup,
     type PermissionData,
     type ApiPermissionData,
 } from "@/services/permissionService";
+import suggestionMap from "@/constants/rolePermissionMap.json";
 
 interface Role {
     id: string;
@@ -65,7 +67,7 @@ export default function RolesPage() {
             if (rolesRaw.status === "fulfilled" && Array.isArray(rolesRaw.value)) {
                 setRoles(
                     rolesRaw.value.map((r: any) => ({
-                        id: String(r.id ?? r.name ?? ""),
+                        id: String(r.id ?? r.roles_id ?? r.name ?? ""),
                         name: r.displayName ?? r.name ?? "",
                         code: r.code ?? r.name ?? "",
                         description: r.description ?? "",
@@ -131,7 +133,7 @@ export default function RolesPage() {
                       : [];
             const apiIds: string[] =
                 apiRes.status === "fulfilled" && Array.isArray(apiRes.value?.data)
-                    ? apiRes.value.data.map((p: any) => String(p.id ?? p.api_permissions_id ?? p))
+                    ? apiRes.value.data.map((p: any) => String(p.id ?? p.api_id ?? p.api_permissions_id ?? p))
                     : [];
             setEditedPermissions(perms);
             setEditedApiPermissions(apiIds);
@@ -165,18 +167,18 @@ export default function RolesPage() {
         if (!selectedRoleId) return;
         setSavingPermissions(true);
         try {
-            // 1) Save normal permissions (replace toàn bộ)
-            await assignPermissions(selectedRoleId, editedPermissions);
+            // Lọc loại bỏ những quyền bị rác hoặc không còn tồn tại trong DB
+            const validDbPerms = new Set(permGroups.flatMap((g) => (g.permissions ?? []).map((p: any) => String(p.id ?? p.code))));
+            const validPerms = editedPermissions.filter(id => id && id !== "[object Object]" && id !== "undefined" && validDbPerms.has(id));
 
-            // 2) Diff API permissions → add/remove
-            const toAdd = editedApiPermissions.filter((id) => !originalApiPermissions.includes(id));
-            const toRemove = originalApiPermissions.filter(
-                (id) => !editedApiPermissions.includes(id),
-            );
-            await Promise.allSettled([
-                ...toAdd.map((id) => addRoleApiPermission(selectedRoleId, id)),
-                ...toRemove.map((id) => removeRoleApiPermission(selectedRoleId, id)),
-            ]);
+            const validDbApiIds = new Set(apiPerms.map((p: any) => String(p.id ?? p.api_id ?? p.api_permissions_id)));
+            const validApiIds = editedApiPermissions.filter(id => id && id !== "[object Object]" && id !== "undefined" && id !== "null" && validDbApiIds.has(id));
+
+            // 1) Save normal permissions (replace toàn bộ)
+            await assignPermissions(selectedRoleId, validPerms);
+
+            // 2) Save API permissions (replace toàn bộ qua 1 request duy nhất)
+            await replaceRoleApiPermissions(selectedRoleId, validApiIds);
 
             setRoles((prev) =>
                 prev.map((r) =>
@@ -192,6 +194,75 @@ export default function RolesPage() {
         } finally {
             setSavingPermissions(false);
         }
+    };
+
+    const handleSuggestPermissions = () => {
+        if (!selected) return;
+        let code = selected.code.toUpperCase();
+        if (!code.startsWith("ROLE_")) code = "ROLE_" + code;
+
+        let suggestedPerms: string[] = [];
+        let suggestedApis: string[] = [];
+
+        if (code === "ROLE_ADMIN") {
+            suggestedPerms = permGroups.flatMap((g) => (g.permissions ?? []).map((p: any) => String(p.id ?? p.code)));
+            suggestedApis = apiPerms.map((p: any) => String(p.id ?? p.api_id ?? p.api_permissions_id));
+        } else {
+            // 1) Read from exact database map if available
+            const exactPerms = (suggestionMap.rolePerms as any)[code] || [];
+            const exactApis = (suggestionMap.roleApis as any)[code] || [];
+
+            if (exactPerms.length > 0 || exactApis.length > 0) {
+                suggestedPerms = exactPerms;
+                suggestedApis = exactApis;
+            } else {
+                // 2) Fallback to heuristic matching for custom roles
+                const allowModules: string[] = [];
+                const allowApiPaths: string[] = [];
+                const rawCode = code.replace("ROLE_", "");
+                
+                if (rawCode === "DOCTOR" || rawCode === "BACSI") {
+                    allowModules.push("PATIENT", "ENCOUNTER", "CLINICAL", "DIAGNOSIS", "PRESCRIPTION", "MEDICAL_ORDER", "MEDICAL_RECORD", "SCHEDULE");
+                    allowApiPaths.push("/patients", "/encounters", "/clinical", "/diagnoses", "/prescriptions", "/medical-orders", "/medical-records", "/staff-schedules", "/teleconsultation");
+                } else if (rawCode === "NURSE" || rawCode === "YTA") {
+                    allowModules.push("PATIENT", "ENCOUNTER", "MEDICAL_ORDER", "VITALS", "BED", "CLINICAL");
+                    allowApiPaths.push("/patients", "/encounters", "/medical-orders", "/clinical");
+                } else if (rawCode === "RECEPTIONIST" || rawCode === "LETON") {
+                    allowModules.push("PATIENT", "APPOINTMENT", "ENCOUNTER", "BILLING");
+                    allowApiPaths.push("/patients", "/appointments", "/encounters", "/billing", "/appointment-status", "/appointment-confirmations");
+                } else if (rawCode === "PHARMACIST" || rawCode === "DUOCSI") {
+                    allowModules.push("PHARMACY", "INVENTORY", "DISPENSING", "STOCK_IN", "STOCK_OUT");
+                    allowApiPaths.push("/pharmacy", "/inventory", "/dispensing", "/stock-in", "/stock-out");
+                } else if (rawCode === "ACCOUNTANT" || rawCode === "KETOAN") {
+                    allowModules.push("BILLING", "REPORT", "INVOICE");
+                    allowApiPaths.push("/billing", "/reports");
+                } else if (rawCode === "PATIENT" || rawCode === "BENHNHAN") {
+                    allowModules.push("PORTAL_PATIENT");
+                    allowApiPaths.push("/profile", "/teleconsultation/booking");
+                }
+    
+                allowApiPaths.push("/auth", "/profile"); // basic access
+    
+                permGroups.forEach((g) => {
+                    const mod = (g.group || "").toUpperCase();
+                    if (allowModules.some(m => mod.includes(m))) {
+                        (g.permissions ?? []).forEach((p: any) => suggestedPerms.push(String(p.id ?? p.code)));
+                    }
+                });
+    
+                apiPerms.forEach((p: any) => {
+                    const apiPath = (p.path || p.endpoint || "").toLowerCase();
+                    if (allowApiPaths.some(ap => apiPath.startsWith("/api" + ap))) {
+                        suggestedApis.push(String(p.id ?? p.api_id ?? p.api_permissions_id));
+                    }
+                });
+            }
+        }
+
+        setEditedPermissions(suggestedPerms);
+        setEditedApiPermissions(suggestedApis);
+        setHasChanges(true);
+        setSaveSuccess(false);
     };
 
     const handleAddRole = async () => {
@@ -303,7 +374,7 @@ export default function RolesPage() {
                     <tbody className="divide-y divide-[#f0f1f3] dark:divide-[#2d353e]">
                         {apiPermGroups.map(({ group, items }) =>
                             items.map((p, pi) => {
-                                const id = String(p.id);
+                                const id = String(p.id ?? (p as any).api_id ?? (p as any).api_permissions_id);
                                 const method = String(p.method ?? "").toUpperCase();
                                 const methodColor =
                                     method === "GET"
@@ -455,6 +526,14 @@ export default function RolesPage() {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handleSuggestPermissions}
+                                        title="Tự động check quyền gợi ý cho vai trò này"
+                                        className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors bg-amber-500 text-white hover:bg-amber-600 flex items-center gap-1"
+                                    >
+                                        <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                                        Gợi ý quyền
+                                    </button>
                                     <button
                                         onClick={handleSave}
                                         disabled={!hasChanges || savingPermissions}

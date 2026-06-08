@@ -60,13 +60,13 @@ export const appointmentStatusService = {
      * POST /api/appointment-status/{id}/start-exam — Bắt đầu khám
      */
     startExam: (id: string) =>
-        axiosClient.post(APPOINTMENT_STATUS_ENDPOINTS.START_EXAM(id), {}).then(r => r.data),
+        axiosClient.patch(APPOINTMENT_STATUS_ENDPOINTS.START_EXAM(id), {}).then(r => r.data),
 
     /**
      * POST /api/appointment-status/{id}/complete-exam — Hoàn thành khám
      */
     completeExam: (id: string) =>
-        axiosClient.post(APPOINTMENT_STATUS_ENDPOINTS.COMPLETE_EXAM(id), {}).then(r => r.data),
+        axiosClient.patch(APPOINTMENT_STATUS_ENDPOINTS.COMPLETE_EXAM(id), {}).then(r => r.data),
 
     /**
      * PATCH /api/appointment-status/{id}/no-show — Không đến
@@ -97,7 +97,7 @@ export const appointmentStatusService = {
      * Tự động xử lý invoice/billing kèm theo
      */
     confirmAppointment: (id: string) =>
-        axiosClient.post(APPOINTMENT_ENDPOINTS.CONFIRM(id), {}).then(r => r?.data?.data ?? r?.data ?? r),
+        axiosClient.patch(APPOINTMENT_ENDPOINTS.CONFIRM(id), {}).then(r => r?.data?.data ?? r?.data ?? r),
 
     /**
      * DELETE /api/appointments/{id} — Hủy lịch khám (PENDING → CANCELLED)

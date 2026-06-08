@@ -140,7 +140,7 @@ export default function ProfilePage() {
                     gender: data.gender || "MALE",
                     idNumber: data.identity_card_number || data.idNumber || data.citizenId || "",
                     address: data.address || "",
-                    avatar: data.avatar_url?.[0]?.url || data.avatar,
+                    avatar: (Array.isArray(data.avatar_url) && data.avatar_url.length > 0) ? data.avatar_url[data.avatar_url.length - 1]?.url : data.avatar,
                 });
             }
         } catch { /* use defaults */ }

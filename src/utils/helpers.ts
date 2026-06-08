@@ -249,7 +249,8 @@ export const getImageUrl = (url?: any): string => {
     if (typeof url === 'string') {
         path = url;
     } else if (Array.isArray(url) && url.length > 0) {
-        path = typeof url[0] === 'string' ? url[0] : (url[0]?.url || url[0]?.path || '');
+        const lastItem = url[url.length - 1];
+        path = typeof lastItem === 'string' ? lastItem : (lastItem?.url || lastItem?.path || '');
     } else if (typeof url === 'object') {
         path = url.url || url.path || '';
     }

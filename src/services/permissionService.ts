@@ -159,7 +159,23 @@ export const toggleRoleStatus = async (id: string, data: { status: 'ACTIVE' | 'I
 export const getPermissions = async (): Promise<PermissionGroup[]> => {
     try {
         const response = await axiosClient.get(PERMISSION_ENDPOINTS.LIST);
-        return response.data.data || [];
+        const rawData = response.data.data || [];
+        
+        // Group flat permissions by module
+        const map = new Map<string, PermissionData[]>();
+        for (const p of rawData) {
+            const mod = p.module || 'OTHER';
+            if (!map.has(mod)) map.set(mod, []);
+            map.get(mod)!.push(p);
+        }
+        
+        const groups: PermissionGroup[] = Array.from(map.entries()).map(([module, perms]) => ({
+            group: module,
+            groupLabel: module,
+            permissions: perms
+        }));
+        
+        return groups;
     } catch (error) {
         if (process.env.NODE_ENV === 'development') {
             console.error('Lỗi lấy danh sách quyền:', error);
@@ -420,6 +436,16 @@ export const getRoleApiPermissions = async (roleId: string): Promise<any> => {
         return response.data;
     } catch (error: any) {
         throw new Error(error.response?.data?.message || 'Lấy API của vai trò thất bại');
+    }
+};
+
+/** PUT /api/roles/{roleId}/api-permissions — Thay thế toàn bộ API cho vai trò */
+export const replaceRoleApiPermissions = async (roleId: string, apiIds: string[]): Promise<any> => {
+    try {
+        const response = await axiosClient.put(ROLE_ENDPOINTS.API_PERMISSIONS(roleId), { api_ids: apiIds });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Cập nhật API thất bại');
     }
 };
 

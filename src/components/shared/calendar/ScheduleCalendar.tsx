@@ -200,25 +200,44 @@ export function ScheduleCalendar({
                             )}
 
                             {!loading && (
-                                <div className="space-y-1.5 flex-1">
-                                    {visible.map((ev) => {
-                                        const colorKey = ev.color ?? statusToColor(ev.status) ?? shiftToColor(ev.shift);
-                                        const cls = COLOR_MAP[colorKey];
+                                <div className="space-y-2 flex-1 pt-1">
+                                    {["Sáng", "Chiều", "Tối", "Khác"].map((groupName) => {
+                                        const groupEvs = visible.filter((ev) => {
+                                            const color = shiftToColor(ev.shift);
+                                            if (color === "blue") return groupName === "Sáng";
+                                            if (color === "violet") return groupName === "Chiều";
+                                            if (color === "amber") return groupName === "Tối";
+                                            return groupName === "Khác";
+                                        });
+
+                                        if (groupEvs.length === 0) return null;
+
                                         return (
-                                            <div
-                                                key={ev.id}
-                                                role="button"
-                                                tabIndex={0}
-                                                onClick={(e) => { e.stopPropagation(); onEventClick?.(ev); }}
-                                                onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onEventClick?.(ev); } }}
-                                                className={`group flex flex-col w-full px-2 py-1.5 rounded-lg border transition-all ${cls} ${onEventClick ? "cursor-pointer hover:scale-[1.02] hover:shadow-sm" : ""}`}
-                                                title={`${ev.title}${ev.subtitle ? " · " + ev.subtitle : ""}`}
-                                            >
-                                                <div className="flex items-center gap-1.5 overflow-hidden">
-                                                    <span className="text-[11px] font-medium leading-tight truncate">
-                                                        {ev.title}
-                                                    </span>
+                                            <div key={groupName} className="space-y-1">
+                                                <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider pl-1">
+                                                    {groupName}
                                                 </div>
+                                                {groupEvs.map((ev) => {
+                                                    const colorKey = ev.color ?? statusToColor(ev.status) ?? shiftToColor(ev.shift);
+                                                    const cls = COLOR_MAP[colorKey];
+                                                    return (
+                                                        <div
+                                                            key={ev.id}
+                                                            role="button"
+                                                            tabIndex={0}
+                                                            onClick={(e) => { e.stopPropagation(); onEventClick?.(ev); }}
+                                                            onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onEventClick?.(ev); } }}
+                                                            className={`group flex flex-col w-full px-2 py-1.5 rounded-lg border transition-all ${cls} ${onEventClick ? "cursor-pointer hover:scale-[1.02] hover:shadow-sm" : ""}`}
+                                                            title={`${ev.title}${ev.subtitle ? " · " + ev.subtitle : ""}`}
+                                                        >
+                                                            <div className="flex items-center gap-1.5 overflow-hidden">
+                                                                <span className="text-[11px] font-medium leading-tight truncate">
+                                                                    {ev.title}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         );
                                     })}
@@ -226,7 +245,7 @@ export function ScheduleCalendar({
                                         <button
                                             type="button"
                                             onClick={(e) => { e.stopPropagation(); setExpandedDates(prev => ({ ...prev, [iso]: true })); }}
-                                            className="w-full mt-1 text-center text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border border-transparent hover:border-blue-100 dark:hover:border-blue-800"
+                                            className="w-full mt-2 text-center text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border border-transparent hover:border-blue-100 dark:hover:border-blue-800"
                                         >
                                             + {overflow} lịch khác
                                         </button>
@@ -235,7 +254,7 @@ export function ScheduleCalendar({
                                         <button
                                             type="button"
                                             onClick={(e) => { e.stopPropagation(); setExpandedDates(prev => ({ ...prev, [iso]: false })); }}
-                                            className="w-full mt-1 text-center text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center gap-1 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                                            className="w-full mt-2 text-center text-[11px] font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center gap-1 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
                                         >
                                             <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>expand_less</span>
                                             Thu gọn

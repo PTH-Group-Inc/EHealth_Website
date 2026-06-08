@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import axiosClient from "@/api/axiosClient";
-import { STAFF_ENDPOINTS, STAFF_SCHEDULE_ENDPOINTS } from "@/api/endpoints";
+import { STAFF_ENDPOINTS, STAFF_SCHEDULE_ENDPOINTS, MEDICAL_ROOM_ENDPOINTS } from "@/api/endpoints";
 import { staffScheduleService, type StaffSchedule } from "@/services/staffScheduleService";
 import { workShiftService, type WorkShift } from "@/services/workShiftService";
 import { useToast } from "@/contexts/ToastContext";
@@ -113,11 +113,18 @@ export default function StaffSchedulePage() {
         setAutoProgress({ done: 0, total: 0, error: 0 });
 
         try {
+            // Fetch medical rooms
+            const roomsRes = await axiosClient.get(MEDICAL_ROOM_ENDPOINTS.LIST, { params: { limit: 500 } });
+            const allRooms: any[] = roomsRes.data?.data?.items ?? roomsRes.data?.data ?? roomsRes.data?.items ?? roomsRes.data ?? [];
+            const activeRooms = allRooms.filter((r) => String(r.status ?? "").toUpperCase() === "ACTIVE");
+            if (activeRooms.length === 0) { toast.warning("Không có phòng y tế nào đang hoạt động."); setAutoRunning(false); return; }
+
             const staffRes = await axiosClient.get(STAFF_ENDPOINTS.LIST, { params: { limit: 500, role: autoForm.role } });
             const raw: any[] = staffRes.data?.data?.items ?? staffRes.data?.data ?? staffRes.data?.items ?? staffRes.data ?? [];
             const staffList = (Array.isArray(raw) ? raw : []).filter((s: any) => {
-                const r = String(s.role ?? s.position ?? "").toUpperCase();
-                return r.includes(autoForm.role.toUpperCase()) || autoForm.role === "ALL";
+                if (autoForm.role === "ALL") return true;
+                const roles = Array.isArray(s.roles) ? s.roles : [s.role, s.position].filter(Boolean);
+                return roles.some((r: any) => String(r).toUpperCase().includes(autoForm.role.toUpperCase()));
             });
             if (staffList.length === 0) { toast.warning(`Không có nhân sự role=${autoForm.role}.`); setAutoRunning(false); return; }
 
@@ -130,44 +137,46 @@ export default function StaffSchedulePage() {
                 days.push(d.toISOString().slice(0, 10));
             }
 
-            type Assignment = { workDate: string; staffId: string; shiftId: string };
+            type Assignment = { work_date: string; staff_id: string; shift_id: string; medical_room_id: string };
             const assignments: Assignment[] = [];
             let staffIdx = 0;
+
             for (const day of days) {
                 for (const shift of activeShifts) {
-                    const staff = staffList[staffIdx % staffList.length];
-                    assignments.push({
-                        workDate: day,
-                        staffId: String(staff.staffs_id ?? staff.staff_id ?? staff.id ?? ""),
-                        shiftId: shift.id,
-                    });
-                    staffIdx += 1;
+                    let roomIdx = 0;
+                    // Phân bổ staff vào các phòng, mỗi shift lấy số lượng staff bằng số lượng phòng hoặc staff có sẵn
+                    const assignCount = Math.min(staffList.length, activeRooms.length, 5); // Tối đa 5 người 1 ca để test
+                    for (let i = 0; i < assignCount; i++) {
+                        const staff = staffList[staffIdx % staffList.length];
+                        const room = activeRooms[roomIdx % activeRooms.length];
+                        
+                        assignments.push({
+                            work_date: day,
+                            staff_id: String(staff.users_id ?? staff.staffs_id ?? staff.staff_id ?? staff.id ?? ""),
+                            shift_id: shift.id,
+                            medical_room_id: String(room.medical_rooms_id ?? room.medical_room_id ?? room.id ?? ""),
+                        });
+                        
+                        staffIdx += 1;
+                        roomIdx += 1;
+                    }
                 }
             }
 
-            setAutoProgress({ done: 0, total: assignments.length, error: 0 });
+            setAutoProgress({ done: 50, total: 100, error: 0 });
 
-            let done = 0, errors = 0;
-            for (const a of assignments) {
-                try {
-                    await axiosClient.post(STAFF_SCHEDULE_ENDPOINTS.CREATE, {
-                        staff_id: a.staffId,
-                        shift_id: a.shiftId,
-                        work_date: a.workDate,
-                        status: "SCHEDULED",
-                    });
-                    done += 1;
-                } catch {
-                    errors += 1;
-                }
-                setAutoProgress({ done, total: assignments.length, error: errors });
-            }
+            const res = await axiosClient.post(STAFF_SCHEDULE_ENDPOINTS.BATCH, { assignments });
+            const resultData = res.data?.data;
+            const successCount = resultData?.success ?? assignments.length;
+            const failedCount = resultData?.failed ?? 0;
 
-            toast.success(`Đã tạo ${done}/${assignments.length} lịch (lỗi: ${errors}).`);
+            setAutoProgress({ done: 100, total: 100, error: failedCount });
+
+            toast.success(`Phân lịch AI hoàn tất: ${successCount} thành công, ${failedCount} lỗi.`);
             setShowAutoModal(false);
             await load();
         } catch (err: any) {
-            toast.error(err?.response?.data?.message ?? "Lỗi khi auto-assign.");
+            toast.error(err?.response?.data?.message ?? "Lỗi khi chạy thuật toán phân lịch AI.");
         } finally {
             setAutoRunning(false);
         }
@@ -358,17 +367,17 @@ export default function StaffSchedulePage() {
 
 function mapSchedule(s: any): StaffSchedule {
     return {
-        id: String(s.schedule_id ?? s.id ?? ""),
-        staffId: String(s.staff_id ?? ""),
-        staffName: s.staff_name ?? s.full_name ?? "",
+        id: String(s.staff_schedules_id ?? s.schedule_id ?? s.id ?? ""),
+        staffId: String(s.user_id ?? s.staff_id ?? ""),
+        staffName: s.staff_name ?? s.full_name ?? s.user?.full_name ?? "",
         shiftId: String(s.shift_id ?? ""),
-        shiftName: s.shift_name ?? s.shift?.name ?? "",
-        workDate: (s.work_date ?? s.date ?? "").slice(0, 10),
+        shiftName: s.shift_name ?? s.shift?.name ?? s.shift_code ?? "",
+        workDate: (s.working_date ?? s.work_date ?? s.date ?? "").slice(0, 10),
         startTime: s.start_time ?? "",
         endTime: s.end_time ?? "",
         departmentId: s.department_id ?? "",
         status: (s.status ?? "SCHEDULED") as StaffSchedule["status"],
-        note: s.note ?? "",
+        note: s.leave_reason ?? s.note ?? "",
         createdAt: s.created_at ?? "",
     };
 }
