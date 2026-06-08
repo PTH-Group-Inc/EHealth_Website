@@ -201,6 +201,8 @@ export const createAppointment = async (data: CreateAppointmentData): Promise<Ap
         if (data.reason) payload.reason_for_visit = data.reason;
         if (data.note) payload.symptoms_notes = data.note;
         if (data.serviceId) payload.facility_service_id = data.serviceId;
+        const specialtyId = data.specialtyId || data.departmentId || (data as any).specialty_id || (data as any).department_id;
+        if (specialtyId) payload.specialty_id = specialtyId;
         // Back-compat: giữ lại tên field cũ cho các validator linh hoạt
         if (data.patientName) payload.patient_name = data.patientName;
         if (data.phone) payload.phone = data.phone;

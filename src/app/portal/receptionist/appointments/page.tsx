@@ -62,6 +62,21 @@ interface Row {
     createdAt?: string;
 }
 
+function toLocalYYYYMMDD(isoStr?: string) {
+    if (!isoStr) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(isoStr)) {
+        return isoStr;
+    }
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) {
+        return isoStr.slice(0, 10);
+    }
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+}
+
 function normalize(a: any): Row {
     return {
         id: a.appointments_id ?? a.id,
@@ -74,7 +89,7 @@ function normalize(a: any): Row {
         serviceName: a.service_name ?? a.serviceName,
         specialtyName: a.specialty_name ?? a.specialtyName,
         room: a.room_name ?? a.room,
-        date: a.appointment_date ?? a.date,
+        date: toLocalYYYYMMDD(a.appointment_date ?? a.date),
         slotStart: a.slot_start_time,
         slotEnd: a.slot_end_time,
         status: (a.status ?? "PENDING").toString().toUpperCase(),

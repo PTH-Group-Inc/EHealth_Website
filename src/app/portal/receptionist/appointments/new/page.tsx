@@ -209,6 +209,7 @@ export default function NewAppointmentPage() {
                 branchId: fd.branchId || undefined,
                 type: fd.type === "Khám mới" ? "first_visit" : fd.type === "Tái khám" ? "re_examination" : fd.type,
                 note: fd.note || undefined,
+                bookingChannel: "DIRECT_CLINIC",
             });
             router.push("/portal/receptionist/appointments");
         } catch (err: any) {

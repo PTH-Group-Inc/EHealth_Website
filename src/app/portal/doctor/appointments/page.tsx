@@ -41,6 +41,21 @@ const formatTime = (v?: string) => {
     return s.match(/^\d{2}:\d{2}$/) ? s : v;
 };
 
+function toLocalYYYYMMDD(isoStr?: string) {
+    if (!isoStr) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(isoStr)) {
+        return isoStr;
+    }
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) {
+        return isoStr.slice(0, 10);
+    }
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+}
+
 function normalize(a: any) {
     return {
         id: a.appointments_id ?? a.id,
@@ -48,7 +63,7 @@ function normalize(a: any) {
         patientName: a.patient_name ?? a.patientName ?? "(chưa có tên)",
         patientId: a.patient_id ?? a.patientId,
         phone: a.patient_phone ?? a.phone,
-        date: a.appointment_date ?? a.date,
+        date: toLocalYYYYMMDD(a.appointment_date ?? a.date),
         slot: a.slot_start_time ?? a.slot ?? a.time,
         slotEnd: a.slot_end_time ?? a.endTime,
         room: a.room_name ?? a.room ?? a.clinic_room_name,
