@@ -232,7 +232,7 @@ export function AIPatientPreAnalysis({
                     vitals: profile.recentVitals[0] as any,
                     patientHistory: { chronicConditions: profile.chronicConditions, medications: profile.currentMedications } as any,
                 });
-                const data = res?.data as any;
+                const data = (res?.data as any)?.data ?? res?.data;
                 if (data?.diagnoses?.length) {
                     setAnalysis({
                         likelyConditions: data.diagnoses.map((d: any) => ({

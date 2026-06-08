@@ -172,8 +172,8 @@ export default function PharmacistMedicationProfilePage() {
                             {current.length === 0 ? <p className="text-xs italic text-[#687582]">Không có thuốc đang dùng</p>
                             : (
                                 <ul className="space-y-2">
-                                    {current.map((m: any) => (
-                                        <li key={m.id} className="text-sm border-b border-[#e5e7eb] dark:border-[#2d353e] pb-2">
+                                    {current.map((m: any, i: number) => (
+                                        <li key={`${m.id ?? 'curr'}-${i}`} className="text-sm border-b border-[#e5e7eb] dark:border-[#2d353e] pb-2">
                                             <p className="font-medium">{m.drug_name ?? m.name}</p>
                                             <p className="text-xs text-[#687582]">{m.dose ?? ""} · {m.frequency ?? ""} · từ {fmt(m.start_date)}</p>
                                         </li>
@@ -188,8 +188,8 @@ export default function PharmacistMedicationProfilePage() {
                             {allergies.length === 0 ? <p className="text-xs italic text-emerald-600">Không có dị ứng</p>
                             : (
                                 <ul className="space-y-2">
-                                    {allergies.map((a: any) => (
-                                        <li key={a.id} className="bg-rose-50 dark:bg-rose-900/20 rounded p-3 text-sm">
+                                    {allergies.map((a: any, i: number) => (
+                                        <li key={`${a.id ?? 'allergy'}-${i}`} className="bg-rose-50 dark:bg-rose-900/20 rounded p-3 text-sm">
                                             <p className="font-bold text-rose-700">{a.allergen ?? a.name}</p>
                                             {a.severity && <p>Mức độ: {a.severity}</p>}
                                             {a.reaction && <p>Phản ứng: {a.reaction}</p>}
@@ -205,8 +205,8 @@ export default function PharmacistMedicationProfilePage() {
                             {history.length === 0 ? <p className="text-xs italic text-[#687582]">Chưa có lịch sử thuốc</p>
                             : (
                                 <ul className="space-y-2">
-                                    {history.map((h: any) => (
-                                        <li key={h.id} className="text-sm border-b border-[#e5e7eb] dark:border-[#2d353e] pb-2">
+                                    {history.map((h: any, i: number) => (
+                                        <li key={`${h.id ?? 'hist'}-${i}`} className="text-sm border-b border-[#e5e7eb] dark:border-[#2d353e] pb-2">
                                             <p className="font-medium">{h.drug_name ?? h.title}</p>
                                             <p className="text-xs text-[#687582]">{fmt(h.start_date)} → {fmt(h.end_date)}</p>
                                         </li>
@@ -237,8 +237,8 @@ export default function PharmacistMedicationProfilePage() {
                             {adherence.length === 0 ? <p className="text-xs italic text-[#687582]">Chưa có ghi nhận tuân thủ</p>
                             : (
                                 <ul className="space-y-1 mb-3">
-                                    {adherence.map((a: any) => (
-                                        <li key={a.id} className="text-sm border-b border-[#e5e7eb] dark:border-[#2d353e] py-1.5">
+                                    {adherence.map((a: any, i: number) => (
+                                        <li key={`${a.id ?? 'adh'}-${i}`} className="text-sm border-b border-[#e5e7eb] dark:border-[#2d353e] py-1.5">
                                             <p>{a.note ?? a.status ?? "—"}</p>
                                             <p className="text-xs text-[#687582]">{fmt(a.recorded_at ?? a.created_at)}</p>
                                         </li>
@@ -257,8 +257,8 @@ export default function PharmacistMedicationProfilePage() {
                             {treatment.length === 0 ? <p className="text-xs italic text-[#687582]">Chưa có lịch sử điều trị</p>
                             : (
                                 <ul className="space-y-2">
-                                    {treatment.map((t: any) => (
-                                        <li key={t.id} className="text-sm border-b border-[#e5e7eb] dark:border-[#2d353e] pb-2">
+                                    {treatment.map((t: any, i: number) => (
+                                        <li key={`${t.id ?? 'treat'}-${i}`} className="text-sm border-b border-[#e5e7eb] dark:border-[#2d353e] pb-2">
                                             <p className="font-medium">{t.title ?? t.treatment_name ?? "Điều trị"}</p>
                                             <p className="text-xs text-[#687582]">{fmt(t.start_date)} → {fmt(t.end_date)} · {t.status ?? ""}</p>
                                         </li>

@@ -131,7 +131,7 @@ async function runDoctorChecks(
                 symptoms,
                 vitals: formData,
             });
-            const data = (res?.data as unknown) as Record<string, unknown> | null | undefined;
+            const data = ((res?.data as any)?.data ?? res?.data) as Record<string, unknown> | null | undefined;
             if (data) {
                 // Try to extract top diagnosis from various response shapes
                 const suggestions = (data.suggestions as Array<Record<string, unknown>> | undefined)
@@ -180,7 +180,7 @@ async function runPharmacistChecks(
             allergies: (formData.allergies as string[]) ?? [],
             patientProfile: formData.patientProfile as Record<string, unknown> | undefined,
         });
-        const data = (res?.data as unknown) as Record<string, unknown> | null | undefined;
+        const data = ((res?.data as any)?.data ?? res?.data) as Record<string, unknown> | null | undefined;
         if (data) {
             const interactions = (data.interactions as Array<Record<string, unknown>> | undefined) ?? [];
             const serious = interactions.filter(

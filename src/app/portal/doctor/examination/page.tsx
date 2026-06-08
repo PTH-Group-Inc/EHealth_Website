@@ -76,6 +76,7 @@ export default function ExaminationPage() {
     const [patientLoading, setPatientLoading] = useState(false);
     const [emrId, setEmrId] = useState<string | null>(null);
     const [currentEncounterId, setCurrentEncounterId] = useState<string | null>(encounterId);
+    const [encounterStatus, setEncounterStatus] = useState<string | null>(null);
     const encounterInitRef = useRef(false);
 
     const [activeStep, setActiveStep] = useState(0);
@@ -191,6 +192,12 @@ export default function ExaminationPage() {
         // Nếu đã có encounterId từ query, dùng luôn
         if (encounterId) {
             setCurrentEncounterId(encounterId);
+            encounterService.getById(encounterId)
+                .then(data => {
+                    if (data?.patient_id) setPatientId(data.patient_id);
+                    if (data?.status) setEncounterStatus(data.status);
+                })
+                .catch(() => {});
             return;
         }
 
@@ -201,12 +208,16 @@ export default function ExaminationPage() {
                     if (data?.patient_id) setPatientId(data.patient_id);
                     
                     if (data?.id || data?.encounters_id) {
-                        setCurrentEncounterId(data.id || data.encounters_id);
+                        const eid = data.id || data.encounters_id;
+                        setCurrentEncounterId(eid);
+                        if (data?.status) setEncounterStatus(data.status);
                     } else {
                         encounterService.createFromAppointment(appointmentId)
                             .then(newData => { 
                                 if (newData?.patient_id) setPatientId(newData.patient_id);
-                                if (newData?.id) setCurrentEncounterId(newData.id); 
+                                const newEid = newData?.id || newData?.encounters_id;
+                                if (newEid) setCurrentEncounterId(newEid); 
+                                if (newData?.status) setEncounterStatus(newData.status);
                             })
                             .catch(() => {});
                     }
@@ -216,7 +227,9 @@ export default function ExaminationPage() {
                     encounterService.createFromAppointment(appointmentId)
                         .then(newData => { 
                             if (newData?.patient_id) setPatientId(newData.patient_id);
-                            if (newData?.id) setCurrentEncounterId(newData.id); 
+                            const newEid = newData?.id || newData?.encounters_id;
+                            if (newEid) setCurrentEncounterId(newEid); 
+                            if (newData?.status) setEncounterStatus(newData.status);
                         })
                         .catch(() => {});
                 });
@@ -230,7 +243,11 @@ export default function ExaminationPage() {
                 doctorId: user.id,
                 status: 'IN_PROGRESS',
             })
-                .then(data => { if (data?.id) setCurrentEncounterId(data.id); })
+                .then(data => { 
+                    const newEid = data?.id || data?.encounters_id;
+                    if (newEid) setCurrentEncounterId(newEid); 
+                    if (data?.status) setEncounterStatus(data.status);
+                })
                 .catch(() => {/* không block UI */});
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -417,22 +434,18 @@ export default function ExaminationPage() {
     };
 
     // Xử lý Next button — lưu data của step hiện tại trước khi chuyển
+    // Kiểm tra encounter có thể chỉnh sửa không
+    const isEncounterLocked = encounterStatus === 'COMPLETED' || encounterStatus === 'CLOSED';
+
     const handleGoNext = async () => {
         if (!canProceed || activeStep >= STEPS.length - 1) return;
         const eid = currentEncounterId;
-        if (eid) {
+        if (eid && !isEncounterLocked) {
             setStepLoading(true);
             try {
                 if (activeStep === 0) await handleSaveVitals(eid);
-                else if (activeStep === 1) {
-                    // Lưu symptoms vào encounter status/notes
-                    await encounterService.updateStatus(eid, 'IN_PROGRESS', {
-                        chiefComplaint: symptoms,
-                        painLevel,
-                        painLocations,
-                        onsetTime,
-                    });
-                }
+                // Skip updateStatus(IN_PROGRESS) - encounter đã locked thì không update;
+                // và nếu đang IN_PROGRESS thì không cần update lại vì đã là IN_PROGRESS rồi
                 else if (activeStep === 2) await handleSaveLabOrders(eid);
                 else if (activeStep === 3) await handleSaveDiagnosis(eid);
             } catch { /* không block */ } finally {
@@ -467,28 +480,52 @@ export default function ExaminationPage() {
         try {
             const eid = currentEncounterId;
 
-            // 1. Kê đơn thuốc nếu có
-            if (meds.length > 0 && eid) {
+            // 1. Kê đơn thuốc nếu có VÀ encounter chưa bị lock
+            if (meds.length > 0 && eid && !isEncounterLocked) {
                 try {
-                    // 1.1 Tạo đơn thuốc
-                    const rxRes = await prescriptionService.create({
-                        encounterId: eid,
-                        clinical_diagnosis: diagnosis,
-                        doctor_notes: doctorNote || undefined,
-                    });
-                    const rxId = rxRes?.id || rxRes?.prescription_id;
+                    let rxId: string | null = null;
+
+                    // 1.1 Thử tạo đơn thuốc; nếu 409 (đã tồn tại) thì lấy đơn cũ
+                    try {
+                        const rxRes = await prescriptionService.create({
+                            encounterId: eid,
+                            clinical_diagnosis: diagnosis,
+                            doctor_notes: doctorNote || undefined,
+                        });
+                        rxId = rxRes?.id || rxRes?.prescription_id || null;
+                    } catch (rxErr: any) {
+                        if (rxErr?.response?.status === 409) {
+                            // Đơn đã tồn tại — lấy prescription_id từ response hoặc fetch lại
+                            const existingId = rxErr?.response?.data?.data?.prescriptions_id
+                                || rxErr?.response?.data?.data?.id
+                                || rxErr?.response?.data?.prescriptions_id
+                                || rxErr?.response?.data?.id;
+                            if (existingId) {
+                                rxId = existingId;
+                            } else {
+                                // Fetch lại prescription hiện tại của encounter
+                                try {
+                                    const existing = await prescriptionService.getByEncounter(eid);
+                                    rxId = existing?.prescriptions_id || existing?.id || null;
+                                } catch { /* không block */ }
+                            }
+                        } else {
+                            throw rxErr;
+                        }
+                    }
+
                     if (rxId) {
                         // 1.2 Thêm từng thuốc vào đơn
                         for (const m of meds) {
                             if (!m.drugId) continue;
                             await prescriptionService.addDetail(rxId, {
                                 drug_id: m.drugId,
-                                quantity: parseInt(m.duration) || 1, // temporary logic
+                                quantity: parseInt(m.duration) || 1,
                                 dosage: m.dosage,
                                 frequency: m.frequency,
                                 duration_days: parseInt(m.duration) || undefined,
                                 usage_instruction: m.note || undefined,
-                                route_of_administration: 'ORAL', // default fallback
+                                route_of_administration: 'ORAL',
                                 notes: m.note || undefined
                             });
                         }
@@ -503,22 +540,26 @@ export default function ExaminationPage() {
                 }
             }
 
-            // 2. Sign-off nếu có encounter
+            // 2. Sign-off và update status — chỉ khi encounter chưa locked
             if (eid) {
-                // silent: sign best-effort, outer try-catch + status update đã có toast nếu fail.
-                await encounterService.draftSign(eid).catch(err => { console.error("draftSign failed:", err); });
-                await encounterService.officialSign(eid).catch(err => { console.error("officialSign failed:", err); });
-                await encounterService.updateStatus(eid, 'COMPLETED', {
-                    followUpDate: followUp || undefined,
-                    doctorNote: doctorNote || undefined,
-                });
+                if (!isEncounterLocked) {
+                    await encounterService.draftSign(eid).catch(err => { console.error("draftSign failed:", err); });
+                    await encounterService.officialSign(eid).catch(err => { console.error("officialSign failed:", err); });
+                    await encounterService.updateStatus(eid, 'COMPLETED', {
+                        followUpDate: followUp || undefined,
+                        doctorNote: doctorNote || undefined,
+                    });
+                }
 
                 // 3. Tự động tạo hóa đơn (Auto-generate invoice)
                 try {
                     await billingService.generateInvoice(eid);
                     toast.success("Hóa đơn đã được tự động tạo và chuyển đến Lễ tân/Thu ngân.");
                 } catch {
-                    toast.error("Không thể tự động tạo hóa đơn. Vui lòng báo Thu ngân kiểm tra lại.");
+                    // Hóa đơn có thể đã tồn tại — không báo lỗi nếu encounter đã completed
+                    if (!isEncounterLocked) {
+                        toast.error("Không thể tự động tạo hóa đơn. Vui lòng báo Thu ngân kiểm tra lại.");
+                    }
                 }
             } else {
                 // Fallback: dùng emrService tạo record
@@ -531,7 +572,6 @@ export default function ExaminationPage() {
                 } else {
                     await emrService.update(currentEmrId, { ...payload, status: "COMPLETED" });
                 }
-                // silent: sign best-effort, outer try-catch đã có toast nếu lưu chính fail.
                 if (currentEmrId) await emrService.sign(currentEmrId).catch(err => { console.error("emrService.sign failed:", err); });
             }
 
@@ -616,6 +656,24 @@ export default function ExaminationPage() {
                     </div>
                 </div>
 
+                {/* Read-only Banner — hiện khi encounter đã COMPLETED / CLOSED */}
+                {isEncounterLocked && (
+                    <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+                        <span className="material-symbols-outlined text-amber-500 flex-shrink-0">lock</span>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                                Hồ sơ khám đã hoàn tất ({encounterStatus})
+                            </p>
+                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                                Bạn đang xem ở chế độ chỉ đọc. Không thể chỉnh sửa sinh hiệu, chẩn đoán, đơn thuốc hay ký số nữa.
+                            </p>
+                        </div>
+                        <span className="text-xs px-2.5 py-1 bg-amber-100 dark:bg-amber-800/40 text-amber-700 dark:text-amber-300 rounded-lg font-semibold flex-shrink-0">
+                            Read-only
+                        </span>
+                    </div>
+                )}
+
                 {/* Patient Banner */}
                 <div className="bg-white dark:bg-[#1e242b] rounded-xl border border-[#dde0e4] dark:border-[#2d353e] p-4">
                     <div className="flex items-center gap-4 flex-wrap">
@@ -669,7 +727,7 @@ export default function ExaminationPage() {
                     onApplyDiagnosis={handleAIDiagnosisSelect}
                     onApplyLabs={handleAISuggestLabs}
                     onApplyMedication={(med) => {
-                        setMeds(prev => [...prev, med]);
+                        setMeds(prev => [...prev, { ...med, drugId: "" }]);
                         addAuditEntry("AI Pre-Analysis", `AI gợi ý thuốc: ${med.name}`, "accepted");
                     }}
                     onApplyVitals={(v) => {

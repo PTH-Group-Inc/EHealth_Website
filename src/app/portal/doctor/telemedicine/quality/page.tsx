@@ -44,7 +44,7 @@ export default function TeleQualityPage() {
             />
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <StatCard label="Rating TB" value={metrics?.average_rating ? Number(metrics.average_rating).toFixed(2) : "—"} icon="star" color="amber" loading={loading} />
+                <StatCard label="Rating TB" value={metrics?.avg_doctor_overall ? Number(metrics.avg_doctor_overall).toFixed(2) : (metrics?.avg_satisfaction ? Number(metrics.avg_satisfaction).toFixed(2) : "—")} icon="star" color="amber" loading={loading} />
                 <StatCard label="Tổng review" value={metrics?.total_reviews ?? reviews.length} icon="reviews" color="blue" loading={loading} />
                 <StatCard label="Phiên hoàn tất" value={metrics?.completed_sessions ?? 0} icon="task_alt" color="emerald" loading={loading} />
                 <StatCard label="Phản hồi tốt" value={metrics?.positive_count ?? 0} icon="thumb_up" color="violet" loading={loading} />
@@ -58,19 +58,25 @@ export default function TeleQualityPage() {
                 : reviews.length === 0 ? <EmptyState icon="reviews" title="Chưa có review" description="Phiên khám của bạn chưa nhận được đánh giá nào." />
                 : (
                     <ul className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
-                        {reviews.map((r: any) => (
-                            <li key={r.id ?? r.review_id} className="p-4">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-bold text-amber-500 text-lg">{r.rating ?? 0}/5</span>
-                                        <span className="text-xs text-[#687582]">· {r.patient_name ?? "Bệnh nhân ẩn danh"}</span>
+                        {reviews.map((r: any) => {
+                            const rid = r.review_id ?? r.id;
+                            const rating = r.doctor_overall ?? r.overall_satisfaction ?? r.rating ?? 0;
+                            const comment = r.doctor_comment ?? r.patient_comment ?? r.comment;
+                            const cid = r.tele_consultation_id ?? r.consultation_id;
+                            return (
+                                <li key={rid} className="p-4">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-amber-500 text-lg">{rating}/5</span>
+                                            <span className="text-xs text-[#687582]">· {r.patient_name ?? "Bệnh nhân ẩn danh"}</span>
+                                        </div>
+                                        <span className="text-xs text-[#687582]">{fmt(r.created_at ?? r.reviewed_at)}</span>
                                     </div>
-                                    <span className="text-xs text-[#687582]">{fmt(r.created_at ?? r.reviewed_at)}</span>
-                                </div>
-                                {r.comment && <p className="text-sm">{r.comment}</p>}
-                                {r.consultation_id && <p className="text-xs text-[#687582] mt-1 font-mono">Consultation #{r.consultation_id.slice(0, 8)}</p>}
-                            </li>
-                        ))}
+                                    {comment && <p className="text-sm">{comment}</p>}
+                                    {cid && <p className="text-xs text-[#687582] mt-1 font-mono">Consultation #{cid.slice(0, 8)}</p>}
+                                </li>
+                            );
+                        })}
                     </ul>
                 )}
             </div>

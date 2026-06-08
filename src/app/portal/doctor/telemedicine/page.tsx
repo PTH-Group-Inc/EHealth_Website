@@ -30,7 +30,7 @@ export default function DoctorTelemedicineHub() {
 
     useEffect(() => {
         if (!user?.id) return;
-        const today = new Date().toISOString().slice(0, 10);
+        const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
         Promise.allSettled([
             telemedicineService.getList({ doctorId: user.id, from: today, to: today }),
             teleFollowupService.getStats(),
@@ -40,7 +40,7 @@ export default function DoctorTelemedicineHub() {
             const todayBookings = b.status === "fulfilled" ? ((b.value as any)?.data?.length ?? 0) : 0;
             const pending = fs.status === "fulfilled" ? ((fs.value as any)?.pending ?? (fs.value as any)?.upcoming ?? 0) : 0;
             const attn = au.status === "fulfilled" ? ((au.value as any)?.data?.length ?? 0) : 0;
-            const rating = q.status === "fulfilled" ? ((q.value as any)?.average_rating ?? (q.value as any)?.avg_rating ?? 0) : 0;
+            const rating = q.status === "fulfilled" ? ((q.value as any)?.avg_doctor_overall ?? (q.value as any)?.avg_satisfaction ?? (q.value as any)?.average_rating ?? (q.value as any)?.avg_rating ?? 0) : 0;
             setStats({ todayBookings, pendingFollowUps: pending, attentionUpdates: attn, avgRating: rating });
             setLoading(false);
         });

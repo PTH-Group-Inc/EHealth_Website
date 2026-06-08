@@ -16,7 +16,7 @@ function StockInTab() {
         setTodayDisplay(new Date().toLocaleDateString("vi-VN"));
     }, []);
     const [items, setItems] = useState([
-        { name: "", group: "Kháng sinh", unit: "viên", quantity: "", price: "", expiry: "", supplier: "DHG Pharma", batch: "" },
+        { id: "1", name: "", group: "Kháng sinh", unit: "viên", quantity: "", price: "", expiry: "", supplier: "DHG Pharma", batch: "" },
     ]);
     const [note, setNote] = useState("");
 
@@ -25,7 +25,7 @@ function StockInTab() {
     };
 
     const addItem = () => {
-        setItems((prev) => [...prev, { name: "", group: "Kháng sinh", unit: "viên", quantity: "", price: "", expiry: "", supplier: "DHG Pharma", batch: "" }]);
+        setItems((prev) => [...prev, { id: Math.random().toString(), name: "", group: "Kháng sinh", unit: "viên", quantity: "", price: "", expiry: "", supplier: "DHG Pharma", batch: "" }]);
     };
 
     const removeItem = (index: number) => {
@@ -77,7 +77,7 @@ function StockInTab() {
                 </div>
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     {items.map((item, idx) => (
-                        <div key={idx} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                        <div key={item.id ?? idx} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-xs font-bold text-[#3C81C6]">Thuốc #{idx + 1}</span>
                                 {items.length > 1 && <button type="button" onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700"><span className="material-symbols-outlined text-[18px]">close</span></button>}

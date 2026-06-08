@@ -17,8 +17,14 @@ function AlertsTab() {
             inventoryService.getLowStock(),
             inventoryService.getExpiring(),
         ]);
-        if (l.status === "fulfilled") setLowStock(((l.value as any)?.data ?? l.value ?? []));
-        if (e.status === "fulfilled") setExpiring(((e.value as any)?.data ?? e.value ?? []));
+        if (l.status === "fulfilled") {
+            const val = l.value as any;
+            setLowStock(val?.data?.alerts ?? val?.alerts ?? val?.data ?? val ?? []);
+        }
+        if (e.status === "fulfilled") {
+            const val = e.value as any;
+            setExpiring(val?.data?.alerts ?? val?.alerts ?? val?.data ?? val ?? []);
+        }
         setLoading(false);
     }, []);
 
@@ -59,7 +65,7 @@ function AlertsTab() {
                         </thead>
                         <tbody className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
                             {items.map((s: any, i: number) => (
-                                <tr key={s.id ?? i} className={tab === "expiring" ? "bg-rose-50/30 dark:bg-rose-900/10" : ""}>
+                                <tr key={`${s.id ?? 'alert'}-${i}`} className={tab === "expiring" ? "bg-rose-50/30 dark:bg-rose-900/10" : ""}>
                                     <td className="px-4 py-3 font-medium">{s.drug_name ?? "—"}</td>
                                     <td className="px-4 py-3 font-mono text-xs">{s.batch_number ?? s.batch ?? "—"}</td>
                                     <td className="px-4 py-3">{s.warehouse_name ?? "—"}</td>

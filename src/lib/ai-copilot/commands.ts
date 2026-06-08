@@ -36,7 +36,7 @@ export const COMMANDS: Command[] = [
         execute: async (args, _ctx) => {
             try {
                 const res = await aiService.lookupICD10(args);
-                const data = res?.data as any;
+                const data = (res?.data as any)?.data ?? res?.data;
                 const message = data?.message || data?.content || `Kết quả ICD-10 cho "${args}"`;
                 return {
                     type: 'icd',
@@ -58,7 +58,7 @@ export const COMMANDS: Command[] = [
         execute: async (args, _ctx) => {
             try {
                 const res = await aiService.chat({ message: `Thông tin thuốc: ${args}`, context: { type: 'drug_info' } });
-                const data = res?.data as any;
+                const data = (res?.data as any)?.data ?? res?.data;
                 return { type: 'drug', content: data?.message || data?.content || '', applyable: false };
             } catch {
                 return { type: 'text', content: `Không tìm được thông tin thuốc "${args}"`, applyable: false };
@@ -79,7 +79,7 @@ export const COMMANDS: Command[] = [
             }
             try {
                 const res = await aiService.getDiagnosis({ symptoms, vitals });
-                const data = res?.data as any;
+                const data = (res?.data as any)?.data ?? res?.data;
                 const diagnoses = data?.diagnoses || [];
                 if (diagnoses.length === 0) {
                     return { type: 'text', content: 'Không tìm thấy chẩn đoán phù hợp.', applyable: false };
@@ -114,7 +114,7 @@ export const COMMANDS: Command[] = [
             }
             try {
                 const res = await aiService.summarizePatient(ctx.patientId);
-                const data = res?.data as any;
+                const data = (res?.data as any)?.data ?? res?.data;
                 const summary = data?.summary;
                 if (!summary) return { type: 'text', content: 'Không có dữ liệu tóm tắt.', applyable: false };
                 const lines = [
@@ -139,7 +139,7 @@ export const COMMANDS: Command[] = [
         execute: async (args, _ctx) => {
             try {
                 const res = await aiService.chat({ message: `Phác đồ điều trị: ${args}`, context: { type: 'protocol' } });
-                const data = res?.data as any;
+                const data = (res?.data as any)?.data ?? res?.data;
                 return { type: 'protocol', content: data?.message || data?.content || '', applyable: false };
             } catch {
                 return { type: 'text', content: `Không tìm được phác đồ cho "${args}"`, applyable: false };
@@ -162,7 +162,7 @@ export const COMMANDS: Command[] = [
                     drugs: drugs.map(d => ({ name: d, dosage: '' })),
                     allergies: [],
                 });
-                const data = res?.data as any;
+                const data = (res?.data as any)?.data ?? res?.data;
                 const interactions = data?.interactions || [];
                 if (interactions.length === 0) {
                     return { type: 'interaction', content: `✅ Không phát hiện tương tác giữa ${drugs.join(' + ')}`, applyable: false };

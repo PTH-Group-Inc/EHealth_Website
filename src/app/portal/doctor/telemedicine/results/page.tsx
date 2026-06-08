@@ -94,21 +94,25 @@ export default function TeleResultsPage() {
                             <tr><td colSpan={6} className="px-4 py-12 text-center text-[#687582]">Đang tải…</td></tr>
                         ) : items.length === 0 ? (
                             <tr><td colSpan={6}><EmptyState icon="fact_check" title="Chưa có kết quả" /></td></tr>
-                        ) : items.map((r: any) => (
-                            <tr key={r.id ?? r.consultation_id}>
-                                <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">#{(r.consultation_id ?? r.id ?? "").toString().slice(0, 8)}</td>
+                        ) : items.map((r: any, idx: number) => {
+                            const rid = r.result_id ?? r.id;
+                            const cid = r.tele_consultation_id ?? r.consultation_id;
+                            return (
+                            <tr key={rid ?? cid ?? idx}>
+                                <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">#{(cid ?? rid ?? "").toString().slice(0, 12)}</td>
                                 <td className="px-4 py-3 font-medium">{r.patient_name ?? r.patientName ?? "—"}</td>
                                 <td className="px-4 py-3">{fmt(r.created_at ?? r.createdAt)}</td>
                                 <td className="px-4 py-3">{r.status ?? "—"}</td>
-                                <td className="px-4 py-3">{r.signed_at ? <span className="text-emerald-600 text-xs">Đã ký</span> : <span className="text-amber-600 text-xs">Chưa ký</span>}</td>
+                                <td className="px-4 py-3">{r.signed_at || r.is_signed ? <span className="text-emerald-600 text-xs">Đã ký</span> : <span className="text-amber-600 text-xs">Chưa ký</span>}</td>
                                 <td className="px-4 py-3 text-right">
                                     <div className="inline-flex gap-1">
-                                        {!(r.completed_at ?? r.completedAt) && <button onClick={() => onComplete(r.id ?? r.consultation_id)} className="px-2 py-1 text-xs rounded bg-violet-50 text-violet-700">Complete</button>}
-                                        {!r.signed_at && <button onClick={() => onSign(r.id ?? r.consultation_id)} className="px-2 py-1 text-xs rounded bg-[#3C81C6] text-white">Ký</button>}
+                                        {!(r.completed_at ?? r.completedAt) && r.status !== 'COMPLETED' && r.status !== 'SIGNED' && cid && <button onClick={() => onComplete(cid)} className="px-2 py-1 text-xs rounded bg-violet-50 text-violet-700">Complete</button>}
+                                        {!r.signed_at && !r.is_signed && cid && <button onClick={() => onSign(cid)} className="px-2 py-1 text-xs rounded bg-[#3C81C6] text-white">Ký</button>}
                                     </div>
                                 </td>
                             </tr>
-                        ))}
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

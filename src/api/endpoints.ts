@@ -541,6 +541,7 @@ export const AI_ENDPOINTS = {
 export const TELEMEDICINE_ENDPOINTS = {
     // Booking
     LIST: '/api/teleconsultation/booking/my-bookings',
+    DOCTOR_LIST: '/api/teleconsultation/booking',           // ADMIN/DOCTOR — supports doctor_id, patient_id etc.
     BOOK: '/api/teleconsultation/booking',
     DETAIL: (id: string) => `/api/teleconsultation/booking/${id}`,
     CANCEL: (id: string) => `/api/teleconsultation/booking/${id}/cancel`,

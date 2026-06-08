@@ -56,8 +56,8 @@ function DrugsTab() {
                             <tr><th className="text-left px-4 py-3">Tên thuốc</th><th className="text-left px-4 py-3">Mã</th><th className="text-left px-4 py-3">Nhóm</th><th className="text-left px-4 py-3">Trạng thái</th></tr>
                         </thead>
                         <tbody className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
-                            {filtered.slice(0, 100).map((d: any) => (
-                                <tr key={d.id}>
+                            {filtered.slice(0, 100).map((d: any, i: number) => (
+                                <tr key={`${d.id ?? 'drug'}-${i}`}>
                                     <td className="px-4 py-3 font-medium">{d.name}</td>
                                     <td className="px-4 py-3 font-mono text-xs">{d.code ?? "—"}</td>
                                     <td className="px-4 py-3">{d.category_name ?? d.category?.name ?? "—"}</td>
@@ -85,7 +85,7 @@ function SimpleListTab({ endpoint, nameField = "name", extraFields = [] as strin
             : (
                 <ul className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
                     {items.map((it: any, i: number) => (
-                        <li key={it.id ?? i} className="px-4 py-3 text-sm flex items-start justify-between">
+                        <li key={`${it.id ?? 'item'}-${i}`} className="px-4 py-3 text-sm flex items-start justify-between">
                             <div>
                                 <p className="font-medium">{it[nameField] ?? it.name ?? "—"}</p>
                                 <p className="text-xs text-[#687582]">
@@ -128,7 +128,7 @@ function InstructionsTab() {
                 : (
                     <ul className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
                         {(tab === "templates" ? templates : drugInst).map((it: any, i: number) => (
-                            <li key={it.id ?? i} className="p-4 text-sm">
+                            <li key={`${it.id ?? 'inst'}-${i}`} className="p-4 text-sm">
                                 <p className="font-medium">{it.name ?? it.title ?? it.drug_name ?? "—"}</p>
                                 <p className="text-xs text-[#687582] mt-1">{it.content ?? it.instruction ?? "—"}</p>
                             </li>

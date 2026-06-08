@@ -148,11 +148,16 @@ export const telemedicineService = {
         status?: string;
         from?: string;
         to?: string;
-    }): Promise<TelemedicineListResponse> =>
-        axiosClient
-            .get(TELEMEDICINE_ENDPOINTS.LIST, { params })
+    }): Promise<TelemedicineListResponse> => {
+        // Doctor portal passes doctorId → use admin/doctor endpoint
+        const url = params?.doctorId
+            ? TELEMEDICINE_ENDPOINTS.DOCTOR_LIST
+            : TELEMEDICINE_ENDPOINTS.LIST;
+        return axiosClient
+            .get(url, { params })
             .then(r => unwrapList<TelemedicineSession>(r))
-            .catch(() => ({ data: [] })),
+            .catch(() => ({ data: [] }));
+    },
 
     /** Chi tiết một booking */
     getById: (id: string): Promise<TelemedicineSession> =>

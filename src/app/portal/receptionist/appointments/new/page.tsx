@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { getDepartments } from "@/services/departmentService";
-import { staffService } from "@/services/staffService";
-import { getPatients } from "@/services/patientService";
-import { createAppointment } from "@/services/appointmentService";
+import { staffService, unwrapStaffList } from "@/services/staffService";
+import { getPatients, getPatientInsurances, createPatient, addPatientInsurance } from "@/services/patientService";
+import { createAppointment, getAvailableSlots } from "@/services/appointmentService";
 
 
 export default function NewAppointmentPage() {
@@ -22,9 +22,11 @@ export default function NewAppointmentPage() {
         patientName: "", phone: "", cccd: "", dob: "", gender: "Nam",
         department: "", departmentId: "", doctor: "", doctorId: "",
         date: "", time: "", type: "Khám mới", insurance: "", note: "",
+        slotId: "", shiftId: "", branchId: "",
     });
     const [deptList, setDeptList] = useState<{ id: string; name: string }[]>([]);
     const [doctorsByDept, setDoctorsByDept] = useState<Record<string, { id: string; name: string }[]>>({});
+    const [availableSlots, setAvailableSlots] = useState<any[]>([]);
 
     useEffect(() => {
         // Load departments
@@ -42,13 +44,13 @@ export default function NewAppointmentPage() {
         // Load doctors
         staffService.getList({ limit: 200 })
             .then((res: any) => {
-                const items: any[] = res?.data?.data ?? res?.data ?? res ?? [];
-                if (Array.isArray(items) && items.length > 0) {
+                const items = unwrapStaffList(res);
+                if (items.length > 0) {
                     const byDept: Record<string, { id: string; name: string }[]> = {};
                     items.forEach((d: any) => {
-                        const dept = d.department?.name ?? d.departmentName ?? "Khác";
+                        const dept = d.departmentName || "Khác";
                         if (!byDept[dept]) byDept[dept] = [];
-                        byDept[dept].push({ id: d.id ?? "", name: d.full_name ?? d.fullName ?? d.name ?? "" });
+                        byDept[dept].push({ id: d.id, name: d.fullName });
                     });
                     setDoctorsByDept(byDept);
                 }
@@ -58,6 +60,25 @@ export default function NewAppointmentPage() {
                 setDoctorsByDept({});
             });
     }, []);
+
+    // Load available slots when doctor or date changes
+    useEffect(() => {
+        setFd(p => ({ ...p, slotId: "", shiftId: "", branchId: "", time: "" }));
+        if (fd.doctorId && fd.date) {
+            getAvailableSlots({ doctor_id: fd.doctorId, date: fd.date })
+                .then((slots: any[]) => {
+                    if (slots.length > 0) {
+                        const active = slots.filter((s: any) => s.is_available !== false);
+                        setAvailableSlots(active);
+                    } else {
+                        setAvailableSlots([]);
+                    }
+                })
+                .catch(() => setAvailableSlots([]));
+        } else {
+            setAvailableSlots([]);
+        }
+    }, [fd.doctorId, fd.date]);
 
     const handlePatientSearch = async () => {
         if (!patientSearch.trim()) return;
@@ -75,14 +96,40 @@ export default function NewAppointmentPage() {
 
     const selectPatient = (p: any) => {
         setSelectedPatient(p);
+        let formattedDob = "";
+        const rawDob = p.date_of_birth ?? p.dob;
+        if (rawDob) {
+            formattedDob = rawDob.includes("T") ? rawDob.split("T")[0] : rawDob;
+        }
         setFd(prev => ({
             ...prev,
             patientName: p.full_name ?? p.fullName ?? p.name ?? "",
-            phone: p.contact?.phone_number ?? p.phone ?? "",
-            dob: p.date_of_birth ?? p.dob ?? "",
+            phone: p.phone_number ?? p.contact?.phone_number ?? p.phone ?? "",
+            dob: formattedDob,
+            cccd: p.id_card_number ?? p.cccd ?? "",
             gender: p.gender === "MALE" ? "Nam" : p.gender === "FEMALE" ? "Nữ" : p.gender ?? "Nam",
             insurance: p.insurance_number ?? p.bhyt ?? "",
         }));
+
+        const patientId = p.id ?? p.patient_id;
+        if (patientId) {
+            getPatientInsurances(patientId)
+                .then(res => {
+                    if (res.success && res.data && res.data.length > 0) {
+                        const activeIns = res.data.find(ins => ins.is_active !== false) ?? res.data[0];
+                        if (activeIns?.insurance_number) {
+                            setFd(prev => ({
+                                ...prev,
+                                insurance: activeIns.insurance_number
+                            }));
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to load patient insurances:", err);
+                });
+        }
+
         setFoundPatients([]);
         setPatientSearch("");
     };
@@ -109,10 +156,46 @@ export default function NewAppointmentPage() {
         if (!fd.patientName || !fd.phone) {
             alert("Vui lòng nhập đầy đủ thông tin bệnh nhân"); return;
         }
+        if (!selectedPatient && !fd.dob) {
+            alert("Vui lòng nhập ngày sinh bệnh nhân mới"); return;
+        }
         setSaving(true);
         try {
+            let patientId = selectedPatient?.id ?? selectedPatient?.patient_id;
+            
+            if (!patientId) {
+                // Register patient first
+                const newPatientRes = await createPatient({
+                    full_name: fd.patientName,
+                    date_of_birth: fd.dob,
+                    gender: fd.gender === "Nam" ? "MALE" : fd.gender === "Nữ" ? "FEMALE" : "OTHER",
+                    id_card_number: fd.cccd || undefined,
+                    phone_number: fd.phone,
+                    force_create: true,
+                } as any);
+
+                if (!newPatientRes.success || !newPatientRes.data) {
+                    alert("Tạo hồ sơ bệnh nhân thất bại: " + (newPatientRes.message || "Vui lòng thử lại"));
+                    setSaving(false);
+                    return;
+                }
+
+                patientId = newPatientRes.data.id ?? newPatientRes.data.patient_id;
+
+                // Add insurance card if provided
+                if (fd.insurance && fd.insurance.trim()) {
+                    await addPatientInsurance(patientId!, {
+                        provider_id: "INS_BHYT",
+                        insurance_number: fd.insurance.trim(),
+                        start_date: `${new Date().getFullYear() - 1}-01-01`,
+                        end_date: `${new Date().getFullYear() + 5}-12-31`,
+                        is_primary: true
+                    });
+                }
+            }
+
             await createAppointment({
-                patientId: selectedPatient?.id ?? undefined,
+                patientId: patientId,
                 patientName: fd.patientName,
                 phone: fd.phone,
                 departmentId: fd.departmentId || undefined,
@@ -121,12 +204,15 @@ export default function NewAppointmentPage() {
                 doctorName: fd.doctor || undefined,
                 date: fd.date,
                 time: fd.time,
+                slotId: fd.slotId || undefined,
+                shiftId: fd.shiftId || undefined,
+                branchId: fd.branchId || undefined,
                 type: fd.type === "Khám mới" ? "first_visit" : fd.type === "Tái khám" ? "re_examination" : fd.type,
                 note: fd.note || undefined,
             });
             router.push("/portal/receptionist/appointments");
-        } catch {
-            alert("Đặt lịch hẹn thất bại. Vui lòng thử lại.");
+        } catch (err: any) {
+            alert(err.message || "Đặt lịch hẹn thất bại. Vui lòng thử lại.");
         } finally {
             setSaving(false);
         }
@@ -138,9 +224,9 @@ export default function NewAppointmentPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-[#687582]">
-                    <Link href="/portal/receptionist/appointments" className="hover:text-[#3C81C6]">Lịch hẹn</Link>
+                    <Link href="/portal/receptionist/appointments" className="hover:text-[#3C81C6]">Lịch khám</Link>
                     <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                    <span className="text-[#121417] dark:text-white font-medium">Đặt lịch hẹn mới</span>
+                    <span className="text-[#121417] dark:text-white font-medium">Đặt lịch khám mới</span>
                 </div>
                 <button onClick={() => router.back()} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1e242b] border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
                     <span className="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại
@@ -175,7 +261,7 @@ export default function NewAppointmentPage() {
                                     <button key={p.id ?? i} type="button" onClick={() => selectPatient(p)}
                                         className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors">
                                         <p className="text-sm font-medium text-[#121417] dark:text-white">{p.full_name ?? p.fullName ?? p.name ?? "—"}</p>
-                                        <p className="text-xs text-[#687582]">{p.contact?.phone_number ?? p.phone ?? ""} • {p.patient_code ?? p.id}</p>
+                                        <p className="text-xs text-[#687582]">{p.phone_number ?? p.contact?.phone_number ?? p.phone ?? ""} • {p.patient_code ?? p.id}</p>
                                     </button>
                                 ))}
                             </div>
@@ -220,7 +306,34 @@ export default function NewAppointmentPage() {
                             </select>
                         </div>
                         <Inp label="Ngày hẹn *" name="date" type="date" value={fd.date} onChange={handleChange} />
-                        <Inp label="Giờ hẹn *" name="time" type="time" value={fd.time} onChange={handleChange} />
+                        <div>
+                            <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">
+                                Giờ hẹn * {availableSlots.length > 0 && <span className="text-xs text-emerald-600">(slot trống)</span>}
+                            </label>
+                            {!fd.doctorId || !fd.date ? (
+                                <div className="text-sm text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5">
+                                    Vui lòng chọn bác sĩ và ngày hẹn
+                                </div>
+                            ) : availableSlots.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {availableSlots.map(s => {
+                                        const start = (s.start_time ?? s.time ?? "").toString().slice(0, 5);
+                                        const end = (s.end_time ?? "").toString().slice(0, 5);
+                                        const displayTime = end ? `${start} - ${end}` : start;
+                                        return (
+                                            <button key={s.slot_id} type="button" onClick={() => setFd(p => ({ ...p, time: start, slotId: s.slot_id, shiftId: s.shift_id, branchId: s.branch_id }))}
+                                                className={`px-3 py-2 rounded-xl text-sm font-medium border transition-all ${fd.slotId === s.slot_id ? "bg-[#3C81C6] text-white border-[#3C81C6]" : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white hover:border-[#3C81C6]"}`}>
+                                                {displayTime}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-rose-500 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/30 rounded-xl px-4 py-2.5">
+                                    Bác sĩ không có lịch khám trống hoặc không làm việc vào ngày này.
+                                </div>
+                            )}
+                        </div>
                         <div>
                             <label className="block text-sm font-medium text-[#121417] dark:text-gray-300 mb-1.5">Loại khám</label>
                             <div className="flex gap-2">

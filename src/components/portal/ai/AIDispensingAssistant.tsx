@@ -86,7 +86,8 @@ export function AIDispensingAssistant({ prescriptionId }: AIDispensingAssistantP
                     ],
                     allergies: [],
                 });
-                const data = (res?.data as unknown) as Record<string, unknown> | null | undefined;
+                const responseData = (res?.data as any)?.data ?? res?.data;
+                const data = responseData as Record<string, unknown> | null | undefined;
                 if (data?.interactions && Array.isArray(data.interactions) && data.interactions.length > 0) {
                     setInteractions(data.interactions as InteractionRow[]);
                 } else {

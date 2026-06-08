@@ -52,15 +52,19 @@ export default function MedicalChatPage() {
         } catch { setMessages([]); }
     }, []);
 
-    useEffect(() => { if (selected) loadMessages(selected.id); }, [selected, loadMessages]);
+    useEffect(() => {
+        const cid = selected?.conversation_id ?? selected?.id;
+        if (cid) loadMessages(cid);
+    }, [selected, loadMessages]);
     useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
     const sendMessage = async () => {
-        if (!selected || !text.trim()) return;
+        const cid = selected?.conversation_id ?? selected?.id;
+        if (!cid || !text.trim()) return;
         try {
-            await axiosClient.post(`/api/teleconsultation/medical-chat/conversations/${selected.id}/messages`, { content: text });
+            await axiosClient.post(`/api/teleconsultation/medical-chat/conversations/${cid}/messages`, { content: text });
             setText("");
-            await loadMessages(selected.id);
+            await loadMessages(cid);
         } catch (e: any) { alert(e?.message ?? "Gửi thất bại"); }
     };
 
@@ -86,20 +90,24 @@ export default function MedicalChatPage() {
                         : conversations.length === 0 ? <EmptyState icon="chat" title="Chưa có hội thoại" compact />
                         : (
                             <ul>
-                                {conversations.map((c: any) => (
-                                    <li
-                                        key={c.id ?? c.conversation_id}
-                                        onClick={() => setSelected(c)}
-                                        className={`px-3 py-2.5 border-b border-[#e5e7eb] dark:border-[#2d353e] cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 ${selected?.id === c.id ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <p className="font-medium text-sm">{c.patient_name ?? c.patientName ?? "Bệnh nhân"}</p>
-                                            {c.unread_count > 0 && <span className="bg-rose-500 text-white text-[10px] px-1.5 rounded-full">{c.unread_count}</span>}
-                                        </div>
-                                        <p className="text-xs text-[#687582] truncate mt-0.5">{c.last_message ?? c.lastMessage ?? "—"}</p>
-                                        <p className="text-[10px] text-[#687582] mt-0.5">{fmtDate(c.updated_at ?? c.last_message_at)}</p>
-                                    </li>
-                                ))}
+                                {conversations.map((c: any) => {
+                                    const cid = c.conversation_id ?? c.id;
+                                    const selId = selected?.conversation_id ?? selected?.id;
+                                    return (
+                                        <li
+                                            key={cid}
+                                            onClick={() => setSelected(c)}
+                                            className={`px-3 py-2.5 border-b border-[#e5e7eb] dark:border-[#2d353e] cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 ${selId === cid ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <p className="font-medium text-sm">{c.patient_name ?? c.patientName ?? "Bệnh nhân"}</p>
+                                                {c.unread_count > 0 && <span className="bg-rose-500 text-white text-[10px] px-1.5 rounded-full">{c.unread_count}</span>}
+                                            </div>
+                                            <p className="text-xs text-[#687582] truncate mt-0.5">{c.last_message ?? c.lastMessage ?? "—"}</p>
+                                            <p className="text-[10px] text-[#687582] mt-0.5">{fmtDate(c.updated_at ?? c.last_message_at)}</p>
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         )}
                     </div>
@@ -114,19 +122,22 @@ export default function MedicalChatPage() {
                             <div className="p-3 border-b border-[#e5e7eb] dark:border-[#2d353e] flex items-center justify-between">
                                 <div>
                                     <p className="font-bold">{selected.patient_name ?? selected.patientName}</p>
-                                    <p className="text-xs text-[#687582]">Conversation #{selected.id?.slice?.(0, 8)}</p>
+                                    <p className="text-xs text-[#687582]">Conversation #{(selected.conversation_id ?? selected.id)?.slice?.(0, 8)}</p>
                                 </div>
                             </div>
                             <div className="flex-1 overflow-y-auto p-3 space-y-2">
                                 {messages.length === 0 ? <p className="text-center text-xs text-[#687582] py-8">Chưa có tin nhắn</p>
-                                : messages.map((m: any) => (
-                                    <div key={m.id} className={`flex ${m.sender_role === "DOCTOR" || m.is_self ? "justify-end" : "justify-start"}`}>
-                                        <div className={`max-w-[70%] rounded-lg p-2.5 text-sm ${m.sender_role === "DOCTOR" || m.is_self ? "bg-[#3C81C6] text-white" : "bg-gray-100 dark:bg-gray-800"}`}>
-                                            <p>{m.content ?? m.message}</p>
-                                            <p className="text-[10px] mt-1 opacity-75">{fmt(m.created_at ?? m.createdAt)}</p>
+                                : messages.map((m: any) => {
+                                    const mid = m.message_id ?? m.id;
+                                    return (
+                                        <div key={mid} className={`flex ${m.sender_role === "DOCTOR" || m.is_self ? "justify-end" : "justify-start"}`}>
+                                            <div className={`max-w-[70%] rounded-lg p-2.5 text-sm ${m.sender_role === "DOCTOR" || m.is_self ? "bg-[#3C81C6] text-white" : "bg-gray-100 dark:bg-gray-800"}`}>
+                                                <p>{m.content ?? m.message}</p>
+                                                <p className="text-[10px] mt-1 opacity-75">{fmt(m.created_at ?? m.createdAt)}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 <div ref={endRef} />
                             </div>
                             <div className="p-3 border-t border-[#e5e7eb] dark:border-[#2d353e] flex gap-2">

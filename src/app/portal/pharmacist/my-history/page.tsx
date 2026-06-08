@@ -21,6 +21,7 @@ export default function PharmacistMyHistoryPage() {
     const [date, setDate] = useState("");
 
     const load = useCallback(async () => {
+        // Load personal dispensing history using pharmacist user.id
         if (!user?.id) return;
         setLoading(true);
         try {

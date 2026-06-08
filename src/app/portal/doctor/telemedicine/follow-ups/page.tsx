@@ -97,18 +97,19 @@ export default function TeleFollowUpsPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
-                                {plans.map((p: any) => {
+                                {plans.map((p: any, idx: number) => {
+                                    const pid = p.plan_id ?? p.id;
                                     const status = (p.status ?? "PENDING").toString().toUpperCase();
                                     const meta = STATUS_META[status] ?? { label: status, cls: "bg-gray-100 text-gray-700" };
                                     return (
-                                        <tr key={p.id ?? p.plan_id}>
-                                            <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">#{(p.id ?? p.plan_id ?? "").toString().slice(0, 8)}</td>
+                                        <tr key={pid ?? idx}>
+                                            <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">#{(pid ?? "").toString().slice(0, 12)}</td>
                                             <td className="px-4 py-3 font-medium">{p.patient_name ?? p.patientName ?? "—"}</td>
-                                            <td className="px-4 py-3">{fmt(p.scheduled_at ?? p.followup_date)}</td>
+                                            <td className="px-4 py-3">{fmt(p.next_follow_up_date ?? p.scheduled_at ?? p.followup_date)}</td>
                                             <td className="px-4 py-3"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${meta.cls}`}>{meta.label}</span></td>
                                             <td className="px-4 py-3 text-right">
-                                                {status !== "COMPLETED" && (
-                                                    <button onClick={() => onComplete(p.id ?? p.plan_id)} className="px-2 py-1 text-xs rounded bg-emerald-50 text-emerald-700">Complete</button>
+                                                {status !== "COMPLETED" && pid && (
+                                                    <button onClick={() => onComplete(pid)} className="px-2 py-1 text-xs rounded bg-emerald-50 text-emerald-700">Complete</button>
                                                 )}
                                             </td>
                                         </tr>
@@ -121,17 +122,20 @@ export default function TeleFollowUpsPage() {
                     attention.length === 0 ? <EmptyState icon="priority_high" title="Hết update cần phản hồi" variant="success" />
                     : (
                         <ul className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
-                            {attention.map((u: any) => (
-                                <li key={u.id} className="p-4 flex items-start gap-3">
+                            {attention.map((u: any, idx: number) => {
+                                const uid = u.update_id ?? u.id;
+                                return (
+                                <li key={uid ?? idx} className="p-4 flex items-start gap-3">
                                     <span className="material-symbols-outlined text-amber-500 mt-1">priority_high</span>
                                     <div className="flex-1">
-                                        <p className="font-medium">{u.patient_name ?? u.patientName} · {u.update_type ?? "Update"}</p>
+                                        <p className="font-medium">{u.patient_name ?? u.patientName ?? "Bệnh nhân"} · {u.update_type ?? "Update"}</p>
                                         <p className="text-sm text-[#687582]">{u.content ?? u.message}</p>
                                         <p className="text-xs text-[#687582] mt-1">{fmtDateTime(u.created_at ?? u.createdAt)}</p>
                                     </div>
-                                    <button onClick={() => onRespond(u.id)} className="px-3 py-1.5 text-xs rounded bg-[#3C81C6] text-white">Phản hồi</button>
+                                    {uid && <button onClick={() => onRespond(uid)} className="px-3 py-1.5 text-xs rounded bg-[#3C81C6] text-white">Phản hồi</button>}
                                 </li>
-                            ))}
+                                );
+                            })}
                         </ul>
                     )
                 )}

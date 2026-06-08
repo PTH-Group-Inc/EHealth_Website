@@ -44,11 +44,11 @@ function normalizeStatus(raw: any): StockOutStatus {
 
 function mapOrder(r: any): StockOutOrder {
     return {
-        id: String(r.stock_out_id ?? r.stockOutId ?? r.id ?? r.order_id ?? ""),
+        id: String(r.stock_out_order_id ?? r.stock_out_id ?? r.stockOutId ?? r.id ?? r.order_id ?? ""),
         code: r.code ?? r.order_code ?? r.stock_out_code ?? "",
         warehouseName: r.warehouse_name ?? r.warehouseName ?? "",
-        reason: r.reason ?? r.note ?? r.description ?? "",
-        totalItems: Number(r.total_items ?? r.totalItems ?? r.item_count ?? 0),
+        reason: r.notes ?? r.reason ?? r.note ?? r.reason_type ?? r.reasonType ?? r.description ?? "",
+        totalItems: Number(r.total_items ?? r.totalItems ?? r.total_quantity ?? r.totalQuantity ?? r.item_count ?? 0),
         totalValue: Number(r.total_value ?? r.totalValue ?? r.total_amount ?? 0),
         status: normalizeStatus(r.status),
         createdBy: r.created_by_name ?? r.createdByName ?? "",

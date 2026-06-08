@@ -47,8 +47,8 @@ export default function DoctorTeleBookingsPage() {
         if (statusFilter !== "ALL" && status !== statusFilter) return false;
         if (search) {
             const q = search.toLowerCase();
-            if (!(s.patientName ?? s.patient_name ?? "").toLowerCase().includes(q) &&
-                !(s.id ?? "").toString().toLowerCase().includes(q)) return false;
+            if (!(s.patient_name ?? s.patientName ?? "").toLowerCase().includes(q) &&
+                !(s.session_code ?? s.id ?? "").toString().toLowerCase().includes(q)) return false;
         }
         return true;
     }), [items, statusFilter, search]);
@@ -111,22 +111,26 @@ export default function DoctorTeleBookingsPage() {
                             ) : filtered.length === 0 ? (
                                 <tr><td colSpan={6}><EmptyState icon="videocam_off" title="Không có phiên khám" description="Không có booking khớp bộ lọc." /></td></tr>
                             ) : filtered.map((s: any) => {
+                                const sid = s.session_id ?? s.id;
                                 const status = (s.status ?? "PENDING").toString().toUpperCase();
                                 const meta = STATUS_META[status] ?? { label: status, cls: "bg-gray-100 text-gray-700" };
+                                const bookingTime = s.booking_date && s.booking_start_time
+                                    ? `${s.booking_date}T${s.booking_start_time}`
+                                    : s.scheduledAt ?? s.scheduled_at ?? s.startTime ?? s.appointment_date;
                                 return (
-                                    <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                        <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">#{s.id?.slice?.(0, 8)}</td>
-                                        <td className="px-4 py-3 font-medium">{s.patientName ?? s.patient_name ?? "—"}</td>
-                                        <td className="px-4 py-3">{s.type ?? s.consultation_type ?? "video"}</td>
-                                        <td className="px-4 py-3">{fmt(s.scheduledAt ?? s.scheduled_at ?? s.startTime ?? s.appointment_date)}</td>
+                                    <tr key={sid} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                        <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">#{s.session_code ?? sid?.slice?.(0, 12)}</td>
+                                        <td className="px-4 py-3 font-medium">{s.patient_name ?? s.patientName ?? "—"}</td>
+                                        <td className="px-4 py-3">{s.type_name ?? s.type_code ?? s.type ?? s.consultation_type ?? "Video"}</td>
+                                        <td className="px-4 py-3">{fmt(bookingTime)}</td>
                                         <td className="px-4 py-3"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${meta.cls}`}>{meta.label}</span></td>
                                         <td className="px-4 py-3 text-right">
                                             <div className="inline-flex gap-1">
                                                 {status === "PENDING" && (
-                                                    <button onClick={() => onConfirm(s.id)} className="px-2 py-1 text-xs rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100">Xác nhận</button>
+                                                    <button onClick={() => onConfirm(sid)} className="px-2 py-1 text-xs rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100">Xác nhận</button>
                                                 )}
                                                 {(status === "CONFIRMED" || status === "IN_PROGRESS") && (
-                                                    <Link href={`/portal/doctor/telemedicine/room?sessionId=${s.id}`} className="px-2 py-1 text-xs rounded-md bg-[#3C81C6] text-white hover:bg-[#2a6da8]">
+                                                    <Link href={`/portal/doctor/telemedicine/room?sessionId=${sid}`} className="px-2 py-1 text-xs rounded-md bg-[#3C81C6] text-white hover:bg-[#2a6da8]">
                                                         Vào room
                                                     </Link>
                                                 )}

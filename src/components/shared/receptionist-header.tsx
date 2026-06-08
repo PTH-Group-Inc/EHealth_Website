@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
 import { SettingsDropdown } from "./settings-dropdown";
 import { NotificationBell } from "./NotificationBell";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -22,12 +24,15 @@ export function ReceptionistHeader() {
                 <LanguageSwitcher variant="compact" />
                 <NotificationBell />
 
-                <button className="flex items-center gap-2 px-3 py-2 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-lg text-sm font-medium transition-colors">
+                <Link 
+                    href={ROUTES.PORTAL.STAFF.NEW_APPOINTMENT}
+                    className="flex items-center gap-2 px-3 py-2 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-lg text-sm font-medium transition-colors"
+                >
                     <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
                         person_add
                     </span>
                     <span className="hidden sm:inline">Tiếp nhận mới</span>
-                </button>
+                </Link>
 
                 <SettingsDropdown />
             </div>

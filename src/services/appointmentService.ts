@@ -172,8 +172,8 @@ export const createAppointment = async (data: CreateAppointmentData): Promise<Ap
 
         if (!slotId && !shiftId && data.doctorId && data.date && data.time) {
             try {
-                const slots = await doctorAvailabilityService.getSlots({
-                    doctorId: data.doctorId,
+                const slots = await getAvailableSlots({
+                    doctor_id: data.doctorId,
                     date: data.date,
                 });
                 const hhmm = data.time.slice(0, 5);
@@ -546,7 +546,7 @@ export const doctorAvailabilityService = {
      */
     getSlots: (params: { doctorId: string; date: string }) =>
         axiosClient.get(`/api/doctor-availability/${params.doctorId}`, {
-            params: { date: params.date },
+            params: { start_date: params.date, end_date: params.date },
         }).then(r => {
             const d = r?.data?.data ?? r?.data ?? r;
             if (Array.isArray(d)) return d;
@@ -644,10 +644,10 @@ export const appointmentChangesService = {
 // ============================================
 export const appointmentConfirmationService = {
     confirm: (id: string) =>
-        axiosClient.post(APPOINTMENT_CONFIRMATION_ENDPOINTS.CONFIRM(id), {}).then(r => r?.data?.data ?? r?.data ?? r),
+        axiosClient.patch(APPOINTMENT_CONFIRMATION_ENDPOINTS.CONFIRM(id), {}).then(r => r?.data?.data ?? r?.data ?? r),
 
     checkIn: (id: string) =>
-        axiosClient.post(APPOINTMENT_CONFIRMATION_ENDPOINTS.CHECK_IN(id), {}).then(r => r?.data?.data ?? r?.data ?? r),
+        axiosClient.patch(APPOINTMENT_CONFIRMATION_ENDPOINTS.CHECK_IN(id), {}).then(r => r?.data?.data ?? r?.data ?? r),
 
     sendReminder: (id: string) =>
         axiosClient.post(APPOINTMENT_CONFIRMATION_ENDPOINTS.SEND_REMINDER(id), {}).then(r => r?.data?.data ?? r?.data ?? r),
@@ -665,7 +665,7 @@ export const appointmentConfirmationService = {
         ).then(r => r?.data?.data ?? r?.data ?? r),
 
     batchConfirm: (ids: string[]) =>
-        axiosClient.post(APPOINTMENT_CONFIRMATION_ENDPOINTS.BATCH_CONFIRM, { ids }).then(r => r?.data?.data ?? r?.data ?? r),
+        axiosClient.patch(APPOINTMENT_CONFIRMATION_ENDPOINTS.BATCH_CONFIRM, { ids }).then(r => r?.data?.data ?? r?.data ?? r),
 
     batchReminder: (ids: string[]) =>
         axiosClient.post(APPOINTMENT_CONFIRMATION_ENDPOINTS.BATCH_REMINDER, { ids }).then(r => r?.data?.data ?? r?.data ?? r),

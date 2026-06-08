@@ -205,7 +205,7 @@ export function AIVitalAlertBanner({
                     patientHistory,
                 });
                 if (!cancelled) {
-                    setAlerts(res.data?.alerts ?? []);
+                    setAlerts((res.data as any)?.data?.alerts ?? res.data?.alerts ?? []);
                 }
             } catch {
                 // Graceful failure — don't block workflow

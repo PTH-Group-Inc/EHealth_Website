@@ -96,7 +96,7 @@ export default function DoctorAppointmentsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { load(); }, [user?.id]);
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
     const rooms = useMemo(() => {
         const set = new Set(items.map(i => i.room).filter(Boolean) as string[]);

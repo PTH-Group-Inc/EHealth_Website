@@ -208,7 +208,8 @@ export function AIExaminationSummary({
             });
 
             // The analyze endpoint returns a generic response; try to extract text + citations
-            const data = res.data as {
+            const responseData = (res.data as any)?.data ?? res.data;
+            const data = responseData as {
                 message?: string;
                 content?: string;
                 text?: string;

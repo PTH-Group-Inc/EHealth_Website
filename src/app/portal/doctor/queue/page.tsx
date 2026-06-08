@@ -54,7 +54,7 @@ function normalizeItem(a: any): QueueItem {
         room: a.room_name ?? a.room ?? a.clinic_room_name,
         doctorName: a.doctor_name ?? a.doctorName,
         status: normalizeStatus(a.queue_status ?? a.status),
-        appointmentTime: a.appointment_time ?? a.appointmentTime ?? a.slot_start_time ?? a.time,
+        appointmentTime: a.appointment_time ?? a.appointmentTime ?? a.slot_time ?? a.slot_start_time ?? a.time,
         checkInTime: a.check_in_time ?? a.checkInTime,
         waitTime: a.wait_time ?? a.waitTime,
         patientId: a.patient_id ?? a.patientId ?? a.patient?.id,
@@ -77,7 +77,7 @@ export default function DoctorQueuePage() {
         setLoading(true);
         try {
             const [q, r] = await Promise.allSettled([
-                appointmentStatusService.getQueueToday({ doctorId: user.id }),
+                appointmentStatusService.getQueueToday({ doctorId: user.id, include_all: true }),
                 appointmentStatusService.getRoomStatus(),
             ]);
             if (q.status === "fulfilled") {

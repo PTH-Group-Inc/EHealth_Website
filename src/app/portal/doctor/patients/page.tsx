@@ -246,29 +246,51 @@ export default function DoctorPatientsPage() {
                                 </div>
                                 <div>
                                     <p className="text-xs text-[#687582] mb-1">SĐT</p>
-                                    <p className="font-medium">{detail?.phone_number ?? selected.phone ?? "—"}</p>
+                                    <p className="font-medium">{detail?.phone_number || selected.phone || "Chưa có"}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-[#687582] mb-1">Email</p>
-                                    <p className="font-medium">{detail?.email ?? "—"}</p>
+                                    <p className="font-medium">{detail?.email || "Chưa có"}</p>
                                 </div>
                                 <div className="col-span-2">
                                     <p className="text-xs text-[#687582] mb-1">Địa chỉ</p>
-                                    <p>{detail?.address ?? "—"}</p>
+                                    <p>{detail?.address || "Chưa có"}</p>
                                 </div>
                             </div>
 
                             {/* Summary */}
                             {summary && (
                                 <div className="border-t border-[#e5e7eb] dark:border-[#2d353e] pt-4">
-                                    <p className="text-xs text-[#687582] mb-2">Tóm tắt</p>
+                                    <p className="text-xs text-[#687582] mb-2">Thông số hồ sơ</p>
                                     <div className="grid grid-cols-3 gap-3 text-xs">
-                                        {Object.entries(summary).slice(0, 6).map(([k, v]) => (
-                                            <div key={k} className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
-                                                <p className="text-[#687582]">{k}</p>
-                                                <p className="font-bold">{String(v ?? "—")}</p>
-                                            </div>
-                                        ))}
+                                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
+                                            <p className="text-[#687582]">Tuổi</p>
+                                            <p className="font-bold">{summary.age ?? "—"} tuổi</p>
+                                        </div>
+                                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
+                                            <p className="text-[#687582]">Tiền sử bệnh</p>
+                                            <p className="font-bold">{summary.medical_history_count ?? 0} bản ghi</p>
+                                        </div>
+                                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
+                                            <p className="text-[#687582]">Dị ứng</p>
+                                            <p className="font-bold text-amber-600 dark:text-amber-400">
+                                                {summary.allergy_count ? `${summary.allergy_count} dị ứng` : "Không có"}
+                                            </p>
+                                        </div>
+                                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
+                                            <p className="text-[#687582]">Bảo hiểm liên kết</p>
+                                            <p className="font-bold">{summary.insurance_count ?? 0} thẻ</p>
+                                        </div>
+                                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
+                                            <p className="text-[#687582]">Số lần bỏ hẹn</p>
+                                            <p className="font-bold text-red-600 dark:text-red-400">{summary.no_show_count ?? 0} lần</p>
+                                        </div>
+                                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-2">
+                                            <p className="text-[#687582]">Hạn chế (Blacklist)</p>
+                                            <p className={`font-bold ${summary.is_blacklisted ? 'text-red-600' : 'text-emerald-600'}`}>
+                                                {summary.is_blacklisted ? "Có" : "Không"}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             )}

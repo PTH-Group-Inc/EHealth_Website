@@ -102,13 +102,13 @@ function DiagnosisCard({
             {expanded && (
                 <div className="border-t border-gray-100 dark:border-gray-800 px-3 py-2.5 space-y-2.5">
                     {/* Matching symptoms */}
-                    {diagnosis.matchingSymptoms.length > 0 && (
+                    {(diagnosis.matchingSymptoms?.length ?? 0) > 0 && (
                         <div>
                             <p className="text-[10px] font-semibold uppercase tracking-wide text-[#687582] dark:text-gray-400 mb-1">
                                 Triệu chứng phù hợp
                             </p>
                             <div className="flex flex-wrap gap-1">
-                                {diagnosis.matchingSymptoms.map((s, i) => (
+                                {diagnosis.matchingSymptoms?.map((s, i) => (
                                     <span
                                         key={i}
                                         className="text-xs px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
@@ -121,13 +121,13 @@ function DiagnosisCard({
                     )}
 
                     {/* Exclude symptoms */}
-                    {diagnosis.excludeSymptoms.length > 0 && (
+                    {(diagnosis.excludeSymptoms?.length ?? 0) > 0 && (
                         <div>
                             <p className="text-[10px] font-semibold uppercase tracking-wide text-[#687582] dark:text-gray-400 mb-1">
                                 Triệu chứng loại trừ
                             </p>
                             <div className="flex flex-wrap gap-1">
-                                {diagnosis.excludeSymptoms.map((s, i) => (
+                                {diagnosis.excludeSymptoms?.map((s, i) => (
                                     <span
                                         key={i}
                                         className="text-xs px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 border border-red-200 dark:border-red-800"
@@ -229,7 +229,7 @@ export function AISymptomAnalyzer({
                 vitals: vitals as Record<string, unknown> | undefined,
                 patientHistory,
             });
-            setResult(res.data);
+            setResult((res.data as any)?.data ?? res.data);
         } catch {
             setError(true);
         } finally {
@@ -272,8 +272,8 @@ export function AISymptomAnalyzer({
 
     const noCitations =
         result !== null &&
-        result.citations.length === 0 &&
-        allDiagnoses.every((d) => d.citations.length === 0);
+        (result.citations?.length ?? 0) === 0 &&
+        allDiagnoses.every((d) => (d.citations?.length ?? 0) === 0);
 
     return (
         <div className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20 border border-violet-200 dark:border-violet-800 border-l-4 border-l-violet-600 rounded-xl overflow-hidden">

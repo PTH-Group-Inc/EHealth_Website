@@ -44,15 +44,15 @@ export default function PharmacistInventory() {
                 const items: any[] = res?.data?.data ?? res?.data ?? res ?? [];
                 if (Array.isArray(items) && items.length > 0) {
                     setInventory(items.map((d: any) => ({
-                        id: d.id ?? d.drugId,
-                        name: d.drugName ?? d.name ?? "",
-                        group: d.category ?? d.drugCategory ?? "",
-                        unit: d.unit ?? "",
-                        stock: d.quantity ?? d.currentStock ?? 0,
-                        min: d.minQuantity ?? d.reorderPoint ?? 50,
-                        price: d.price ?? d.unitPrice ?? 0,
-                        expiry: d.expiryDate ?? d.nearestExpiry ?? "",
-                        supplier: d.supplierName ?? d.manufacturer ?? "",
+                        id: d.pharmacy_inventory_id ?? d.drug_code ?? d.drugId ?? d.id,
+                        name: d.brand_name ?? d.brandName ?? d.drugName ?? d.name ?? "",
+                        group: d.category_name ?? d.categoryName ?? d.category ?? d.drugCategory ?? "",
+                        unit: d.dispensing_unit ?? d.dispensingUnit ?? d.unit ?? "",
+                        stock: d.stock_quantity ?? d.stockQuantity ?? d.quantity ?? d.currentStock ?? 0,
+                        min: d.low_stock_threshold ?? d.lowStockThreshold ?? d.minQuantity ?? d.reorderPoint ?? 50,
+                        price: d.unit_price ?? d.unitPrice ?? d.price ?? 0,
+                        expiry: (d.expiry_date ?? d.expiryDate ?? d.nearestExpiry ?? "").split("T")[0],
+                        supplier: d.supplierName ?? d.manufacturer ?? d.national_drug_code ?? "",
                     })));
                 }
             })
@@ -249,8 +249,8 @@ export default function PharmacistInventory() {
                                         Kho thuốc trống hoặc không có dữ liệu
                                     </td></tr>
                                 )}
-                                {filtered.map((item) => (
-                                    <tr key={item.id} className="border-b border-[#dde0e4] dark:border-[#2d353e] hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors group">
+                                {filtered.map((item, idx) => (
+                                    <tr key={`${item.id ?? 'inv'}-${idx}`} className="border-b border-[#dde0e4] dark:border-[#2d353e] hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors group">
                                         <td className="px-4 py-3 text-sm font-mono text-[#3C81C6] font-medium">{item.id}</td>
                                         <td className="px-4 py-3 text-sm font-semibold text-[#121417] dark:text-white">{item.name}</td>
                                         <td className="px-4 py-3"><span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-600">{item.group}</span></td>

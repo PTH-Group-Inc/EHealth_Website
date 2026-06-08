@@ -35,7 +35,7 @@ export default function TelePrescriptionsPage() {
 
     const stats = useMemo(() => ({
         total: items.length,
-        sent: items.filter((p: any) => (p.status ?? "").toUpperCase() === "SENT").length,
+        sent: items.filter((p: any) => ((p.prescription_status ?? p.status) ?? "").toUpperCase() === "SENT").length,
         restrictions: restrictions.length,
     }), [items, restrictions]);
 
@@ -80,22 +80,25 @@ export default function TelePrescriptionsPage() {
                             <tr><td colSpan={6} className="px-4 py-12 text-center text-[#687582]">Đang tải…</td></tr>
                         ) : items.length === 0 ? (
                             <tr><td colSpan={6}><EmptyState icon="medication" title="Chưa có đơn từ xa" /></td></tr>
-                        ) : items.map((p: any) => (
-                            <tr key={p.id}>
-                                <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">#{(p.consultation_id ?? "").slice(0, 8)}</td>
+                        ) : items.map((p: any, idx: number) => {
+                            const pid = p.tele_prescription_id ?? p.id;
+                            const cid = p.tele_consultation_id ?? p.consultation_id;
+                            return (
+                            <tr key={pid ?? cid ?? idx}>
+                                <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">#{(p.prescription_code ?? cid ?? "").toString().slice(0, 14)}</td>
                                 <td className="px-4 py-3 font-medium">{p.patient_name ?? "—"}</td>
                                 <td className="px-4 py-3">{p.items_count ?? p.items?.length ?? 0}</td>
-                                <td className="px-4 py-3">{p.status ?? "DRAFT"}</td>
+                                <td className="px-4 py-3">{p.prescription_status ?? p.status ?? "DRAFT"}</td>
                                 <td className="px-4 py-3 text-[#687582]">{fmt(p.created_at)}</td>
                                 <td className="px-4 py-3 text-right">
-                                    <div className="inline-flex gap-1">
-                                        <button onClick={() => onAction(p.consultation_id ?? p.id, "prescribe")} className="px-2 py-1 text-xs rounded bg-blue-50 text-blue-700">Kê đơn</button>
-                                        <button onClick={() => onAction(p.consultation_id ?? p.id, "send")} className="px-2 py-1 text-xs rounded bg-[#3C81C6] text-white">Gửi</button>
-                                        <button onClick={() => onAction(p.consultation_id ?? p.id, "referral")} className="px-2 py-1 text-xs rounded bg-violet-50 text-violet-700">Referral</button>
-                                    </div>
+                                    {cid && <div className="inline-flex gap-1">
+                                        <button onClick={() => onAction(cid, "prescribe")} className="px-2 py-1 text-xs rounded bg-blue-50 text-blue-700">Kê đơn</button>
+                                        <button onClick={() => onAction(cid, "send")} className="px-2 py-1 text-xs rounded bg-[#3C81C6] text-white">Gửi</button>
+                                    </div>}
                                 </td>
                             </tr>
-                        ))}
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

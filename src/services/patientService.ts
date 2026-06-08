@@ -443,6 +443,30 @@ export const createPatient = async (data: CreatePatientRequest): Promise<{ succe
 };
 
 /**
+ * Thêm thẻ bảo hiểm cho bệnh nhân
+ */
+export const addPatientInsurance = async (
+    patientId: string,
+    data: {
+        provider_id: string;
+        insurance_number: string;
+        start_date: string;
+        end_date: string;
+        is_primary?: boolean;
+    }
+): Promise<{ success: boolean; data?: any; message?: string }> => {
+    try {
+        const response = await axiosClient.post(`/api/patients/${patientId}/insurances`, data);
+        return { success: true, data: response.data?.data ?? response.data };
+    } catch (error: any) {
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Thêm thẻ bảo hiểm thất bại',
+        };
+    }
+};
+
+/**
  * Cập nhật thông tin hành chính bệnh nhân
  */
 export const updatePatient = async (patientId: string, data: UpdatePatientRequest): Promise<{ success: boolean; data?: Patient; message?: string }> => {

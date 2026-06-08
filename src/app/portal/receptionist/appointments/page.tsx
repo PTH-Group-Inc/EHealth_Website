@@ -15,7 +15,8 @@ import {
     appointmentConfirmationService,
     cancelAppointment,
     doctorAvailabilityService,
-    markNoShow
+    markNoShow,
+    getAvailableSlots
 } from "@/services/appointmentService";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 
@@ -125,7 +126,7 @@ function CalendarGrid({ month, onMonthChange, items }: {
         return map;
     }, [items]);
 
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayStr = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
     const prev = () => onMonthChange(new Date(year, mon - 1, 1));
     const next = () => onMonthChange(new Date(year, mon + 1, 1));
     const goToday = () => onMonthChange(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
@@ -251,7 +252,7 @@ export default function ReceptionistAppointmentsPage() {
 
     useEffect(() => { load(); }, [load]);
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
     const doctors = useMemo(() => Array.from(new Set(items.map(r => r.doctorName).filter(Boolean))), [items]);
     const services = useMemo(() => Array.from(new Set(items.map(r => r.serviceName).filter(Boolean))), [items]);
@@ -276,8 +277,12 @@ export default function ReceptionistAppointmentsPage() {
     useEffect(() => {
         if (showRescheduleForm && selected?.doctorId && rescheduleDate) {
             setLoadingSlots(true);
-            doctorAvailabilityService.getSlots({ doctorId: selected.doctorId, date: rescheduleDate })
-                .then(slots => { setRescheduleSlots(slots); setRescheduleSlotId(""); })
+            getAvailableSlots({ doctor_id: selected.doctorId, date: rescheduleDate })
+                .then(slots => {
+                    const active = slots.filter((s: any) => s.is_available !== false);
+                    setRescheduleSlots(active);
+                    setRescheduleSlotId("");
+                })
                 .catch(() => setRescheduleSlots([]))
                 .finally(() => setLoadingSlots(false));
         } else {
