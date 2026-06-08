@@ -86,11 +86,11 @@ export default function PharmacistMyHistoryPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[#e5e7eb] dark:divide-[#2d353e]">
-                            {filtered.map((r: any, i: number) => (
-                                <tr key={r.id ?? i}>
-                                    <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">#{(r.id ?? "").toString().slice(0, 8)}</td>
+                             {filtered.map((r: any, i: number) => (
+                                <tr key={r.drug_dispense_orders_id ?? r.id ?? i}>
+                                    <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">#{(r.drug_dispense_orders_id ?? r.id ?? "").toString().slice(0, 8)}</td>
                                     <td className="px-4 py-3 font-medium">{r.patient_name ?? "—"}</td>
-                                    <td className="px-4 py-3 font-mono text-xs">{r.prescription_id?.slice?.(0, 8) ?? "—"}</td>
+                                    <td className="px-4 py-3 font-mono text-xs">{r.prescription_code ?? r.prescription_id ?? "—"}</td>
                                     <td className="px-4 py-3">{r.items_count ?? r.items?.length ?? 0}</td>
                                     <td className="px-4 py-3 text-[#687582]">{fmt(r.dispensed_at ?? r.created_at)}</td>
                                     <td className="px-4 py-3 text-right">

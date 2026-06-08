@@ -34,17 +34,24 @@ export default function PharmacistPrescriptionsPage() {
             axiosClient.get("/api/prescriptions/search/stats"),
         ]);
         if (l.status === "fulfilled") {
-            const d = (l.value as any)?.data?.data ?? (l.value as any)?.data ?? [];
+            const resData = (l.value as any)?.data;
+            const d = resData?.data?.data ?? resData?.data ?? resData ?? [];
             setItems(Array.isArray(d) ? d : []);
         }
-        if (s.status === "fulfilled") setStats((s.value as any)?.data?.data ?? (s.value as any)?.data ?? {});
+        if (s.status === "fulfilled") {
+            const resStats = (s.value as any)?.data;
+            setStats(resStats?.data ?? resStats ?? {});
+        }
         setLoading(false);
     }, []);
 
     useEffect(() => { load(); }, [load]);
 
     const filtered = useMemo(() => items.filter((p: any) => {
-        const status = (p.status ?? "PENDING").toUpperCase();
+        let status = (p.status ?? "PENDING").toUpperCase();
+        if (status === "PRESCRIBED" || status === "SENT") {
+            status = "PENDING";
+        }
         if (statusFilter !== "ALL" && status !== statusFilter) return false;
         if (search) {
             const q = search.toLowerCase();
@@ -53,6 +60,15 @@ export default function PharmacistPrescriptionsPage() {
         }
         return true;
     }), [items, statusFilter, search]);
+
+    const statsCount = useMemo(() => {
+        const total = stats.total ?? items.length;
+        const pending = (stats.PENDING ?? 0) + (stats.PRESCRIBED ?? 0) + (stats.SENT ?? 0) + (stats.pending ?? 0) || 
+                        items.filter((i: any) => ["PENDING", "PRESCRIBED", "SENT"].includes((i.status ?? "").toUpperCase())).length;
+        const dispensed = stats.DISPENSED ?? stats.dispensed ?? items.filter((i: any) => (i.status ?? "").toUpperCase() === "DISPENSED").length;
+        const partial = stats.PARTIAL ?? stats.partial ?? 0;
+        return { total, pending, dispensed, partial };
+    }, [stats, items]);
 
     return (
         <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -67,10 +83,10 @@ export default function PharmacistPrescriptionsPage() {
             />
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <StatCard label="Tổng đơn" value={stats.total ?? items.length} icon="list_alt" color="blue" loading={loading} />
-                <StatCard label="Chờ cấp phát" value={stats.pending ?? items.filter((i: any) => (i.status ?? "").toUpperCase() === "PENDING").length} icon="hourglass_empty" color="amber" loading={loading} />
-                <StatCard label="Đã cấp phát" value={stats.dispensed ?? items.filter((i: any) => (i.status ?? "").toUpperCase() === "DISPENSED").length} icon="task_alt" color="emerald" loading={loading} />
-                <StatCard label="Một phần" value={stats.partial ?? 0} icon="schedule" color="violet" loading={loading} />
+                <StatCard label="Tổng đơn" value={statsCount.total} icon="list_alt" color="blue" loading={loading} />
+                <StatCard label="Chờ cấp phát" value={statsCount.pending} icon="hourglass_empty" color="amber" loading={loading} />
+                <StatCard label="Đã cấp phát" value={statsCount.dispensed} icon="task_alt" color="emerald" loading={loading} />
+                <StatCard label="Một phần" value={statsCount.partial} icon="schedule" color="violet" loading={loading} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-3">
@@ -104,15 +120,15 @@ export default function PharmacistPrescriptionsPage() {
                                 const status = (p.status ?? "PENDING").toUpperCase();
                                 const meta = STATUS_META[status] ?? { label: status, cls: "bg-gray-100 text-gray-700" };
                                 return (
-                                    <tr key={p.id}>
-                                        <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">{p.prescription_code ?? `#${(p.id ?? "").toString().slice(0, 8)}`}</td>
+                                    <tr key={p.prescriptions_id || p.id}>
+                                        <td className="px-4 py-3 font-mono text-xs text-[#3C81C6]">{p.prescription_code ?? `#${(p.prescriptions_id ?? p.id ?? "").toString().slice(0, 8)}`}</td>
                                         <td className="px-4 py-3 font-medium">{p.patient_name ?? "—"}</td>
                                         <td className="px-4 py-3 text-[#687582]">{p.doctor_name ?? "—"}</td>
-                                        <td className="px-4 py-3">{p.items_count ?? p.items?.length ?? 0}</td>
-                                        <td className="px-4 py-3 text-[#687582]">{fmt(p.created_at)}</td>
+                                        <td className="px-4 py-3">{p.detail_count ?? p.items_count ?? p.items?.length ?? 0}</td>
+                                        <td className="px-4 py-3 text-[#687582]">{fmt(p.prescribed_at ?? p.created_at)}</td>
                                         <td className="px-4 py-3"><span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${meta.cls}`}>{meta.label}</span></td>
                                         <td className="px-4 py-3 text-right">
-                                            <Link href={`/portal/pharmacist/dispensing?prescriptionId=${p.id}`} className="px-2 py-1 text-xs rounded bg-[#3C81C6] text-white">Cấp phát</Link>
+                                            <Link href={`/portal/pharmacist/dispensing?prescriptionId=${p.prescriptions_id || p.id}`} className="px-2 py-1 text-xs rounded bg-[#3C81C6] text-white">Cấp phát</Link>
                                         </td>
                                     </tr>
                                 );
