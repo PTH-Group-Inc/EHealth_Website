@@ -492,7 +492,7 @@ export default function ExaminationPage() {
                             clinical_diagnosis: diagnosis,
                             doctor_notes: doctorNote || undefined,
                         });
-                        rxId = rxRes?.id || rxRes?.prescription_id || null;
+                        rxId = rxRes?.prescriptions_id || rxRes?.id || rxRes?.prescription_id || null;
                     } catch (rxErr: any) {
                         if (rxErr?.response?.status === 409) {
                             // Đơn đã tồn tại — lấy prescription_id từ response hoặc fetch lại
