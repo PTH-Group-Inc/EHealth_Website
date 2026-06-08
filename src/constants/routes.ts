@@ -332,6 +332,12 @@ export interface ReceptionistMenuGroup {
 
 export const RECEPTIONIST_MENU_GROUPS: ReceptionistMenuGroup[] = [
   {
+    key: "dashboard",
+    href: ROUTES.PORTAL.STAFF.DASHBOARD,
+    icon: "home",
+    label: "Trang chủ",
+  },
+  {
     key: "operations",
     icon: "support_agent",
     label: "Điều phối",

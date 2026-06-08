@@ -32,11 +32,12 @@ export default function NewAppointmentPage() {
     useEffect(() => {
         getDepartments()
             .then((res: any) => {
-                const items: any[] = res?.data?.data ?? res?.data ?? res ?? [];
-                if (Array.isArray(items) && items.length > 0) {
-                    setDeptList(items.map((d: any) => d.name));
+                const items = res?.data?.items ?? res?.data ?? [];
+                const list = Array.isArray(items) ? items : [];
+                if (list.length > 0) {
+                    setDeptList(list.map((d: any) => d.name));
                     const idMap: Record<string, string> = {};
-                    items.forEach((d: any) => { idMap[d.name] = d.id; });
+                    list.forEach((d: any) => { idMap[d.name] = d.department_id ?? d.id; });
                     setDeptIdMap(idMap);
                 }
             })

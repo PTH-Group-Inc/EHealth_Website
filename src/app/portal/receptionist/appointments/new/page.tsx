@@ -30,8 +30,9 @@ export default function NewAppointmentPage() {
         // Load departments
         getDepartments()
             .then(res => {
-                const items: any[] = (res as any)?.data?.data ?? (res as any)?.data ?? res ?? [];
-                setDeptList(items.map((d: any) => ({ id: d.id ?? "", name: d.name ?? "" })));
+                const items = (res as any)?.data?.items ?? (res as any)?.data ?? [];
+                const list = Array.isArray(items) ? items : [];
+                setDeptList(list.map((d: any) => ({ id: d.department_id ?? d.id ?? "", name: d.name ?? "" })));
             })
             .catch(err => {
                 console.error("Load departments failed:", err);
