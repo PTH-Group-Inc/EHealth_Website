@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ROUTES, DOCTOR_MENU_ITEMS } from "@/constants/routes";
+import { ROUTES, getDoctorMenuItemByHref } from "@/constants/routes";
 import { NotificationBell } from "./NotificationBell";
 import { SettingsDropdown } from "./settings-dropdown";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -18,7 +18,7 @@ export function DoctorHeader() {
         const crumbs = [{ label: "Trang chủ", href: ROUTES.PORTAL.DOCTOR.DASHBOARD as string }];
 
         // Find matching menu item
-        const menuItem = DOCTOR_MENU_ITEMS.find((item) => item.href === pathname);
+        const menuItem = getDoctorMenuItemByHref(pathname);
         if (menuItem && pathname !== ROUTES.PORTAL.DOCTOR.DASHBOARD) {
             crumbs.push({ label: menuItem.label, href: menuItem.href as string });
         }

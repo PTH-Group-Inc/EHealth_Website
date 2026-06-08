@@ -108,6 +108,7 @@
         "pharmacy": "Dược & Kho",
         "finance": "Tài chính",
         "systemData": "Dữ liệu hệ thống",
+        "notifications": "Thông báo",
         "statistics": "Thống kê",
         "activityLogs": "Nhật ký hoạt động",
         "settings": "Cài đặt",
@@ -176,12 +177,10 @@
             "expandSidebar": "Mở rộng thanh bên",
             "collapseSidebar": "Thu nhỏ thanh bên",
             "doctorGroup": {
-                "overview": "Tổng quan",
-                "schedule-shifts": "Lịch & Ca trực",
-                "examination": "Khám bệnh",
-                "treatment-records": "Điều trị & Hồ sơ",
-                "remote-ai": "Từ xa & AI",
-                "settings": "Cài đặt"
+                "today": "Hôm nay",
+                "history": "Lịch sử khám",
+                "work-schedule": "Lịch làm việc",
+                "support": "Hỗ trợ"
             },
             "doctor": {
                 "dashboard": "Trang chủ",
@@ -189,6 +188,7 @@
                 "alerts": "Cảnh báo",
                 "appointments": "Lịch hẹn",
                 "queue": "Hàng đợi",
+                "encounters": "Phiên khám",
                 "schedule": "Lịch làm việc",
                 "leaves": "Nghỉ phép",
                 "shiftSwaps": "Đổi ca",
@@ -203,6 +203,19 @@
                 "aiAssistant": "Trợ lý AI",
                 "telemedicine": "Khám từ xa",
                 "settings": "Cài đặt"
+            },
+            "pharmacistGroup": {
+                "operations": "Nghiệp vụ",
+                "warehouse": "Quản lý kho",
+                "data": "Dữ liệu",
+                "account": "Tài khoản"
+            },
+            "receptionistGroup": {
+                "operations": "Điều phối",
+                "patient-flow": "Bệnh nhân & Lịch hẹn",
+                "finance": "Tài chính",
+                "data": "Dữ liệu",
+                "account": "Tài khoản"
             },
             "pharmacist": {
                 "dashboard": "Trang chủ",

@@ -108,6 +108,7 @@
         "pharmacy": "药房与库存",
         "finance": "财务",
         "systemData": "系统数据",
+        "notifications": "通知",
         "statistics": "统计",
         "activityLogs": "活动日志",
         "settings": "设置",
@@ -176,12 +177,10 @@
             "expandSidebar": "展开侧边栏",
             "collapseSidebar": "收起侧边栏",
             "doctorGroup": {
-                "overview": "概览",
-                "schedule-shifts": "排班与值班",
-                "examination": "诊疗",
-                "treatment-records": "治疗与病历",
-                "remote-ai": "远程与 AI",
-                "settings": "设置"
+                "today": "今日",
+                "history": "就诊历史",
+                "work-schedule": "排班",
+                "support": "支持"
             },
             "doctor": {
                 "dashboard": "首页",
@@ -189,6 +188,7 @@
                 "alerts": "警报",
                 "appointments": "预约",
                 "queue": "队列",
+                "encounters": "就诊",
                 "schedule": "工作排班",
                 "leaves": "请假",
                 "shiftSwaps": "换班",
@@ -203,6 +203,19 @@
                 "aiAssistant": "AI 助手",
                 "telemedicine": "远程医疗",
                 "settings": "设置"
+            },
+            "pharmacistGroup": {
+                "operations": "业务",
+                "warehouse": "仓库",
+                "data": "数据",
+                "account": "账户"
+            },
+            "receptionistGroup": {
+                "operations": "调度",
+                "patient-flow": "患者与预约",
+                "finance": "财务",
+                "data": "数据",
+                "account": "账户"
             },
             "pharmacist": {
                 "dashboard": "首页",

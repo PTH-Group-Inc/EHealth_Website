@@ -115,17 +115,7 @@ export default function ReceptionistDashboard() {
                 icon="contact_emergency"
             />
 
-            {/* ── Row 1: Stat Cards ────────────────────────────────── */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <StatCard label="Tổng lịch hôm nay" value={stats.total} icon="event" color="blue" loading={loading} href="/portal/receptionist/appointments" />
-                <StatCard label="Chờ xác nhận" value={stats.pending} icon="schedule" color="amber" loading={loading} href="/portal/receptionist/appointments" />
-                <StatCard label="Đã tiếp nhận" value={stats.checkedIn} icon="how_to_reg" color="emerald" loading={loading} href="/portal/receptionist/queue" />
-                <StatCard label="Đang khám" value={stats.inProgress} icon="stethoscope" color="violet" loading={loading} href="/portal/receptionist/queue" />
-                <StatCard label="Hoàn tất" value={stats.completed} icon="check_circle" color="blue" loading={loading} />
-                <StatCard label="Hoá đơn chờ thu" value={billingCount} icon="receipt_long" color="pink" loading={loading} href="/portal/receptionist/billing" />
-            </div>
-
-            {/* ── Row 2: Thao tác nhanh ──────────────────────────── */}
+            {/* ── Row 1: Thao tác nhanh (ưu tiên trên fold cho ca lễ tân) ── */}
             <div>
                 <h3 className="text-sm font-bold mb-3 text-[#121417] dark:text-white">Thao tác nhanh</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -138,6 +128,16 @@ export default function ReceptionistDashboard() {
                         </Link>
                     ))}
                 </div>
+            </div>
+
+            {/* ── Row 2: Stat Cards (KPI làm background context) ──── */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <StatCard label="Tổng lịch hôm nay" value={stats.total} icon="event" color="blue" loading={loading} href="/portal/receptionist/appointments" />
+                <StatCard label="Chờ xác nhận" value={stats.pending} icon="schedule" color="amber" loading={loading} href="/portal/receptionist/appointments" />
+                <StatCard label="Đã tiếp nhận" value={stats.checkedIn} icon="how_to_reg" color="emerald" loading={loading} href="/portal/receptionist/queue" />
+                <StatCard label="Đang khám" value={stats.inProgress} icon="stethoscope" color="violet" loading={loading} href="/portal/receptionist/queue" />
+                <StatCard label="Hoàn tất" value={stats.completed} icon="check_circle" color="blue" loading={loading} />
+                <StatCard label="Hoá đơn chờ thu" value={billingCount} icon="receipt_long" color="pink" loading={loading} href="/portal/receptionist/billing" />
             </div>
 
             {/* ── Row 3: 2 columns — Hàng đợi live + Tóm tắt theo trạng thái ── */}

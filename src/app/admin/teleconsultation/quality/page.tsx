@@ -34,21 +34,23 @@ function mapReview(r: any): Review {
         id: String(r.review_id ?? r.id ?? ""),
         patientName: r.patient_name ?? "—",
         doctorName: r.doctor_name ?? "—",
-        rating: Number(r.rating ?? r.overall_rating ?? 0),
-        comment: r.comment ?? r.feedback ?? "",
+        rating: Number(r.overall_satisfaction ?? r.doctor_overall ?? r.rating ?? r.overall_rating ?? 0),
+        comment: r.patient_comment ?? r.doctor_comment ?? r.comment ?? r.feedback ?? "",
         createdAt: r.created_at ?? "",
     };
 }
 
 function mapAlert(r: any): Alert {
     const lvl = String(r.level ?? r.severity ?? "INFO").toUpperCase();
+    const status = String(r.status ?? "").toUpperCase();
     return {
         id: String(r.alert_id ?? r.id ?? ""),
         level: lvl === "CRITICAL" ? "CRITICAL" : lvl === "WARNING" ? "WARNING" : "INFO",
         title: r.title ?? r.message ?? "",
         description: r.description ?? r.details ?? "",
-        doctorName: r.doctor_name ?? "",
-        isResolved: Boolean(r.is_resolved ?? false),
+        doctorName: r.doctor_name ?? r.target_name ?? (r.target_type === "DOCTOR" ? r.target_id : "") ?? "",
+        // BE dùng status = OPEN / RESOLVED
+        isResolved: Boolean(r.is_resolved ?? (status === "RESOLVED")),
         createdAt: r.created_at ?? "",
     };
 }

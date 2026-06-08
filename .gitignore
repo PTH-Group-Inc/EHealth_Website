@@ -55,3 +55,4 @@ qc-reports/
 
 # Vitest coverage
 coverage/
+_legacy/

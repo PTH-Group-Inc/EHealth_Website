@@ -24,6 +24,7 @@ const GROUP_I18N_KEY: Record<string, string> = {
     "medicines": "nav.pharmacy",
     "finance": "nav.finance",
     "system-data": "nav.systemData",
+    "notifications": "nav.notifications",
     "statistics": "nav.statistics",
     "activity-logs": "nav.activityLogs",
     "settings": "nav.settings",

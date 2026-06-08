@@ -16,6 +16,7 @@ import AISimilarCases from "@/components/portal/ai/AISimilarCases";
 import type { AIAuditEntry } from "@/types";
 import { usePageAIContext } from "@/hooks/usePageAIContext";
 import { useAIAmbientEngine } from "@/hooks/useAIAmbientEngine";
+import { useExaminationGuard } from "@/hooks/useExaminationGuard";
 
 /* ──────── Steps Config ──────── */
 const STEPS = [
@@ -77,6 +78,11 @@ export default function ExaminationPage() {
     const encounterInitRef = useRef(false);
 
     const [activeStep, setActiveStep] = useState(0);
+
+    // Guard: cảnh báo rời trang khi encounter chưa hoàn tất
+    const wizardDirty = !!currentEncounterId && activeStep < STEPS.length - 1;
+    useExaminationGuard(wizardDirty);
+
     const [saving, setSaving] = useState(false);
     const [stepLoading, setStepLoading] = useState(false);
     const [vitalErrors, setVitalErrors] = useState<Record<string, string>>({});

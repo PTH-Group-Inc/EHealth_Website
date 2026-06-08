@@ -17,7 +17,7 @@ export default function DispensingPage() {
     const t = useTranslations("pages.portal.pharmacist.dispensing");
     const router = useRouter();
     const searchParams = useSearchParams();
-    const prescriptionId = searchParams.get("id");
+    const prescriptionId = searchParams.get("prescriptionId") ?? searchParams.get("id");
     usePageAIContext({ pageKey: 'dispensing' });
     const [checkedMeds, setCheckedMeds] = useState<Record<number, boolean>>({});
     const [patientConfirmed, setPatientConfirmed] = useState(false);
@@ -39,6 +39,14 @@ export default function DispensingPage() {
             .catch(err => { console.error("Load prescription failed:", err); setRx(null); })
             .finally(() => setLoading(false));
     }, [prescriptionId]);
+
+    useEffect(() => {
+        if (!prescriptionId) {
+            router.replace("/portal/pharmacist/prescriptions?status=PENDING");
+        }
+    }, [prescriptionId, router]);
+
+    if (!prescriptionId) return null;
 
     const allChecked = (rx?.medicines ?? []).every((_, i) => checkedMeds[i]);
 

@@ -2,8 +2,12 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams, useRouter } from "next/navigation";
 import { getDrugs } from "@/services/medicineService";
 import { inventoryService } from "@/services/inventoryService";
+import StockInTab from "./_components/StockInTab";
+import StockOutTab from "./_components/StockOutTab";
+import AlertsTab from "./_components/AlertsTab";
 
 type RequestType = "import" | "export" | "transfer" | "cancel";
 type RequestStatus = "pending" | "approved" | "rejected";
@@ -26,6 +30,10 @@ type RequestItem = { id: string; type: RequestType; medicine: string; qty: numbe
 
 export default function PharmacistInventory() {
     const t = useTranslations("pages.portal.pharmacist.inventory");
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const hubTab = (searchParams.get("tab") as "inventory" | "in" | "out" | "alerts") ?? "inventory";
+    const setHubTab = (k: string) => router.push(`/portal/pharmacist/inventory?tab=${k}`);
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [requests, setRequests] = useState<RequestItem[]>([]);
 
@@ -70,7 +78,7 @@ export default function PharmacistInventory() {
     const [showRequestModal, setShowRequestModal] = useState(false);
     const [requestType, setRequestType] = useState<RequestType>("import");
     const [reqForm, setReqForm] = useState({ medicine: "", qty: "", reason: "" });
-    const [activeTab, setActiveTab] = useState<"inventory" | "requests">("inventory");
+    const [innerTab, setInnerTab] = useState<"inventory" | "requests">("inventory");
 
     const groups = Array.from(new Set(inventory.map((i) => i.group)));
 
@@ -149,6 +157,36 @@ export default function PharmacistInventory() {
                 </div>
             </div>
 
+            {/* Hub tabs */}
+            <div className="border-b border-[#e5e7eb] dark:border-[#2d353e]">
+                <nav className="flex gap-1 overflow-x-auto">
+                    {[
+                        { key: "inventory", label: "Tồn kho", icon: "inventory_2" },
+                        { key: "in", label: "Nhập kho", icon: "input" },
+                        { key: "out", label: "Xuất kho", icon: "output" },
+                        { key: "alerts", label: "Cảnh báo", icon: "warning" },
+                    ].map((tb) => (
+                        <button
+                            key={tb.key}
+                            onClick={() => setHubTab(tb.key)}
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                                hubTab === tb.key
+                                    ? "border-[#3C81C6] text-[#3C81C6]"
+                                    : "border-transparent text-[#687582] hover:text-[#3C81C6]"
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[16px] align-middle mr-1">{tb.icon}</span>
+                            {tb.label}
+                        </button>
+                    ))}
+                </nav>
+            </div>
+
+            {hubTab === "in" && <StockInTab />}
+            {hubTab === "out" && <StockOutTab />}
+            {hubTab === "alerts" && <AlertsTab />}
+
+            {hubTab === "inventory" && <>
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                 {[
@@ -168,8 +206,8 @@ export default function PharmacistInventory() {
             {/* Tabs */}
             <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
                 {([["inventory", "Tồn kho", "inventory_2"], ["requests", "Yêu cầu", "assignment"]] as const).map(([key, label, icon]) => (
-                    <button key={key} onClick={() => setActiveTab(key)}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === key ? "bg-white dark:bg-[#1e242b] text-[#121417] dark:text-white shadow-sm" : "text-[#687582] hover:text-[#121417]"}`}>
+                    <button key={key} onClick={() => setInnerTab(key)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${innerTab === key ? "bg-white dark:bg-[#1e242b] text-[#121417] dark:text-white shadow-sm" : "text-[#687582] hover:text-[#121417]"}`}>
                         <span className="material-symbols-outlined text-[18px]">{icon}</span>{label}
                         {key === "requests" && pendingCount > 0 && <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-500 text-white">{pendingCount}</span>}
                     </button>
@@ -177,7 +215,7 @@ export default function PharmacistInventory() {
             </div>
 
             {/* Inventory Tab */}
-            {activeTab === "inventory" && (
+            {innerTab === "inventory" && (
                 <div className="bg-white dark:bg-[#1e242b] rounded-xl border border-[#dde0e4] dark:border-[#2d353e]">
                     <div className="p-4 border-b border-[#dde0e4] dark:border-[#2d353e] flex flex-col sm:flex-row gap-3 items-center">
                         <div className="relative flex-1 w-full sm:max-w-xs">
@@ -252,7 +290,7 @@ export default function PharmacistInventory() {
             )}
 
             {/* Requests Tab */}
-            {activeTab === "requests" && (
+            {innerTab === "requests" && (
                 <div className="space-y-4">
                     {requests.length === 0 ? (
                         <div className="bg-white dark:bg-[#1e242b] rounded-xl border border-[#dde0e4] dark:border-[#2d353e] p-12 text-center">
@@ -296,6 +334,7 @@ export default function PharmacistInventory() {
                     )}
                 </div>
             )}
+            </>}
 
             {/* Request Modal */}
             {showRequestModal && (

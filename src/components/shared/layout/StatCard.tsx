@@ -2,6 +2,7 @@
 
 /**
  * StatCard — widget thống kê chuẩn cho dashboard.
+ * Responsive: value tự co theo độ dài, không tràn icon.
  */
 
 import Link from "next/link";
@@ -29,22 +30,40 @@ export interface StatCardProps {
     loading?: boolean;
 }
 
+/**
+ * Pick font-size class theo độ dài value. Value càng dài → text càng nhỏ.
+ * Giúp số tiền dài (vd "38.450.422 đ") vẫn vừa card không tràn.
+ */
+function getValueSizeClass(value: string | number): string {
+    const len = String(value ?? "").length;
+    if (len <= 6) return "text-[28px]";    // "100", "12.345"
+    if (len <= 10) return "text-2xl";       // "1.234.567"
+    if (len <= 14) return "text-xl";        // "38.450.422 đ"
+    return "text-lg";                        // "1.234.567.890 đ"
+}
+
 export function StatCard({ label, value, icon, color = "blue", trend, footer, href, loading }: StatCardProps) {
     const c = COLOR_STYLE[color] ?? COLOR_STYLE.blue;
+    const valueSizeCls = getValueSizeClass(value);
 
     const inner = (
         <>
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                    <p className="text-[#687582] dark:text-gray-400 text-xs font-medium mb-1.5 uppercase tracking-wider truncate">{label}</p>
+                    <p className="text-[#687582] dark:text-gray-400 text-xs font-medium mb-1.5 uppercase tracking-wider truncate" title={label}>{label}</p>
                     {loading ? (
                         <div className="h-8 w-24 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
                     ) : (
-                        <h3 className="text-[28px] font-extrabold text-[#121417] dark:text-white leading-none">{value}</h3>
+                        <h3
+                            className={`${valueSizeCls} font-extrabold text-[#121417] dark:text-white leading-tight tabular-nums break-all`}
+                            title={String(value)}
+                        >
+                            {value}
+                        </h3>
                     )}
                 </div>
-                <div className={`p-2.5 bg-gradient-to-br ${c.gradient} rounded-xl ${c.text} group-hover:scale-110 transition-transform flex-shrink-0`}>
-                    <span className="material-symbols-outlined text-[22px]">{icon}</span>
+                <div className={`p-2.5 bg-gradient-to-br ${c.gradient} rounded-xl ${c.text} group-hover:scale-110 transition-transform flex-shrink-0 self-start`}>
+                    <span className="material-symbols-outlined text-[20px]">{icon}</span>
                 </div>
             </div>
             {(trend || footer) && (
@@ -68,7 +87,7 @@ export function StatCard({ label, value, icon, color = "blue", trend, footer, hr
         </>
     );
 
-    const cls = "bg-white dark:bg-[#1e242b] p-5 rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm flex flex-col justify-between group hover:shadow-md hover:border-[#3C81C6]/40 dark:hover:border-[#3C81C6]/30 transition-all";
+    const cls = "bg-white dark:bg-[#1e242b] p-4 rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm flex flex-col justify-between group hover:shadow-md hover:border-[#3C81C6]/40 dark:hover:border-[#3C81C6]/30 transition-all overflow-hidden";
 
     if (href) return <Link href={href} className={`${cls} cursor-pointer`}>{inner}</Link>;
     return <div className={cls}>{inner}</div>;

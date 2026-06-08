@@ -330,7 +330,7 @@ export default function DoctorsPage() {
                 {viewMode === "card" && (
                     <div className="p-4">
                         {isLoading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {Array.from({ length: 6 }).map((_, i) => (
                                     <div key={i} className="h-40 bg-gray-50 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
                                 ))}
@@ -338,7 +338,7 @@ export default function DoctorsPage() {
                         ) : filteredDoctors.length === 0 ? (
                             <EmptyState icon="stethoscope" title="Chưa có bác sĩ nào" description="Thêm bác sĩ mới để bắt đầu quản lý." />
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {filteredDoctors.map((doctor, idx) => (
                                     <DoctorCard
                                         key={`${doctor.id || doctor.code || "doc"}-${idx}`}

@@ -78,6 +78,14 @@ export default function PharmacistMedicationProfilePage() {
         });
     }, [patientId]);
 
+    useEffect(() => {
+        if (!patientId) {
+            router.replace("/portal/pharmacist/patients");
+        }
+    }, [patientId, router]);
+
+    if (!patientId) return null;
+
     const onTab = (t: TabKey) => {
         setTab(t);
         const url = new URL(window.location.href);

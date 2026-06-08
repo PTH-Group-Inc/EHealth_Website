@@ -108,6 +108,7 @@
         "pharmacy": "Pharmacy & Inventory",
         "finance": "Finance",
         "systemData": "System Data",
+        "notifications": "Notifications",
         "statistics": "Statistics",
         "activityLogs": "Activity Logs",
         "settings": "Settings",
@@ -176,12 +177,10 @@
             "expandSidebar": "Expand sidebar",
             "collapseSidebar": "Collapse sidebar",
             "doctorGroup": {
-                "overview": "Overview",
-                "schedule-shifts": "Schedule & Shifts",
-                "examination": "Examination",
-                "treatment-records": "Treatment & Records",
-                "remote-ai": "Telemedicine & AI",
-                "settings": "Settings"
+                "today": "Today",
+                "history": "Visit history",
+                "work-schedule": "Work schedule",
+                "support": "Support"
             },
             "doctor": {
                 "dashboard": "Home",
@@ -189,6 +188,7 @@
                 "alerts": "Alerts",
                 "appointments": "Appointments",
                 "queue": "Queue",
+                "encounters": "Encounters",
                 "schedule": "Work schedule",
                 "leaves": "Leaves",
                 "shiftSwaps": "Shift swaps",
@@ -203,6 +203,19 @@
                 "aiAssistant": "AI Assistant",
                 "telemedicine": "Telemedicine",
                 "settings": "Settings"
+            },
+            "pharmacistGroup": {
+                "operations": "Operations",
+                "warehouse": "Warehouse",
+                "data": "Data",
+                "account": "Account"
+            },
+            "receptionistGroup": {
+                "operations": "Coordination",
+                "patient-flow": "Patients & Appointments",
+                "finance": "Finance",
+                "data": "Data",
+                "account": "Account"
             },
             "pharmacist": {
                 "dashboard": "Home",

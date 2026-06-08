@@ -67,7 +67,7 @@ export default function RolesPage() {
             if (rolesRaw.status === "fulfilled" && Array.isArray(rolesRaw.value)) {
                 setRoles(
                     rolesRaw.value.map((r: any) => ({
-                        id: String(r.id ?? r.roles_id ?? r.name ?? ""),
+                        id: String(r.roles_id ?? r.role_id ?? r.id ?? r.name ?? ""),
                         name: r.displayName ?? r.name ?? "",
                         code: r.code ?? r.name ?? "",
                         description: r.description ?? "",
@@ -78,7 +78,25 @@ export default function RolesPage() {
                 );
             }
             if (permsRaw.status === "fulfilled" && Array.isArray(permsRaw.value)) {
-                setPermGroups(permsRaw.value);
+                // BE trả flat array [{permissions_id, code, module, description}, ...]
+                // FE expect grouped [{group, groupLabel, permissions: [...]}, ...]
+                const grouped = new Map<string, any[]>();
+                for (const p of permsRaw.value as any[]) {
+                    const mod = (p.module || "OTHER").toString();
+                    if (!grouped.has(mod)) grouped.set(mod, []);
+                    grouped.get(mod)!.push({
+                        id: p.permissions_id ?? p.permission_id ?? p.id ?? p.code,
+                        code: p.code,
+                        name: p.description ?? p.name ?? p.code,
+                        description: p.description ?? "",
+                    });
+                }
+                const arr: PermissionGroup[] = Array.from(grouped.entries()).map(([mod, perms]) => ({
+                    group: mod,
+                    groupLabel: mod.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+                    permissions: perms,
+                }));
+                setPermGroups(arr);
             }
             if (apiRaw.status === "fulfilled" && Array.isArray(apiRaw.value)) {
                 setApiPerms(apiRaw.value);
