@@ -59,20 +59,20 @@ export const prescriptionService = {
     // Dùng CONFIRM endpoint hoặc update tùy API
     updateStatus: (id: string, status: 'checking' | 'dispensed' | 'cancelled', note?: string) => {
         if (status === 'dispensed') {
-            return axiosClient.post(PRESCRIPTION_ENDPOINTS.CONFIRM(id), { note }).then(r => r.data);
+            return axiosClient.patch(PRESCRIPTION_ENDPOINTS.CONFIRM(id), { note }).then(r => r.data);
         }
         if (status === 'cancelled') {
-            return axiosClient.post(PRESCRIPTION_ENDPOINTS.CANCEL(id), { reason: note }).then(r => r.data);
+            return axiosClient.patch(PRESCRIPTION_ENDPOINTS.CANCEL(id), { reason: note }).then(r => r.data);
         }
         // checking — dùng update
         return axiosClient.put(PRESCRIPTION_ENDPOINTS.UPDATE(id), { status: 'CHECKING', note }).then(r => r.data);
     },
 
     cancel: (id: string, reason?: string) =>
-        axiosClient.post(PRESCRIPTION_ENDPOINTS.CANCEL(id), { reason }).then(r => r.data),
+        axiosClient.patch(PRESCRIPTION_ENDPOINTS.CANCEL(id), { reason }).then(r => r.data),
 
     confirm: (id: string) =>
-        axiosClient.post(PRESCRIPTION_ENDPOINTS.CONFIRM(id), {}).then(r => r.data),
+        axiosClient.patch(PRESCRIPTION_ENDPOINTS.CONFIRM(id), {}).then(r => r.data),
 
     // Tìm kiếm bệnh nhân để kê đơn nhanh
     searchPatients: (q: string) =>
