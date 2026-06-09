@@ -55,7 +55,7 @@ export const clinicalExamService = {
   },
 
   finalize: async (encounterId: string, data?: any) => {
-    const res = await axiosClient.post(
+    const res = await axiosClient.patch(
       CLINICAL_EXAM_ENDPOINTS.FINALIZE(encounterId),
       data ?? {}
     );

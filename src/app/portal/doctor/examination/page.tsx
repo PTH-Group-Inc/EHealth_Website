@@ -353,6 +353,22 @@ export default function ExaminationPage() {
             toast.error("Vui lòng chọn một loại thuốc từ danh sách!");
             return;
         }
+        if (!newMed.dosage.trim()) {
+            toast.error("Vui lòng nhập liều lượng dùng thuốc (VD: 1 viên)!");
+            return;
+        }
+        if (!newMed.frequency.trim()) {
+            toast.error("Vui lòng nhập tần suất dùng thuốc (VD: 2 lần/ngày)!");
+            return;
+        }
+        if (!newMed.duration.trim()) {
+            toast.error("Vui lòng nhập số lượng thuốc cần kê!");
+            return;
+        }
+        if (isNaN(Number(newMed.duration)) || Number(newMed.duration) <= 0) {
+            toast.error("Số lượng thuốc phải là số nguyên dương!");
+            return;
+        }
         setMeds(prev => [...prev, { ...newMed }]);
         setNewMed({ name: "", dosage: "", frequency: "", duration: "", note: "", drugId: "" });
         setDrugQuery("");
@@ -444,8 +460,7 @@ export default function ExaminationPage() {
             setStepLoading(true);
             try {
                 if (activeStep === 0) await handleSaveVitals(eid);
-                // Skip updateStatus(IN_PROGRESS) - encounter đã locked thì không update;
-                // và nếu đang IN_PROGRESS thì không cần update lại vì đã là IN_PROGRESS rồi
+                else if (activeStep === 1) await encounterService.saveClinicalExam(eid, { chief_complaint: symptoms });
                 else if (activeStep === 2) await handleSaveLabOrders(eid);
                 else if (activeStep === 3) await handleSaveDiagnosis(eid);
             } catch { /* không block */ } finally {
@@ -479,6 +494,12 @@ export default function ExaminationPage() {
         setSaving(true);
         try {
             const eid = currentEncounterId;
+
+            // 0. Finalize clinical exam first so that prescription confirmation and EMR finalize have access to finalized exam
+            if (eid && !isEncounterLocked) {
+                await encounterService.saveClinicalExam(eid, { chief_complaint: symptoms }).catch(() => {});
+                await encounterService.finalizeExam(eid).catch(err => { console.error("finalizeExam failed:", err); });
+            }
 
             // 1. Kê đơn thuốc nếu có VÀ encounter chưa bị lock
             if (meds.length > 0 && eid && !isEncounterLocked) {
@@ -540,15 +561,21 @@ export default function ExaminationPage() {
                 }
             }
 
-            // 2. Sign-off và update status — chỉ khi encounter chưa locked
+            // 2. Update status, finalize EMR, and sign-off — chỉ khi encounter chưa locked
             if (eid) {
                 if (!isEncounterLocked) {
-                    await encounterService.draftSign(eid).catch(err => { console.error("draftSign failed:", err); });
-                    await encounterService.officialSign(eid).catch(err => { console.error("officialSign failed:", err); });
+                    // 2.1 Update status to COMPLETED
                     await encounterService.updateStatus(eid, 'COMPLETED', {
                         followUpDate: followUp || undefined,
                         doctorNote: doctorNote || undefined,
                     });
+                    // 2.2 Finalize EMR (creates immutable snapshot and sets is_finalized to true)
+                    await encounterService.finalizeMedicalRecord(eid).catch(err => { 
+                        console.error("finalizeMedicalRecord failed:", err); 
+                    });
+                    // 2.3 Sign EMR
+                    await encounterService.draftSign(eid).catch(err => { console.error("draftSign failed:", err); });
+                    await encounterService.officialSign(eid).catch(err => { console.error("officialSign failed:", err); });
                 }
 
                 // 3. Tự động tạo hóa đơn (Auto-generate invoice)

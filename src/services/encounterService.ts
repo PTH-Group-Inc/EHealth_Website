@@ -54,8 +54,11 @@ export const encounterService = {
     saveVitals: (encounterId: string, data: Record<string, any>) =>
         axiosClient.patch(CLINICAL_EXAM_ENDPOINTS.VITALS(encounterId), data).then(r => r.data?.data ?? r.data),
 
+    saveClinicalExam: (encounterId: string, data: Record<string, any>) =>
+        axiosClient.patch(CLINICAL_EXAM_ENDPOINTS.DETAIL(encounterId), data).then(r => r.data?.data ?? r.data),
+
     finalizeExam: (encounterId: string) =>
-        axiosClient.post(CLINICAL_EXAM_ENDPOINTS.FINALIZE(encounterId), {}).then(r => r.data),
+        axiosClient.patch(CLINICAL_EXAM_ENDPOINTS.FINALIZE(encounterId), {}).then(r => r.data),
 
     getExamSummary: (encounterId: string) =>
         axiosClient.get(CLINICAL_EXAM_ENDPOINTS.SUMMARY(encounterId)).then(r => r.data?.data ?? r.data),
@@ -64,8 +67,15 @@ export const encounterService = {
     getDiagnoses: (encounterId: string) =>
         axiosClient.get(DIAGNOSIS_ENDPOINTS.BY_ENCOUNTER(encounterId)).then(r => r.data?.data ?? r.data),
 
-    addDiagnosis: (encounterId: string, data: Record<string, any>) =>
-        axiosClient.post(DIAGNOSIS_ENDPOINTS.BY_ENCOUNTER(encounterId), data).then(r => r.data?.data ?? r.data),
+    addDiagnosis: (encounterId: string, data: Record<string, any>) => {
+        const payload = {
+            icd10_code: data.icd10_code || data.icd_code || data.icdCode,
+            diagnosis_name: data.diagnosis_name || data.description || data.icdDescription || data.name,
+            diagnosis_type: data.diagnosis_type || data.type,
+            notes: data.notes || data.treatment
+        };
+        return axiosClient.post(DIAGNOSIS_ENDPOINTS.BY_ENCOUNTER(encounterId), payload).then(r => r.data?.data ?? r.data);
+    },
 
     updateDiagnosis: (diagnosisId: string, data: Record<string, any>) =>
         axiosClient.put(DIAGNOSIS_ENDPOINTS.DETAIL(diagnosisId), data).then(r => r.data?.data ?? r.data),
