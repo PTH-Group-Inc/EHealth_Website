@@ -54,8 +54,14 @@ export const encounterService = {
     saveVitals: (encounterId: string, data: Record<string, any>) =>
         axiosClient.patch(CLINICAL_EXAM_ENDPOINTS.VITALS(encounterId), data).then(r => r.data?.data ?? r.data),
 
+    createClinicalExam: (encounterId: string, data: Record<string, any>) =>
+        axiosClient.post(CLINICAL_EXAM_ENDPOINTS.DETAIL(encounterId), data).then(r => r.data?.data ?? r.data),
+
+    updateClinicalExam: (encounterId: string, data: Record<string, any>) =>
+        axiosClient.patch(CLINICAL_EXAM_ENDPOINTS.DETAIL(encounterId), data).then(r => r.data?.data ?? r.data),
+
     finalizeExam: (encounterId: string) =>
-        axiosClient.post(CLINICAL_EXAM_ENDPOINTS.FINALIZE(encounterId), {}).then(r => r.data),
+        axiosClient.patch(CLINICAL_EXAM_ENDPOINTS.FINALIZE(encounterId), {}).then(r => r.data),
 
     getExamSummary: (encounterId: string) =>
         axiosClient.get(CLINICAL_EXAM_ENDPOINTS.SUMMARY(encounterId)).then(r => r.data?.data ?? r.data),

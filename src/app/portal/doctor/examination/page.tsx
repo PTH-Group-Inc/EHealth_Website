@@ -405,6 +405,71 @@ export default function ExaminationPage() {
         } catch { /* không block — data vẫn giữ local */ }
     };
 
+    const getClinicalExamPayload = () => {
+        const bp = vitals.bloodPressure?.split('/');
+        return {
+            blood_pressure_systolic: bp?.[0] ? parseInt(bp[0]) : undefined,
+            blood_pressure_diastolic: bp?.[1] ? parseInt(bp[1]) : undefined,
+            pulse: vitals.heartRate ? parseFloat(vitals.heartRate) : undefined,
+            temperature: vitals.temperature ? parseFloat(vitals.temperature) : undefined,
+            spo2: vitals.spO2 ? parseFloat(vitals.spO2) : undefined,
+            respiratory_rate: vitals.respiratoryRate ? parseFloat(vitals.respiratoryRate) : undefined,
+            weight: vitals.weight ? parseFloat(vitals.weight) : undefined,
+            height: vitals.height ? parseFloat(vitals.height) : undefined,
+            chief_complaint: symptoms.trim() || diagnosis.trim() || "Khám bệnh",
+            physical_examination: treatment || undefined,
+            clinical_notes: doctorNote || undefined,
+        };
+    };
+
+    const getApiCode = (err: any) => err?.response?.data?.code || err?.response?.data?.error_code;
+
+    const ensureClinicalExamFinal = async (eid: string) => {
+        const payload = getClinicalExamPayload();
+        try {
+            await encounterService.createClinicalExam(eid, payload);
+        } catch (err: any) {
+            const code = getApiCode(err);
+            if (code !== "ALREADY_EXISTS") throw err;
+            try {
+                await encounterService.updateClinicalExam(eid, payload);
+            } catch (updateErr: any) {
+                if (getApiCode(updateErr) !== "ALREADY_FINALIZED") throw updateErr;
+                await encounterService.saveVitals(eid, payload);
+            }
+        }
+
+        try {
+            await encounterService.finalizeExam(eid);
+        } catch (err: any) {
+            const code = getApiCode(err);
+            if (code !== "NOT_DRAFT" && code !== "ALREADY_FINALIZED") throw err;
+        }
+    };
+
+    const normalizeDrugName = (value?: string) =>
+        (value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+    const getPrescriptionId = (value: any): string | null =>
+        value?.prescriptions_id
+        || value?.prescription_id
+        || value?.id
+        || value?.prescription?.prescriptions_id
+        || value?.prescription?.prescription_id
+        || value?.prescription?.id
+        || null;
+
+    const resolveMedicationDrugId = async (med: { name: string; drugId?: string }) => {
+        if (med.drugId) return med.drugId;
+        const results = await prescriptionService.searchDrugsActive(med.name);
+        const target = normalizeDrugName(med.name);
+        const match = results.find((drug: any) => {
+            const names = [drug.brand_name, drug.drug_name, drug.name].map(normalizeDrugName);
+            return names.some(name => name === target || name.includes(target) || target.includes(name));
+        });
+        return match?.drugs_id || match?.drug_id || match?.id || "";
+    };
+
     // Lưu lab orders step 2 lên API
     const handleSaveLabOrders = async (eid: string) => {
         if (selectedLabs.length === 0) return;
@@ -479,76 +544,90 @@ export default function ExaminationPage() {
         setSaving(true);
         try {
             const eid = currentEncounterId;
+            let prescriptionSent = false;
 
             // 1. Kê đơn thuốc nếu có VÀ encounter chưa bị lock
             if (meds.length > 0 && eid && !isEncounterLocked) {
                 try {
-                    let rxId: string | null = null;
+                    await ensureClinicalExamFinal(eid);
 
-                    // 1.1 Thử tạo đơn thuốc; nếu 409 (đã tồn tại) thì lấy đơn cũ
+                    const medsForPrescription = await Promise.all(meds.map(async (m) => ({
+                        ...m,
+                        drugId: await resolveMedicationDrugId(m),
+                    })));
+                    const missingDrug = medsForPrescription.find(m => !m.drugId);
+                    if (missingDrug) {
+                        throw new Error(`Thuốc "${missingDrug.name}" chưa có mã thuốc hợp lệ. Vui lòng chọn lại từ danh sách thuốc.`);
+                    }
+
+                    let existingDetails: any[] | null = null;
+                    let rxId: string | null = null;
                     try {
                         const rxRes = await prescriptionService.create({
                             encounterId: eid,
                             clinical_diagnosis: diagnosis,
                             doctor_notes: doctorNote || undefined,
                         });
-                        rxId = rxRes?.prescriptions_id || rxRes?.id || rxRes?.prescription_id || null;
-                    } catch (rxErr: any) {
-                        if (rxErr?.response?.status === 409) {
-                            // Đơn đã tồn tại — lấy prescription_id từ response hoặc fetch lại
-                            const existingId = rxErr?.response?.data?.data?.prescriptions_id
-                                || rxErr?.response?.data?.data?.id
-                                || rxErr?.response?.data?.prescriptions_id
-                                || rxErr?.response?.data?.id;
-                            if (existingId) {
-                                rxId = existingId;
-                            } else {
-                                // Fetch lại prescription hiện tại của encounter
-                                try {
-                                    const existing = await prescriptionService.getByEncounter(eid);
-                                    rxId = existing?.prescriptions_id || existing?.id || null;
-                                } catch { /* không block */ }
-                            }
-                        } else {
-                            throw rxErr;
+                        rxId = getPrescriptionId(rxRes);
+                    } catch (err: any) {
+                        if (getApiCode(err) !== "ALREADY_EXISTS") throw err;
+                        const existing = await prescriptionService.getByEncounter(eid);
+                        rxId = getPrescriptionId(existing);
+                        existingDetails = existing?.details ?? [];
+                        if (existing?.prescription?.status === "PRESCRIBED") {
+                            prescriptionSent = true;
                         }
                     }
 
                     if (rxId) {
-                        // 1.2 Thêm từng thuốc vào đơn
-                        for (const m of meds) {
-                            if (!m.drugId) continue;
-                            await prescriptionService.addDetail(rxId, {
-                                drug_id: m.drugId,
-                                quantity: parseInt(m.duration) || 1,
-                                dosage: m.dosage,
-                                frequency: m.frequency,
-                                duration_days: parseInt(m.duration) || undefined,
-                                usage_instruction: m.note || undefined,
-                                route_of_administration: 'ORAL',
-                                notes: m.note || undefined
-                            });
+                        if (!existingDetails || existingDetails.length === 0) {
+                            for (const m of medsForPrescription) {
+                                await prescriptionService.addDetail(rxId, {
+                                    drug_id: m.drugId,
+                                    quantity: parseInt(m.duration) || 1,
+                                    dosage: m.dosage,
+                                    frequency: m.frequency,
+                                    duration_days: parseInt(m.duration) || undefined,
+                                    usage_instruction: m.note || undefined,
+                                    route_of_administration: 'ORAL',
+                                    notes: m.note || undefined
+                                });
+                            }
                         }
-                        // 1.3 Nếu đã xác nhận gửi thì CONFIRM đơn thuốc
+
                         if (sendToPharmacy) {
                             await prescriptionService.confirm(rxId);
+                            prescriptionSent = true;
                         }
                     }
                 } catch (err) {
                     console.error("Prescription save failed:", err);
-                    toast.error("Không thể lưu đơn thuốc, có thể do thuốc không hợp lệ.");
+                    toast.error((err as any)?.message || "Không thể lưu đơn thuốc, có thể do thuốc không hợp lệ.");
+                    throw err;
                 }
             }
 
             // 2. Sign-off và update status — chỉ khi encounter chưa locked
             if (eid) {
                 if (!isEncounterLocked) {
-                    await encounterService.draftSign(eid).catch(err => { console.error("draftSign failed:", err); });
-                    await encounterService.officialSign(eid).catch(err => { console.error("officialSign failed:", err); });
                     await encounterService.updateStatus(eid, 'COMPLETED', {
                         followUpDate: followUp || undefined,
                         doctorNote: doctorNote || undefined,
                     });
+
+                    let recordFinalized = false;
+                    try {
+                        await encounterService.finalizeMedicalRecord(eid);
+                        recordFinalized = true;
+                    } catch (err: any) {
+                        if (getApiCode(err) === "ALREADY_FINALIZED") recordFinalized = true;
+                        else console.error("finalizeMedicalRecord failed:", err);
+                    }
+
+                    await encounterService.draftSign(eid).catch(err => { console.error("draftSign failed:", err); });
+                    if (recordFinalized) {
+                        await encounterService.officialSign(eid).catch(err => { console.error("officialSign failed:", err); });
+                    }
                 }
 
                 // 3. Tự động tạo hóa đơn (Auto-generate invoice)
@@ -575,7 +654,7 @@ export default function ExaminationPage() {
                 if (currentEmrId) await emrService.sign(currentEmrId).catch(err => { console.error("emrService.sign failed:", err); });
             }
 
-            if (sendToPharmacy && meds.length > 0) {
+            if (prescriptionSent) {
                 toast.success("Đã hoàn thành khám bệnh và gửi đơn thuốc đến quầy dược!");
             } else {
                 toast.success("Đã hoàn thành khám bệnh!");
@@ -727,7 +806,11 @@ export default function ExaminationPage() {
                     onApplyDiagnosis={handleAIDiagnosisSelect}
                     onApplyLabs={handleAISuggestLabs}
                     onApplyMedication={(med) => {
+<<<<<<< Updated upstream
                         setMeds(prev => [...prev, { ...med, drugId: "" }]);
+=======
+                        setMeds(prev => [...prev, { ...med, drugId: (med as any).drugId || "" }]);
+>>>>>>> Stashed changes
                         addAuditEntry("AI Pre-Analysis", `AI gợi ý thuốc: ${med.name}`, "accepted");
                     }}
                     onApplyVitals={(v) => {
@@ -1102,7 +1185,7 @@ export default function ExaminationPage() {
                                                         <button key={dr.drugs_id || dr.id} type="button"
                                                             onClick={() => { 
                                                                 const selectedName = dr.brand_name || dr.drug_name || dr.name;
-                                                                setNewMed(p => ({ ...p, name: selectedName, drugId: dr.drugs_id || dr.id })); 
+                                                                setNewMed(p => ({ ...p, name: selectedName, drugId: dr.drugs_id || dr.drug_id || dr.id })); 
                                                                 setDrugQuery(selectedName); 
                                                                 setDrugResults([]); 
                                                             }}

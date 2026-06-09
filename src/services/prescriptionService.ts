@@ -69,10 +69,10 @@ export const prescriptionService = {
     },
 
     cancel: (id: string, reason?: string) =>
-        axiosClient.post(PRESCRIPTION_ENDPOINTS.CANCEL(id), { reason }).then(r => r.data),
+        axiosClient.patch(PRESCRIPTION_ENDPOINTS.CANCEL(id), { cancelled_reason: reason }).then(r => r.data),
 
     confirm: (id: string) =>
-        axiosClient.post(PRESCRIPTION_ENDPOINTS.CONFIRM(id), {}).then(r => r.data),
+        axiosClient.patch(PRESCRIPTION_ENDPOINTS.CONFIRM(id), {}).then(r => r.data),
 
     // Tìm kiếm bệnh nhân để kê đơn nhanh
     searchPatients: (q: string) =>

@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageHeader, EmptyState, StatCard } from "@/components/shared/layout";
