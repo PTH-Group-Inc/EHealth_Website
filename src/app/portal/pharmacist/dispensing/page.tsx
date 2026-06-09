@@ -10,7 +10,16 @@ import { AIDispensingAssistant } from "@/components/portal/ai";
 type RxData = {
     id: string; patient: string; patientId: string; age: number; gender: string; phone: string;
     doctor: string; dept: string; diagnosis: string; date: string; note: string;
-    medicines: { name: string; qty: string; dosage: string; lot?: string; expiry?: string }[];
+    medicines: {
+        prescription_detail_id: string;
+        inventory_id?: string;
+        drug_id?: string;
+        name: string;
+        qty: string;
+        dosage: string;
+        lot?: string;
+        expiry?: string;
+    }[];
 };
 
 export default function DispensingPage() {
@@ -48,9 +57,18 @@ export default function DispensingPage() {
 
     if (!prescriptionId) return null;
 
-    const allChecked = (rx?.medicines ?? []).every((_, i) => checkedMeds[i]);
+    const allChecked = (rx?.medicines ?? []).every((_, i) => {
+        const isOutOfStock = !_.inventory_id || _.lot === 'Hết hàng';
+        return isOutOfStock ? false : checkedMeds[i];
+    });
+
+    const hasOutOfStock = (rx?.medicines ?? []).some(med => !med.inventory_id || med.lot === 'Hết hàng');
 
     const toggleMed = (idx: number) => {
+        const med = rx?.medicines[idx];
+        if (med && (!med.inventory_id || med.lot === 'Hết hàng')) {
+            return;
+        }
         setCheckedMeds(prev => ({ ...prev, [idx]: !prev[idx] }));
     };
 
@@ -162,6 +180,17 @@ export default function DispensingPage() {
                 </div>
             )}
 
+            {/* Out of stock warning */}
+            {hasOutOfStock && (
+                <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl animate-pulse">
+                    <span className="material-symbols-outlined text-amber-600 text-[20px] mt-0.5">warning</span>
+                    <div>
+                        <p className="text-sm font-bold text-amber-700 dark:text-amber-400">Không thể hoàn thành cấp phát</p>
+                        <p className="text-sm text-amber-600 dark:text-amber-300 mt-0.5">Đơn thuốc chứa một hoặc nhiều loại thuốc đã hết hàng trong kho. Vui lòng nhập kho bổ sung hoặc liên hệ bác sĩ để đổi thuốc.</p>
+                    </div>
+                </div>
+            )}
+
             {/* Patient Info */}
             <div className="bg-white dark:bg-[#1e242b] rounded-xl border border-[#dde0e4] dark:border-[#2d353e] p-5">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -189,22 +218,32 @@ export default function DispensingPage() {
                     </h2>
                 </div>
                 <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {rx.medicines.map((med, i) => (
-                        <div key={i} onClick={() => toggleMed(i)}
-                            className={`flex items-center gap-4 p-4 cursor-pointer transition-all ${checkedMeds[i] ? "bg-green-50/50 dark:bg-green-900/5" : "hover:bg-gray-50 dark:hover:bg-gray-800/30"}`}>
-                            <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${checkedMeds[i] ? "border-green-500 bg-green-500" : "border-gray-300 dark:border-gray-600"}`}>
-                                {checkedMeds[i] && <span className="material-symbols-outlined text-white text-[14px]">check</span>}
+                    {rx.medicines.map((med, i) => {
+                        const isOutOfStock = !med.inventory_id || med.lot === 'Hết hàng';
+                        return (
+                            <div key={i} onClick={() => !isOutOfStock && toggleMed(i)}
+                                className={`flex items-center gap-4 p-4 transition-all ${isOutOfStock ? "opacity-60 bg-gray-50/50 dark:bg-gray-800/10 cursor-not-allowed" : checkedMeds[i] ? "bg-green-50/50 dark:bg-green-900/5 cursor-pointer" : "hover:bg-gray-50 dark:hover:bg-gray-800/30 cursor-pointer"}`}>
+                                <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${isOutOfStock ? "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800" : checkedMeds[i] ? "border-green-500 bg-green-500" : "border-gray-300 dark:border-gray-600"}`}>
+                                    {checkedMeds[i] && <span className="material-symbols-outlined text-white text-[14px]">check</span>}
+                                    {isOutOfStock && <span className="material-symbols-outlined text-red-500 text-[14px]">close</span>}
+                                </div>
+                                <div className="flex-1">
+                                    <p className={`text-sm font-bold ${isOutOfStock ? "text-gray-400 dark:text-gray-500" : checkedMeds[i] ? "text-green-700 dark:text-green-400 line-through" : "text-[#121417] dark:text-white"}`}>{med.name}</p>
+                                    <p className="text-xs text-[#687582] mt-0.5">{med.dosage}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className={`text-sm font-medium ${isOutOfStock ? "text-gray-400 dark:text-gray-500" : "text-[#121417] dark:text-white"}`}>{med.qty}</p>
+                                    <p className="text-[10px] text-[#687582] mt-0.5">
+                                        {isOutOfStock ? (
+                                            <span className="text-red-500 font-bold bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded">Hết hàng trong kho</span>
+                                        ) : (
+                                            <>Lô: {med.lot} • HSD: {med.expiry}</>
+                                        )}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="flex-1">
-                                <p className={`text-sm font-bold ${checkedMeds[i] ? "text-green-700 dark:text-green-400 line-through" : "text-[#121417] dark:text-white"}`}>{med.name}</p>
-                                <p className="text-xs text-[#687582] mt-0.5">{med.dosage}</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm font-medium text-[#121417] dark:text-white">{med.qty}</p>
-                                <p className="text-[10px] text-[#687582]">Lô: {med.lot} • HSD: {med.expiry}</p>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 
@@ -223,9 +262,10 @@ export default function DispensingPage() {
                     <span className="material-symbols-outlined text-[18px]">print</span>In nhãn thuốc
                 </button>
                 <div className="flex items-center gap-2">
-                    {!allChecked && <p className="text-xs text-amber-600">Chưa kiểm tra đủ thuốc</p>}
+                    {!allChecked && !hasOutOfStock && <p className="text-xs text-amber-600">Chưa kiểm tra đủ thuốc</p>}
+                    {hasOutOfStock && <p className="text-xs text-red-600 font-semibold">Đơn thuốc có thuốc hết hàng</p>}
                     {!patientConfirmed && allChecked && <p className="text-xs text-amber-600">Chưa xác nhận bệnh nhân</p>}
-                    <button onClick={handleDispense} disabled={!allChecked || !patientConfirmed || dispensing}
+                    <button onClick={handleDispense} disabled={!allChecked || !patientConfirmed || dispensing || hasOutOfStock}
                         className="flex items-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold transition-colors disabled:opacity-40 shadow-md shadow-green-200 dark:shadow-none">
                         {dispensing ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Đang xử lý...</> : <><span className="material-symbols-outlined text-[18px]">done_all</span>Hoàn thành cấp phát</>}
                     </button>
