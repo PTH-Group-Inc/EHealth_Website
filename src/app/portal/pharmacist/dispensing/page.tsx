@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { dispensingService } from "@/services/dispensingService";
 import { usePageAIContext } from "@/hooks/usePageAIContext";
 import { AIDispensingAssistant } from "@/components/portal/ai";
+import { getPortalPath } from "@/utils/portalNavigation";
 
 type RxData = {
     id: string; patient: string; patientId: string; age: number; gender: string; phone: string;
@@ -16,25 +17,32 @@ type RxData = {
 export default function DispensingPage() {
     const t = useTranslations("pages.portal.pharmacist.dispensing");
     const router = useRouter();
+    const pathname = usePathname();
     const searchParams = useSearchParams();
     const prescriptionId = searchParams.get("prescriptionId") ?? searchParams.get("id");
-    usePageAIContext({ pageKey: 'dispensing' });
+
+    const [rx, setRx] = useState<RxData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [dispensing, setDispensing] = useState(false);
     const [checkedMeds, setCheckedMeds] = useState<Record<number, boolean>>({});
     const [patientConfirmed, setPatientConfirmed] = useState(false);
-    const [dispensing, setDispensing] = useState(false);
     const [completed, setCompleted] = useState(false);
     const [dispenseError, setDispenseError] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [rx, setRx] = useState<RxData | null>(null);
+
+    usePageAIContext({ pageKey: 'dispensing' });
 
     useEffect(() => {
         if (!prescriptionId) return;
         setLoading(true);
-        // Dùng /api/dispensing/{prescriptionId} — đúng Swagger
         dispensingService.getPrescription(prescriptionId)
             .then(res => {
                 const data = res?.data ?? res;
-                if (data && data.id) setRx(data as RxData);
+                setRx(data as RxData);
+                if (data?.medicines) {
+                    const initialChecked: Record<number, boolean> = {};
+                    data.medicines.forEach((_: any, i: number) => { initialChecked[i] = true; });
+                    setCheckedMeds(initialChecked);
+                }
             })
             .catch(err => { console.error("Load prescription failed:", err); setRx(null); })
             .finally(() => setLoading(false));
@@ -42,9 +50,9 @@ export default function DispensingPage() {
 
     useEffect(() => {
         if (!prescriptionId) {
-            router.replace("/portal/pharmacist/prescriptions?status=PENDING");
+            router.replace(getPortalPath("/portal/pharmacist/prescriptions?status=PENDING", pathname));
         }
-    }, [prescriptionId, router]);
+    }, [prescriptionId, router, pathname]);
 
     if (!prescriptionId) return null;
 
@@ -94,7 +102,7 @@ export default function DispensingPage() {
                     <h1 className="text-xl font-bold text-[#121417] dark:text-white mb-2">Cấp phát thành công!</h1>
                     <p className="text-sm text-[#687582] mb-6">Đơn thuốc {rx?.id} đã được cấp phát cho bệnh nhân {rx?.patient}.</p>
                     <div className="flex items-center justify-center gap-3">
-                        <button onClick={() => router.push("/portal/pharmacist/prescriptions")} className="px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold transition-colors">
+                        <button onClick={() => router.push(getPortalPath("/portal/pharmacist/prescriptions", pathname))} className="px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold transition-colors">
                             Về danh sách đơn
                         </button>
                         <button onClick={() => window.print()} className="px-5 py-2.5 bg-white dark:bg-[#1e242b] border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-[#687582] hover:bg-gray-50 transition-colors flex items-center gap-2">

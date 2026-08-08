@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { getPatients, Patient, PatientGender, PatientStatus } from "@/services/patientService";
+import { getPortalPath } from "@/utils/portalNavigation";
 
 // ==================== HELPERS ====================
 function fmtDob(iso?: string): string {
@@ -47,6 +48,7 @@ interface FilterState {
 export default function ReceptionistPatients() {
     const t = useTranslations("pages.portal.staff.patients");
     const router = useRouter();
+    const pathname = usePathname();
     const [patients, setPatients] = useState<Patient[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -190,7 +192,7 @@ export default function ReceptionistPatients() {
                         <button onClick={handleExportCSV} className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1e242b] border border-[#dde0e4] dark:border-[#2d353e] rounded-xl text-sm font-medium text-[#687582] hover:text-[#121417] dark:hover:text-white transition-colors">
                             <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>download</span>Xuất CSV
                         </button>
-                        <button onClick={() => router.push('/portal/receptionist/patients/new')} className="flex items-center gap-2 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-medium transition-colors shadow-lg shadow-[#3C81C6]/20">
+                        <button onClick={() => router.push(getPortalPath('/portal/receptionist/patients/new', pathname))} className="flex items-center gap-2 px-4 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-medium transition-colors shadow-lg shadow-[#3C81C6]/20">
                             <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>person_add</span>Đăng ký BN mới
                         </button>
                     </div>
@@ -397,21 +399,21 @@ export default function ReceptionistPatients() {
                                                         <td className="px-4 py-3">
                                                             <div className="flex items-center gap-1">
                                                                 <button
-                                                                    onClick={() => router.push(`/portal/receptionist/patients/${p.patient_id || p.id}`)}
+                                                                    onClick={() => router.push(getPortalPath(`/portal/receptionist/patients/${p.patient_id || p.id}`, pathname))}
                                                                     className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-600 transition-colors"
                                                                     title="Xem hồ sơ"
                                                                 >
                                                                     <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>visibility</span>
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => router.push(`/portal/receptionist/patients/${p.patient_id || p.id}`)}
+                                                                    onClick={() => router.push(getPortalPath(`/portal/receptionist/patients/${p.patient_id || p.id}`, pathname))}
                                                                     className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-[#687582] transition-colors"
                                                                     title="Sửa thông tin"
                                                                 >
                                                                     <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>edit</span>
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => router.push('/portal/receptionist/appointments/new')}
+                                                                    onClick={() => router.push(getPortalPath('/portal/receptionist/appointments/new', pathname))}
                                                                     className="p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 text-emerald-600 transition-colors"
                                                                     title="Đặt lịch hẹn"
                                                                 >

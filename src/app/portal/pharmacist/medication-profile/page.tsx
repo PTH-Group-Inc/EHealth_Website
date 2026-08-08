@@ -7,10 +7,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { PageHeader, EmptyState, StatCard } from "@/components/shared/layout";
 import { ehrService } from "@/services/ehrService";
 import { getPatients } from "@/services/patientService";
+import { getPortalPath } from "@/utils/portalNavigation";
 import axiosClient from "@/api/axiosClient";
 
 const TABS = [
@@ -35,6 +36,7 @@ const fmt = (v?: string) => { if (!v) return "—"; try { return new Date(v).toL
 export default function PharmacistMedicationProfilePage() {
     const sp = useSearchParams();
     const router = useRouter();
+    const pathname = usePathname();
     const initialPatientId = sp.get("patientId") ?? "";
     const initialTab = (sp.get("tab") as TabKey) ?? "current";
 
@@ -80,7 +82,7 @@ export default function PharmacistMedicationProfilePage() {
 
     useEffect(() => {
         if (!patientId) {
-            router.replace("/portal/pharmacist/patients");
+            router.replace(getPortalPath("/portal/pharmacist/patients", pathname));
         }
     }, [patientId, router]);
 

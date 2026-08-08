@@ -42,7 +42,11 @@ function getValueSizeClass(value: string | number): string {
     return "text-lg";                        // "1.234.567.890 đ"
 }
 
+import { usePathname } from "next/navigation";
+import { getPortalPath } from "@/utils/portalNavigation";
+
 export function StatCard({ label, value, icon, color = "blue", trend, footer, href, loading }: StatCardProps) {
+    const pathname = usePathname();
     const c = COLOR_STYLE[color] ?? COLOR_STYLE.blue;
     const valueSizeCls = getValueSizeClass(value);
 
@@ -89,7 +93,7 @@ export function StatCard({ label, value, icon, color = "blue", trend, footer, hr
 
     const cls = "bg-white dark:bg-[#1e242b] p-4 rounded-2xl border border-[#dde0e4] dark:border-[#2d353e] shadow-sm flex flex-col justify-between group hover:shadow-md hover:border-[#3C81C6]/40 dark:hover:border-[#3C81C6]/30 transition-all overflow-hidden";
 
-    if (href) return <Link href={href} className={`${cls} cursor-pointer`}>{inner}</Link>;
+    if (href) return <Link href={getPortalPath(href, pathname)} className={`${cls} cursor-pointer`}>{inner}</Link>;
     return <div className={cls}>{inner}</div>;
 }
 

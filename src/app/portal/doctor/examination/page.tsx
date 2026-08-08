@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { emrService } from "@/services/emrService";
 import { encounterService } from "@/services/encounterService";
 import { prescriptionService } from "@/services/prescriptionService";
 import { billingService } from "@/services/billingService";
 import { useAuth } from "@/contexts/AuthContext";
+import { getPortalPath } from "@/utils/portalNavigation";
 import { useToast } from "@/contexts/ToastContext";
 import { validateBloodPressure, validateVitalSign } from "@/utils/validation";
 import { AIVitalAlertBanner, AISymptomAnalyzer, AIDrugIntelligence, AIExaminationSummary } from "@/components/portal/ai";
@@ -63,6 +64,7 @@ type PatientInfo = {
 /* ──────── Component ──────── */
 export default function ExaminationPage() {
     const router = useRouter();
+    const pathname = usePathname();
     const searchParams = useSearchParams();
     const patientIdParam = searchParams.get("patient");
     const appointmentId = searchParams.get("appointment");
@@ -659,7 +661,7 @@ export default function ExaminationPage() {
             } else {
                 toast.success("Đã hoàn thành khám bệnh!");
             }
-            router.push("/portal/doctor/queue");
+            router.push(getPortalPath("/portal/doctor/queue", pathname));
         } catch {
             toast.error("Có lỗi khi lưu kết quả khám. Vui lòng thử lại.");
         } finally {
@@ -669,7 +671,7 @@ export default function ExaminationPage() {
 
     const handleExit = () => {
         if (confirm("Bạn muốn thoát? Dữ liệu chưa lưu sẽ bị mất.")) {
-            router.push("/portal/doctor/queue");
+            router.push(getPortalPath("/portal/doctor/queue", pathname));
         }
     };
 
@@ -708,7 +710,7 @@ export default function ExaminationPage() {
                     </div>
                     <h1 className="text-xl font-bold text-[#121417] dark:text-white mb-2">Chưa chọn bệnh nhân</h1>
                     <p className="text-sm text-[#687582] mb-6">Vui lòng chọn bệnh nhân từ hàng đợi để bắt đầu khám.</p>
-                    <Link href="/portal/doctor/queue" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all">
+                    <Link href={getPortalPath("/portal/doctor/queue", pathname)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#3C81C6] hover:bg-[#2a6da8] text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all">
                         <span className="material-symbols-outlined text-[18px]">groups</span>Về hàng đợi
                     </Link>
                 </div>
@@ -722,9 +724,9 @@ export default function ExaminationPage() {
                 {/* Top Bar */}
                 <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-1.5 text-xs text-[#687582]">
-                        <Link href="/portal/doctor" className="hover:text-[#3C81C6]">Trang chủ</Link>
+                        <Link href={getPortalPath("/portal/doctor", pathname)} className="hover:text-[#3C81C6]">Trang chủ</Link>
                         <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-                        <Link href="/portal/doctor/queue" className="hover:text-[#3C81C6]">Hàng đợi</Link>
+                        <Link href={getPortalPath("/portal/doctor/queue", pathname)} className="hover:text-[#3C81C6]">Hàng đợi</Link>
                         <span className="material-symbols-outlined text-[12px]">chevron_right</span>
                         <span className="text-[#121417] dark:text-white font-medium">Khám bệnh — {patient.fullName}</span>
                     </div>
@@ -806,11 +808,7 @@ export default function ExaminationPage() {
                     onApplyDiagnosis={handleAIDiagnosisSelect}
                     onApplyLabs={handleAISuggestLabs}
                     onApplyMedication={(med) => {
-<<<<<<< Updated upstream
-                        setMeds(prev => [...prev, { ...med, drugId: "" }]);
-=======
                         setMeds(prev => [...prev, { ...med, drugId: (med as any).drugId || "" }]);
->>>>>>> Stashed changes
                         addAuditEntry("AI Pre-Analysis", `AI gợi ý thuốc: ${med.name}`, "accepted");
                     }}
                     onApplyVitals={(v) => {

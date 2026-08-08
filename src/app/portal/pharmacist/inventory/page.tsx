@@ -2,9 +2,10 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { getDrugs } from "@/services/medicineService";
 import { inventoryService } from "@/services/inventoryService";
+import { getPortalPath } from "@/utils/portalNavigation";
 import StockInTab from "./_components/StockInTab";
 import StockOutTab from "./_components/StockOutTab";
 import AlertsTab from "./_components/AlertsTab";

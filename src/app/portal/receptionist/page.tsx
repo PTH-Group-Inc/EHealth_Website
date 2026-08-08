@@ -7,10 +7,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageHeader, StatCard, EmptyState } from "@/components/shared/layout";
 import { appointmentStatusService } from "@/services/appointmentStatusService";
 import { billingService } from "@/services/billingService";
+import { getPortalPath } from "@/utils/portalNavigation";
 
 /* ── Thao tác nhanh ───────────────────────────────────────── */
 const QUICK_ACTIONS = [
@@ -42,6 +44,7 @@ const INVOICE_STATUS: Record<string, { label: string; cls: string }> = {
 
 export default function ReceptionistDashboard() {
     const { user } = useAuth();
+    const pathname = usePathname();
     const [dashboard, setDashboard] = useState<any>(null);
     const [rooms, setRooms] = useState<any[]>([]);
     const [queue, setQueue] = useState<any[]>([]);
@@ -120,7 +123,7 @@ export default function ReceptionistDashboard() {
                 <h3 className="text-sm font-bold mb-3 text-[#121417] dark:text-white">Thao tác nhanh</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     {QUICK_ACTIONS.map(a => (
-                        <Link key={a.label} href={a.href} className="group bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-4 hover:shadow-md hover:border-[#3C81C6]/40 transition-all text-center">
+                        <Link key={a.label} href={getPortalPath(a.href, pathname)} className="group bg-white dark:bg-[#1e242b] border border-[#e5e7eb] dark:border-[#2d353e] rounded-xl p-4 hover:shadow-md hover:border-[#3C81C6]/40 transition-all text-center">
                             <div className={`mx-auto inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${a.color} text-white mb-2 group-hover:scale-110 transition-transform`}>
                                 <span className="material-symbols-outlined text-[24px]">{a.icon}</span>
                             </div>

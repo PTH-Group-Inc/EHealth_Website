@@ -7,10 +7,11 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageHeader, EmptyState, StatCard } from "@/components/shared/layout";
 import { appointmentStatusService } from "@/services/appointmentStatusService";
+import { getPortalPath } from "@/utils/portalNavigation";
 
 type QueueStatus = "waiting" | "in_progress" | "completed" | "skipped" | "cancelled";
 
@@ -121,6 +122,7 @@ export default function DoctorQueuePage() {
         completed: queue.filter(q => q.status === "completed").length,
     }), [queue]);
 
+    const pathname = usePathname();
     const doAction = async (id: string, action: "enter" | "continue" | "skip" | "recall") => {
         setBusyId(id);
         try {
@@ -130,12 +132,12 @@ export default function DoctorQueuePage() {
             if (action === "enter") {
                 // Gộp 2 thao tác: chuyển status WAITING→IN_PROGRESS + navigate vào wizard
                 await appointmentStatusService.startExam(id);
-                router.push(`/portal/doctor/examination?appointment=${id}${patientParam}`);
+                router.push(getPortalPath(`/portal/doctor/examination?appointment=${id}${patientParam}`, pathname));
                 return; // không cần reload queue — sẽ thấy khi quay về
             }
             if (action === "continue") {
                 // BN đã IN_PROGRESS → chỉ navigate, không gọi startExam lần 2
-                router.push(`/portal/doctor/examination?appointment=${id}${patientParam}`);
+                router.push(getPortalPath(`/portal/doctor/examination?appointment=${id}${patientParam}`, pathname));
                 return;
             }
             if (action === "skip") await appointmentStatusService.skip(id);
@@ -282,7 +284,7 @@ export default function DoctorQueuePage() {
                                                 )}
                                                 {q.status === "completed" && (
                                                     <Link
-                                                        href={`/portal/doctor/encounters?appointmentId=${q.id}`}
+                                                        href={getPortalPath(`/portal/doctor/encounters?appointmentId=${q.id}`, pathname)}
                                                         className="px-2 py-1.5 text-xs rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                                                     >
                                                         Xem hồ sơ

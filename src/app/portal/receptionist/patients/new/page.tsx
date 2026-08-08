@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { getPortalPath } from "@/utils/portalNavigation";
 import axiosClient from "@/api/axiosClient";
 import { EHR_ENDPOINTS } from "@/api/endpoints";
 import { extractErrorMessage } from "@/api/response";
@@ -71,6 +72,7 @@ function splitHistoryEntries(value: string) {
 export default function NewPatientPage() {
     const t = useTranslations("pages.portal.staff.patientsNew");
     const router = useRouter();
+    const pathname = usePathname();
     const { showToast } = useToast();
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -236,7 +238,7 @@ export default function NewPatientPage() {
                 showToast("Nhóm máu hiện chưa có API lưu từ màn tiếp nhận nên tạm chưa ghi nhận tự động.", "info");
             }
 
-            router.push(`/portal/receptionist/patients/${patientId}`);
+            router.push(getPortalPath(`/portal/receptionist/patients/${patientId}`, pathname));
         } catch (error: any) {
             showToast(error?.message || extractErrorMessage(error) || "Tiếp nhận bệnh nhân thất bại.", "error");
         } finally {

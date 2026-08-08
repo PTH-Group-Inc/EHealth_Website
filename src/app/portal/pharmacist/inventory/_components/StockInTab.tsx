@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { inventoryService } from "@/services/inventoryService";
+import { getPortalPath } from "@/utils/portalNavigation";
 
 const SUPPLIERS = ["DHG Pharma", "Imexpharm", "Pymepharco", "Hậu Giang", "Traphaco", "Khác"];
 const GROUPS = ["Kháng sinh", "Giảm đau", "Tim mạch", "Tiêu hóa", "Hô hấp", "Đái tháo đường", "Da liễu", "Vitamin", "Khác"];
@@ -10,6 +11,7 @@ const UNITS = ["viên", "ống", "gói", "chai", "tuýp", "hộp"];
 function StockInTab() {
     const t = useTranslations("pages.portal.pharmacist.inventoryImport");
     const router = useRouter();
+    const pathname = usePathname();
     const [saving, setSaving] = useState(false);
     const [todayDisplay, setTodayDisplay] = useState("");
     useEffect(() => {
@@ -52,7 +54,7 @@ function StockInTab() {
                 })),
                 note: note || undefined,
             });
-            router.push("/portal/pharmacist/inventory");
+            router.push(getPortalPath("/portal/pharmacist/inventory", pathname));
         } catch {
             alert("Nhập thuốc thất bại. Vui lòng thử lại.");
         } finally {

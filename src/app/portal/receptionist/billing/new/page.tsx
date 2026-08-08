@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { billingService } from "@/services/billingService";
+import { getPortalPath } from "@/utils/portalNavigation";
 import { unwrap, unwrapList } from "@/api/response";
 import axiosClient from "@/api/axiosClient";
 
@@ -46,6 +47,7 @@ const fmt = (n: number) => (n || 0).toLocaleString("vi-VN") + "đ";
 
 export default function NewBillingPage() {
     const router = useRouter();
+    const pathname = usePathname();
 
     // ── Patient search ──────────────────────────────────────────────────────
     const [patientQuery, setPatientQuery]       = useState("");
@@ -222,7 +224,7 @@ export default function NewBillingPage() {
                 note: fd.note || undefined,
             };
             await billingService.createInvoice(payload);
-            router.push("/portal/receptionist/billing");
+            router.push(getPortalPath("/portal/receptionist/billing", pathname));
         } catch {
             setError("Tạo hóa đơn thất bại. Vui lòng thử lại.");
         } finally {

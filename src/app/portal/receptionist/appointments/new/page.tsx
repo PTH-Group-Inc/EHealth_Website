@@ -1,18 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { getDepartments } from "@/services/departmentService";
 import { staffService, unwrapStaffList } from "@/services/staffService";
 import { getPatients, getPatientInsurances, createPatient, addPatientInsurance } from "@/services/patientService";
 import { createAppointment, getAvailableSlots } from "@/services/appointmentService";
+import { getPortalPath } from "@/utils/portalNavigation";
 
 
 export default function NewAppointmentPage() {
     const t = useTranslations("pages.portal.staff.appointmentsNew");
     const router = useRouter();
+    const pathname = usePathname();
     const [saving, setSaving] = useState(false);
     const [patientSearch, setPatientSearch] = useState("");
     const [searching, setSearching] = useState(false);
@@ -211,7 +213,7 @@ export default function NewAppointmentPage() {
                 note: fd.note || undefined,
                 bookingChannel: "DIRECT_CLINIC",
             });
-            router.push("/portal/receptionist/appointments");
+            router.push(getPortalPath("/portal/receptionist/appointments", pathname));
         } catch (err: any) {
             alert(err.message || "Đặt lịch hẹn thất bại. Vui lòng thử lại.");
         } finally {
